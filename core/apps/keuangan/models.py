@@ -29,3 +29,21 @@ class Pendapatan(models.Model):
 
     def __str__(self):
         return f"{self.usaha} - {self.dateCreate}"
+    
+    
+    def save(self, *args, **kwargs):
+
+        # ✅ hitung laba otomatis
+        self.laba = self.pendapatan - self.pengeluaran
+
+        # ✅ ambil kas terakhir dari usaha yang sama
+        last = Pendapatan.objects.filter(
+            usaha=self.usaha
+        ).order_by('-dateCreate', '-id').first()
+
+        if last:
+            self.kas = last.kas + self.laba
+        else:
+            self.kas = self.laba  # awal
+
+        super().save(*args, **kwargs)

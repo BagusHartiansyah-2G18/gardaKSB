@@ -17,14 +17,27 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path,include
 
-from core.views import home,login,login_view,dashboard
+from core.views import home,login,login_view,seed_sumbawa,dashboard
+from core.apps.kelompok.vkelompok import pkelompok
+from core.apps.usaha.vusaha import pusaha
+from core.apps.keuangan.vkeuangan import pkeuangan,pkeuanganAdd
+
+
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', home),
     path('login', login),
-     path('dashboard', dashboard, name="dashboard"),
+    path('seed-sumbawa/', seed_sumbawa),
+    path('dashboard', dashboard, name="dashboard"),
+    path('kelompok', pkelompok, name="pkelompok"),
+    path('usaha', pusaha, name="pusaha"),
     path('sigin', login_view, name='sigin'),
+    path('pendapatan', pkeuangan, name='pendapatan'),
+    path('pendapatan/add', pkeuanganAdd, name='pkeuanganAdd'),
+    
 
+    
     path("__reload__/", include("django_browser_reload.urls")),
 ]

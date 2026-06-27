@@ -1,0 +1,77 @@
+{% extends './layout.html' %}
+{% block content %}
+
+<div class="p-6">
+  <div class="max-w-3xl mx-auto">
+
+    <h2 class="text-xl font-semibold mb-6 dark:text-white">
+      Tambah Pendapatan
+    </h2>
+
+    <form method="post" class="space-y-4 bg-white dark:bg-zinc-900 p-6 rounded-xl shadow">
+      {% csrf_token %}
+
+      <!-- USAHA -->
+      <div>
+        <label class="text-sm">Usaha</label>
+        <select name="usaha" class="w-full p-2 border rounded">
+          {% for u in usaha_list %}
+          <option value="{{ u.id }}">
+            {{ u.kelompok.nmKelo }} - {{ u.jenisUsaha.nmJUsaha }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- TANGGAL -->
+      <div>
+        <label class="text-sm">Tanggal</label>
+        <input type="date" name="tanggal" class="w-full p-2 border rounded">
+      </div>
+
+      <!-- PENDAPATAN -->
+      <div>
+        <label class="text-sm">Pendapatan</label>
+        <input type="number" name="pendapatan" class="w-full p-2 border rounded">
+      </div>
+
+      <!-- PENGELUARAN -->
+      <div>
+        <label class="text-sm">Pengeluaran</label>
+        <input type="number" name="pengeluaran" class="w-full p-2 border rounded">
+      </div>
+
+      <!-- LABA -->
+      <div>
+        <label class="text-sm">Laba</label>
+        <input type="number" name="laba" class="w-full p-2 border rounded">
+      </div>
+
+      <!-- KAS -->
+      <div>
+        <label class="text-sm">Kas</label>
+        <input type="number" name="kas" class="w-full p-2 border rounded">
+      </div>
+
+      <!-- KETERANGAN -->
+      <div>
+        <label class="text-sm">Keterangan</label>
+        <textarea name="keterangan" class="w-full p-2 border rounded"></textarea>
+      </div>
+
+      <!-- BUTTON -->
+      <div class="flex justify-end gap-2">
+        <a href="/pendapatan/" class="px-4 py-2 bg-gray-200 rounded">
+          Batal
+        </a>
+        <button class="px-4 py-2 bg-blue-500 text-white rounded">
+          Simpan
+        </button>
+      </div>
+
+    </form>
+
+  </div>
+</div>
+
+{% endblock %}

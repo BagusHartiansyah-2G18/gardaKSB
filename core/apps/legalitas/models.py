@@ -4,3 +4,5 @@ class ItemLegalitas(models.Model):
     nmILega = models.CharField(max_length=100)
     jenisValue = models.CharField(max_length=20)
     idJLega = models.CharField(max_length=100)
+    def __str__(self):
+        return self.nmILega

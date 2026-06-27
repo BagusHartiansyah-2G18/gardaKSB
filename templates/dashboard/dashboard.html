@@ -1,0 +1,112 @@
+{% extends './layout.html' %}
+
+{% block content %}
+<div
+    class="grow p-6 lg:rounded-lg lg:bg-white lg:p-10 lg:shadow-xs lg:ring-1 lg:ring-zinc-950/5 dark:lg:bg-zinc-900 dark:lg:ring-white/10">
+    <div class="mx-auto max-w-6xl"><!--$--><!--/$-->
+        <form method="post" class="mx-auto max-w-4xl">
+            <h1 class="text-2xl/8 font-semibold text-zinc-950 sm:text-xl/8 dark:text-white">Dashboard</h1>
+            <hr role="presentation"
+                class="my-10 mt-6 w-full border-t border-zinc-950/10 dark:border-white/10">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div class="bg-blue-500 p-4 rounded-xl">
+                    Kecamatan
+                    <div class="text-2xl font-bold">{{ summary.kecamatan }}</div>
+                </div>
+                <div class="bg-green-500  p-4 rounded-xl">
+                    Desa
+                    <div class="text-2xl font-bold">{{ summary.desa }}</div>
+                </div>
+                <div class="bg-yellow-500  p-4 rounded-xl">
+                    Kelompok
+                    <div class="text-2xl font-bold">{{ summary.kelompok }}</div>
+                </div>
+                <div class="bg-red-500 p-4 rounded-xl">
+                    Usaha
+                    <div class="text-2xl font-bold">{{ summary.usaha }}</div>
+                </div>
+            </div>
+            <hr role="presentation"
+                class="my-10 mt-6 w-full border-t border-zinc-950/10 dark:border-white/10">
+            <div class="grid grid-cols-2 md:grid-cols-2 gap-6">
+                <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow">
+                    <h3 class="mb-2 font-semibold">Jenis Usaha</h3>
+                    <canvas id="jenisUsahaChart"></canvas>
+                </div>
+
+                <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow">
+                    <h3 class="mb-2 font-semibold">Kelompok per Kecamatan</h3>
+                    <canvas id="kecamatanChart"></canvas>
+                </div>
+
+                <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow">
+                    <h3 class="mb-2 font-semibold">Komoditas</h3>
+                    <canvas id="komoditasChart"></canvas>
+                </div>
+
+                <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow">
+                    <h3 class="mb-2 font-semibold">Status</h3>
+                    <canvas id="statusChart"></canvas>
+                </div>
+
+            </div>
+        </form>
+    </div>
+</div> 
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    // ✅ JENIS USAHA
+    new Chart(document.getElementById('jenisUsahaChart'), {
+        type: 'pie',
+        data: {
+            labels: [{% for i in jenis_usaha %}"{{ i.jenisUsaha__nmJUsaha }}",{% endfor %}],
+            datasets: [{
+                data: [{% for i in jenis_usaha %}{{ i.total }},{% endfor %}],
+                backgroundColor: ['#3b82f6','#22c55e','#f59e0b','#ef4444','#8b5cf6','#06b6d4']
+            }]
+        }
+    });
+
+    // ✅ KECAMATAN
+    new Chart(document.getElementById('kecamatanChart'), {
+        type: 'bar',
+        data: {
+            labels: [{% for i in kelompok_per_kecamatan %}"{{ i.desa__kecamatan__nmKec }}",{% endfor %}],
+            datasets: [{
+                label: 'Kelompok',
+                data: [{% for i in kelompok_per_kecamatan %}{{ i.total }},{% endfor %}],
+                backgroundColor: '#3b82f6'
+            }]
+        }
+    });
+
+    // ✅ KOMODITAS
+    new Chart(document.getElementById('komoditasChart'), {
+        type: 'bar',
+        data: {
+            labels: [{% for i in komoditas %}"{{ i.komoditi }}",{% endfor %}],
+            datasets: [{
+                label: 'Komoditas',
+                data: [{% for i in komoditas %}{{ i.total }},{% endfor %}],
+                backgroundColor: '#22c55e'
+            }]
+        }
+    });
+
+    // ✅ STATUS
+    new Chart(document.getElementById('statusChart'), {
+        type: 'doughnut',
+        data: {
+            labels: [{% for i in status %}"{{ i.status }}",{% endfor %}],
+            datasets: [{
+                data: [{% for i in status %}{{ i.total }},{% endfor %}],
+                backgroundColor: ['#22c55e','#ef4444']
+            }]
+        }
+    });
+
+});
+</script>
+
+{% endblock %}
