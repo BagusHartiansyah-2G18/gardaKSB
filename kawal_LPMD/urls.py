@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.urls import path,include
 
 from core.views import home,login,login_view,seed_sumbawa,dashboard
-from core.apps.kelompok.vkelompok import pkelompok
+from core.apps.kelompok.vkelompok import pkelompok,pkelompokDetail,pkelompoAsetAdd,pkelompokAnggotaAdd,anggota_delete,aset_delete,legalitasApprove
 from core.apps.usaha.vusaha import pusaha
 from core.apps.keuangan.vkeuangan import pkeuangan,pkeuanganAdd
 
@@ -28,16 +28,28 @@ from core.apps.keuangan.vkeuangan import pkeuangan,pkeuanganAdd
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', home),
-    path('login', login),
+    path('login/', login),
     path('seed-sumbawa/', seed_sumbawa),
-    path('dashboard', dashboard, name="dashboard"),
-    path('kelompok', pkelompok, name="pkelompok"),
-    path('usaha', pusaha, name="pusaha"),
-    path('sigin', login_view, name='sigin'),
-    path('pendapatan', pkeuangan, name='pendapatan'),
+    path('dashboard/', dashboard, name="dashboard"),
+    path('kelompok/', pkelompok, name="pkelompok"),
+    path('kelompok/<int:id>/',pkelompokDetail, name='kelompok_detail'),
+    path('usaha/', pusaha, name="pusaha"),
+    path('sigin/', login_view, name='sigin'),
+    path('pendapatan/<int:id>/', pkeuangan, name='pendapatan'),
     path('pendapatan/add', pkeuanganAdd, name='pkeuanganAdd'),
     
-
+    path('legalitas/approve/<int:id>/<str:key>/', legalitasApprove, name='legalitasApprove'),
     
     path("__reload__/", include("django_browser_reload.urls")),
+    path('accounts/', include('django.contrib.auth.urls')),
+
+    
+    path('kelompok/<int:id>/anggota/add/', pkelompokAnggotaAdd, name='anggota_add'),
+    path('kelompok/<int:id>/aset/add/', pkelompoAsetAdd, name='aset_add'),
+    
+    path('anggota/<int:id>/delete/', anggota_delete, name='anggota_delete'),
+    path('aset/<int:id>/delete/', aset_delete, name='aset_delete'),
+
+
+
 ]

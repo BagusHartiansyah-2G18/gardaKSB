@@ -3,17 +3,29 @@
 
 <div class="p-6">
   <div class="max-w-7xl mx-auto">
-
+    <div class="mx-auto max-w-4xl">
+        <div class="flex justify-between items-center">
+          <div>
+            <h1 class="text-2xl/8 font-semibold text-zinc-950 sm:text-xl/8 dark:text-white">Pendapatan Kelompok</h1>
+          </div>
+          <a href="/kelompok/"
+            class="px-4 py-2 text-sm border rounded-lg hover:bg-zinc-100">
+            ← Kembali
+          </a>
+        </div>
+          <hr role="presentation"
+            class="my-4 mt-6 w-full border-t border-zinc-950/10 dark:border-white/10">
+    </div> 
     <!-- HEADER -->
     <div class="flex items-center justify-between mb-6">
         
         <div>
             <h1 class="text-xl font-semibold text-zinc-900 dark:text-white">
-            Data Pendapatan
+              {{ kelompok.nmKelo }}
             </h1>
             <p class="text-sm text-zinc-500">
-            Monitoring keuangan kelompok
-            </p>
+              {{ kelompok.desa.nmDesa }} • {{ kelompok.desa.kecamatan.nmKec }}
+            </p>  
         </div>
 
         <div class="flex gap-2">
@@ -50,7 +62,7 @@
               <th class="px-6 py-4">Pengeluaran</th>
               <th class="px-6 py-4">Laba</th>
               <th class="px-6 py-4">Kas</th>
-              <th class="px-6 py-4">Approval</th>
+              <th class="px-6 py-4">aksi</th>
             </tr>
           </thead>
 

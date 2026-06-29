@@ -6,7 +6,7 @@
         class="grow p-6 lg:rounded-lg lg:bg-white lg:p-10 lg:shadow-xs lg:ring-1 lg:ring-zinc-950/5 dark:lg:bg-zinc-900 dark:lg:ring-white/10">
         <div class="mx-auto max-w-6xl"><!--$--><!--/$-->
             <div class="mx-auto max-w-4xl py-6">
-                <h1 class="text-2xl/8 font-semibold text-zinc-950 sm:text-xl/8 dark:text-white">Kelompok</h1>
+                <h1 class="text-2xl/8 font-semibold text-zinc-950 sm:text-xl/8 dark:text-white">Data Kelompok</h1>
                 <hr role="presentation"
                     class="my-10 mt-6 w-full border-t border-zinc-950/10 dark:border-white/10">
                 
@@ -22,8 +22,8 @@
                 </form>
             </div>
 
-                    <!-- TABLE CARD -->
-                    <div class="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800">
+                <!-- TABLE CARD -->
+                <div class="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800">
 
                     <div class="overflow-x-auto">
 
@@ -83,11 +83,39 @@
                             </td>
 
                             <!-- Aksi -->
-                            <td class="px-6 py-4 text-right">
-                                <button class="text-blue-500 hover:underline text-sm">
-                                Detail
+                            <td class="px-6 py-4 text-right relative">
+                                
+                                <div class="relative inline-block menu-wrapper">
+
+                                <!-- BUTTON -->
+                                <button onclick="toggleMenu({{ item.id }}, event)"
+                                    class="px-2 py-1 text-zinc-500 hover:text-black">
+                                    ⋮
                                 </button>
-                            </td>
+
+                                <!-- MENU -->
+                                <div id="menu-{{ item.id }}"
+                                    class="dropdown-menu hidden absolute right-0 mt-2 w-36 bg-white border rounded-lg shadow-lg z-10" style="    text-align: left;">
+
+                                    <a href="{% url 'kelompok_detail' item.id %}"
+                                        class="block px-3 py-2 text-sm hover:bg-zinc-100">
+                                        Detail
+                                        </a>
+                                         <a href="{% url 'pendapatan' item.id %}"
+                                        class="block px-3 py-2 text-sm hover:bg-zinc-100">
+                                        Pendapatan
+                                        </a>
+                                         <a href="{% url 'kelompok_detail' item.id %}"
+                                        class="block px-3 py-2 text-sm hover:bg-zinc-100">
+                                        PAD
+                                        </a>
+
+                                </div>
+
+                                </div>
+ 
+
+                                </td>
 
                             </tr>
                             {% endfor %}
@@ -143,4 +171,29 @@
             </div>
         </div>
     </div>
+    
+    <script>
+        function toggleMenu(id, event) {
+            event.stopPropagation(); // penting
+
+            const menu = document.getElementById("menu-" + id);
+
+            // tutup semua menu lain
+            document.querySelectorAll('.dropdown-menu').forEach(el => {
+                if (el !== menu) el.classList.add("hidden");
+            });
+
+            menu.classList.toggle("hidden");
+        }
+
+        // klik luar → tutup semua menu
+        document.addEventListener("click", function(e) {
+            if (!e.target.closest(".menu-wrapper")) {
+                document.querySelectorAll('.dropdown-menu').forEach(el => {
+                    el.classList.add("hidden");
+                });
+            }
+        });
+    </script>
 {% endblock %} 
+

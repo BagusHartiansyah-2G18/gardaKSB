@@ -1,0 +1,7 @@
+admin tidak usah wilayah, kalau ditentukan jadi batasan
+pengawas wajib memiliki wilayah agar dapat mengakses desa sesuai datanya
+
+
+tano,1tano2poto
+admtano,1desa2kec
+pengawastano1,1desa2kec 

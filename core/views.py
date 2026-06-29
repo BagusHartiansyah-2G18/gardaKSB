@@ -1,5 +1,5 @@
 from django.shortcuts import render,redirect
-
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login as auth_login
 
 from django.contrib import messages
@@ -55,6 +55,7 @@ def login(request):
         'features': []
     })
 
+@login_required
 def dashboard(request):
     
     total_kecamatan = Kecamatan.objects.count()

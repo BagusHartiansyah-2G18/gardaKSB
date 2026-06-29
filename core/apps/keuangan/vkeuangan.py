@@ -1,20 +1,27 @@
 from django.shortcuts import render,redirect
-
 from django.contrib.auth import authenticate, login as auth_login
-
+from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.contrib import messages
 from core.apps.keuangan.models import Pendapatan
 from core.apps.usaha.models import JenisUsaha,ListUsaha
+from core.apps.kelompok.models import Kelompok
+from django.shortcuts import get_object_or_404
 
 
-def pkeuangan(request): 
+
+@login_required
+def pkeuangan(request, id): 
     
+    kelompok = get_object_or_404(Kelompok, id=id)  
     qs = Pendapatan.objects.select_related(
         'usaha',
         'usaha__kelompok',
         'usaha__jenisUsaha'
+    ).filter(
+        usaha__kelompok_id=id  # ✅ filter disini
     ).order_by('-dateCreate')
+
 
     # ✅ SEARCH
     search = request.GET.get('q')
@@ -31,11 +38,13 @@ def pkeuangan(request):
 
     return render(request, 'dashboard/keuangan.html', {
         'data': page_obj,
+        'kelompok':kelompok,
         'search': search
         }
     )
     
 
+@login_required
 def pkeuanganAdd(request):
 
     usaha_list = ListUsaha.objects.select_related('kelompok')

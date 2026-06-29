@@ -6,7 +6,7 @@ from django.utils.html import format_html
 from core.apps.wilayah.models import Kecamatan, Desa, WilayahPengawas
 from core.apps.legalitas.models import ItemLegalitas 
 from core.apps.keuangan.models import Pendapatan 
-from core.apps.kelompok.models import Kelompok, LegalitasKelompok
+from core.apps.kelompok.models import Kelompok, LegalitasKelompok,AnggotaKelompok,AsetKelompok
 from core.apps.usaha.models import JenisUsaha, ListUsaha
 
 
@@ -183,3 +183,18 @@ class WilayahPengawasAdmin(admin.ModelAdmin):
     search_fields = ('user__username', 'desa__nmDesa')
     list_filter = ('desa',)
 
+
+
+
+@admin.register(AnggotaKelompok)
+class AnggotaAdmin(admin.ModelAdmin):
+    list_display = ('nama', 'kelompok', 'jabatan')
+    search_fields = ('nama', 'kelompok__nmKelo')
+    list_filter = ('jabatan',)
+
+
+@admin.register(AsetKelompok)
+class AsetAdmin(admin.ModelAdmin):
+    list_display = ('namaAset', 'kelompok', 'jumlah', 'kondisi')
+    search_fields = ('namaAset',)
+    list_filter = ('kondisi',)
