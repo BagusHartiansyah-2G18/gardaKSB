@@ -1,0 +1,206 @@
+{% extends './layout.html' %}
+
+{% block content %}
+<div
+    class="grow p-6 lg:rounded-lg lg:bg-white lg:p-10 lg:shadow-xs lg:ring-1 lg:ring-zinc-950/5 dark:lg:bg-zinc-900 dark:lg:ring-white/10">
+
+    <div class="mx-auto max-w-6xl">
+
+        <h1 class="text-2xl/8 font-semibold text-zinc-950 sm:text-xl/8 dark:text-white">
+            Monitoring BUMDes
+        </h1>
+
+        <hr class="my-10 mt-6 w-full border-t border-zinc-950/10 dark:border-white/10">
+
+        <!-- KPI -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+
+            <div class="bg-green-500 text-white p-4 rounded-xl">
+                Pendapatan
+                <div class="text-2xl font-bold">
+                    Rp {{ chartPendAll.total_pendapatan|default:0|floatformat:0 }}
+                </div>
+            </div>
+
+            
+            <div class="bg-red-500 text-white p-4 rounded-xl">
+                Pengeluaran
+                <div class="text-2xl font-bold">
+                    Rp {{ chartPendAll.total_pengeluaran|default:0|floatformat:0 }}
+                </div>
+            </div>
+
+            <div class="bg-blue-500 text-white p-4 rounded-xl">
+                Laba
+                <div class="text-2xl font-bold">
+                    Rp {{ chartPendAll.total_laba|default:0|floatformat:0 }}
+                </div>
+            </div>
+
+            <div class="bg-purple-500 text-white p-4 rounded-xl">
+                Kas
+                <div class="text-2xl font-bold">
+                    Rp {{ chartPendAll.kas|default:0|floatformat:0 }}
+                </div>
+            </div>
+
+        </div>
+
+        <hr class="my-10 mt-6 w-full border-t border-zinc-950/10 dark:border-white/10">
+
+        <!-- CHART -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+            <!-- BULANAN -->
+            <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow">
+                <h3 class="mb-2 font-semibold">
+                    Tren Pendapatan Bulanan
+                </h3>
+                <canvas id="chartBulanan"></canvas>
+            </div>
+
+            <!-- JENIS USAHA -->
+            <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow">
+                <h3 class="mb-2 font-semibold">
+                    Pendapatan per Jenis Usaha
+                </h3>
+                <canvas id="chartJenisUsaha"></canvas>
+            </div>
+
+            <!-- TOP KELOMPOK -->
+            <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow md:col-span-2">
+                <h3 class="mb-2 font-semibold">
+                    Top Kelompok Berdasarkan Pendapatan
+                </h3>
+                <canvas id="chartKelompok"></canvas>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    // ==========================
+    // BULANAN
+    // ==========================
+    new Chart(document.getElementById('chartBulanan'), {
+
+        type: 'line',
+
+        data: {
+            labels: [
+                {% for i in chartPendBulanan %}
+                    "{{ i.bulan }}",
+                {% endfor %}
+            ],
+            datasets: [
+                {
+                    label: 'Pendapatan',
+                    data: [
+                        {% for i in chartPendBulanan %}
+                            {{ i.pendapatan|default:0 }},
+                        {% endfor %}
+                    ],
+                    borderColor: '#22c55e',
+                    backgroundColor: '#22c55e22',
+                    tension: 0.4
+                },
+                {
+                    label: 'Pengeluaran',
+                    data: [
+                        {% for i in chartPendBulanan %}
+                            {{ i.pengeluaran|default:0 }},
+                        {% endfor %}
+                    ],
+                    borderColor: '#ef4444',
+                    backgroundColor: '#ef444422',
+                    tension: 0.4
+                },
+                {
+                    label: 'Laba',
+                    data: [
+                        {% for i in chartPendBulanan %}
+                            {{ i.laba|default:0 }},
+                        {% endfor %}
+                    ],
+                    borderColor: '#3b82f6',
+                    backgroundColor: '#3b82f622',
+                    tension: 0.4
+                }
+            ]
+        }
+
+    });
+
+
+    // ==========================
+    // JENIS USAHA
+    // ==========================
+    new Chart(document.getElementById('chartJenisUsaha'), {
+
+        type: 'pie',
+
+        data: {
+            labels: [
+                {% for i in chartPendJUsaha %}
+                    "{{ i.usaha__jenisUsaha__nmJUsaha }}",
+                {% endfor %}
+            ],
+            datasets: [{
+                data: [
+                    {% for i in chartPendJUsaha %}
+                        {{ i.total }},
+                    {% endfor %}
+                ],
+                backgroundColor: [
+                    '#3b82f6',
+                    '#22c55e',
+                    '#f59e0b',
+                    '#ef4444',
+                    '#8b5cf6',
+                    '#06b6d4'
+                ]
+            }]
+        }
+
+    });
+
+
+    // ==========================
+    // TOP KELOMPOK
+    // ==========================
+    new Chart(document.getElementById('chartKelompok'), {
+
+        type: 'bar',
+
+        data: {
+            labels: [
+                {% for i in chartKelompok %}
+                    "{{ i.usaha__kelompok__nmKelo }}",
+                {% endfor %}
+            ],
+            datasets: [{
+                label: 'Pendapatan',
+                data: [
+                    {% for i in chartKelompok %}
+                        {{ i.total }},
+                    {% endfor %}
+                ],
+                backgroundColor: '#10b981'
+            }]
+        },
+
+        options: {
+            indexAxis: 'y'
+        }
+
+    });
+
+});
+</script>
+
+{% endblock %}

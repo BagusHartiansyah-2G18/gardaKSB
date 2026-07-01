@@ -1,109 +1,412 @@
 {% extends './layout.html' %}
 
 {% block content %}
+
 <div
     class="grow p-6 lg:rounded-lg lg:bg-white lg:p-10 lg:shadow-xs lg:ring-1 lg:ring-zinc-950/5 dark:lg:bg-zinc-900 dark:lg:ring-white/10">
-    <div class="mx-auto max-w-6xl"><!--$--><!--/$-->
-        <form method="post" class="mx-auto max-w-4xl">
-            <h1 class="text-2xl/8 font-semibold text-zinc-950 sm:text-xl/8 dark:text-white">Dashboard</h1>
-            <hr role="presentation"
-                class="my-10 mt-6 w-full border-t border-zinc-950/10 dark:border-white/10">
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div class="bg-blue-500 p-4 rounded-xl">
-                    Kecamatan
-                    <div class="text-2xl font-bold">{{ summary.kecamatan }}</div>
-                </div>
-                <div class="bg-green-500  p-4 rounded-xl">
-                    Desa
-                    <div class="text-2xl font-bold">{{ summary.desa }}</div>
-                </div>
-                <div class="bg-yellow-500  p-4 rounded-xl">
-                    Kelompok
-                    <div class="text-2xl font-bold">{{ summary.kelompok }}</div>
-                </div>
-                <div class="bg-red-500 p-4 rounded-xl">
-                    Usaha
-                    <div class="text-2xl font-bold">{{ summary.usaha }}</div>
+
+    <div class="mx-auto max-w-6xl">
+
+        <h1 class="text-2xl/8 font-semibold text-zinc-950 sm:text-xl/8 dark:text-white">
+            Dashboard Monitoring
+        </h1>
+
+        <hr class="my-10 mt-6 border-zinc-950/10 dark:border-white/10">
+
+        <!-- SUMMARY -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+
+            <div class="bg-blue-500 text-white p-4 rounded-xl">
+                Kecamatan
+                <div class="text-2xl font-bold">
+                    {{ summary.kecamatan }}
                 </div>
             </div>
-            <hr role="presentation"
-                class="my-10 mt-6 w-full border-t border-zinc-950/10 dark:border-white/10">
-            <div class="grid grid-cols-2 md:grid-cols-2 gap-6">
-                <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow">
-                    <h3 class="mb-2 font-semibold">Jenis Usaha</h3>
-                    <canvas id="jenisUsahaChart"></canvas>
+
+            <div class="bg-green-500 text-white p-4 rounded-xl">
+                Desa
+                <div class="text-2xl font-bold">
+                    {{ summary.desa }}
+                </div>
+            </div>
+
+            <div class="bg-yellow-500 text-white p-4 rounded-xl">
+                Kelompok
+                <div class="text-2xl font-bold">
+                    {{ summary.kelompok }}
+                </div>
+            </div>
+
+            <div class="bg-red-500 text-white p-4 rounded-xl">
+                Usaha
+                <div class="text-2xl font-bold">
+                    {{ summary.usaha }}
+                </div>
+            </div>
+
+            <div class="bg-indigo-500 text-white p-4 rounded-xl">
+                Anggota
+                <div class="text-2xl font-bold">
+                    {{ summary.anggota }}
+                </div>
+            </div>
+
+            <div class="bg-orange-500 text-white p-4 rounded-xl">
+                Aset
+                <div class="text-2xl font-bold">
+                    {{ summary.aset }}
+                </div>
+            </div>
+
+            <div class="bg-emerald-600 text-white p-4 rounded-xl">
+                Legalitas
+                <div class="text-2xl font-bold">
+                    {{ summary.legalitas }}
+                </div>
+            </div>
+
+            <div class="bg-purple-500 text-white p-4 rounded-xl">
+                Nilai Aset
+                <div class="text-lg font-bold">
+                    Rp {{ summary.nilai_aset|floatformat:0 }}
+                </div>
+            </div>
+
+        </div>
+        <!-- EARLY WARNING -->
+        <div class="mb-8">
+
+            <div class="bg-white dark:bg-zinc-900 rounded-xl shadow">
+
+                <div class="p-4 border-b">
+                    <h3 class="font-semibold text-red-600">
+                        ⚠ Early Warning System
+                    </h3>
                 </div>
 
-                <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow">
-                    <h3 class="mb-2 font-semibold">Kelompok per Kecamatan</h3>
-                    <canvas id="kecamatanChart"></canvas>
-                </div>
+                <div class="divide-y">
 
-                <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow">
-                    <h3 class="mb-2 font-semibold">Komoditas</h3>
-                    <canvas id="komoditasChart"></canvas>
-                </div>
+                    {% for item in warnings %}
 
-                <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow">
-                    <h3 class="mb-2 font-semibold">Status</h3>
-                    <canvas id="statusChart"></canvas>
+                    <a href="{{ item.url }}"
+                    class="block p-4 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition">
+
+                        <div class="flex items-start justify-between">
+
+                            <div class="flex items-start gap-3">
+
+                                {% if item.level == 'danger' %}
+                                    <div class="text-red-500">🔴</div>
+                                {% elif item.level == 'warning' %}
+                                    <div class="text-yellow-500">🟡</div>
+                                {% else %}
+                                    <div class="text-green-500">🟢</div>
+                                {% endif %}
+
+                                <div>
+                                    <div class="font-medium">
+                                        {{ item.judul }}
+                                    </div>
+
+                                    <div class="text-sm text-zinc-500">
+                                        {{ item.pesan }}
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <div class="text-blue-500 text-sm">
+                                Lihat →
+                            </div>
+
+                        </div>
+
+                    </a>
+
+                    {% empty %}
+
+                    <div class="p-6 text-center text-zinc-500">
+                        ✅ Tidak ada warning
+                    </div>
+
+                    {% endfor %}
+
                 </div>
 
             </div>
-        </form>
+
+        </div>
+
+        <!-- ROW 1 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+
+            <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow">
+                <h3 class="mb-4 font-semibold">
+                    Sebaran Lembaga
+                </h3>
+
+                <canvas id="lembagaChart"></canvas>
+            </div>
+
+            <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow">
+                <h3 class="mb-4 font-semibold">
+                    Status Approval
+                </h3>
+
+                <canvas id="approvalChart"></canvas>
+            </div>
+
+        </div>
+
+        <!-- ROW 2 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+
+            <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow">
+                <h3 class="mb-4 font-semibold">
+                    Tren Pendapatan
+                </h3>
+
+                <canvas id="pendapatanChart"></canvas>
+            </div>
+
+            <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow">
+                <h3 class="mb-4 font-semibold">
+                    Kondisi Aset
+                </h3>
+
+                <canvas id="asetChart"></canvas>
+            </div>
+
+        </div>
+
+        <!-- ROW 3 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+
+            <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow">
+                <h3 class="mb-4 font-semibold">
+                    Top 5 Pendapatan Kelompok
+                </h3>
+
+                <canvas id="topPendapatanChart"></canvas>
+            </div>
+
+            <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow">
+                <h3 class="mb-4 font-semibold">
+                    Top 5 Nilai Aset Kelompok
+                </h3>
+
+                <canvas id="topAsetChart"></canvas>
+            </div>
+
+        </div>
+
     </div>
-</div> 
+</div>
+
 <script>
 document.addEventListener("DOMContentLoaded", function () {
 
-    // ✅ JENIS USAHA
-    new Chart(document.getElementById('jenisUsahaChart'), {
+    // ========================
+    // SEBARAN LEMBAGA
+    // ========================
+
+    new Chart(document.getElementById('lembagaChart'), {
+
         type: 'pie',
+
         data: {
-            labels: [{% for i in jenis_usaha %}"{{ i.jenisUsaha__nmJUsaha }}",{% endfor %}],
+            labels: [
+                {% for i in chartLembaga %}
+                    "{{ i.idJLega }}",
+                {% endfor %}
+            ],
+
             datasets: [{
-                data: [{% for i in jenis_usaha %}{{ i.total }},{% endfor %}],
-                backgroundColor: ['#3b82f6','#22c55e','#f59e0b','#ef4444','#8b5cf6','#06b6d4']
+                data: [
+                    {% for i in chartLembaga %}
+                        {{ i.total }},
+                    {% endfor %}
+                ],
+
+                backgroundColor: [
+                    '#3b82f6',
+                    '#22c55e',
+                    '#f59e0b',
+                    '#ef4444',
+                    '#8b5cf6',
+                    '#06b6d4'
+                ]
             }]
         }
+
     });
 
-    // ✅ KECAMATAN
-    new Chart(document.getElementById('kecamatanChart'), {
-        type: 'bar',
+
+    // ========================
+    // STATUS APPROVAL
+    // ========================
+
+    new Chart(document.getElementById('approvalChart'), {
+
+        type: 'doughnut',
+
         data: {
-            labels: [{% for i in kelompok_per_kecamatan %}"{{ i.desa__kecamatan__nmKec }}",{% endfor %}],
+            labels: [
+                'Approve',
+                'Pending'
+            ],
+
             datasets: [{
-                label: 'Kelompok',
-                data: [{% for i in kelompok_per_kecamatan %}{{ i.total }},{% endfor %}],
+                data: [
+                    {{ summaryApproval.approve }},
+                    {{ summaryApproval.pending }}
+                ],
+
+                backgroundColor: [
+                    '#22c55e',
+                    '#ef4444'
+                ]
+            }]
+        }
+
+    });
+
+
+    // ========================
+    // TREN PENDAPATAN
+    // ========================
+
+    new Chart(document.getElementById('pendapatanChart'), {
+
+        type: 'line',
+
+        data: {
+            labels: [
+                {% for i in chartPendBulanan %}
+                    "{{ i.bulan }}",
+                {% endfor %}
+            ],
+
+            datasets: [{
+                label: 'Pendapatan',
+
+                data: [
+                    {% for i in chartPendBulanan %}
+                        {{ i.pendapatan }},
+                    {% endfor %}
+                ],
+
+                borderColor: '#22c55e',
+                backgroundColor: '#22c55e20',
+                tension: 0.4
+            }]
+        }
+
+    });
+
+
+    // ========================
+    // KONDISI ASET
+    // ========================
+
+    new Chart(document.getElementById('asetChart'), {
+
+        type: 'doughnut',
+
+        data: {
+            labels: [
+                'Baik',
+                'Perlu Perbaikan',
+                'Rusak'
+            ],
+
+            datasets: [{
+                data: [
+                    {{ chartKondisiAset.baik }},
+                    {{ chartKondisiAset.perlu }},
+                    {{ chartKondisiAset.rusak }}
+                ],
+
+                backgroundColor: [
+                    '#22c55e',
+                    '#f59e0b',
+                    '#ef4444'
+                ]
+            }]
+        }
+
+    });
+
+
+    // ========================
+    // TOP PENDAPATAN
+    // ========================
+
+    new Chart(document.getElementById('topPendapatanChart'), {
+
+        type: 'bar',
+
+        data: {
+
+            labels: [
+                {% for i in chartKelompok %}
+                    "{{ i.usaha__kelompok__nmKelo }}",
+                {% endfor %}
+            ],
+
+            datasets: [{
+                label: 'Pendapatan',
+
+                data: [
+                    {% for i in chartKelompok %}
+                        {{ i.total }},
+                    {% endfor %}
+                ],
+
                 backgroundColor: '#3b82f6'
             }]
+        },
+
+        options: {
+            indexAxis: 'y'
         }
+
     });
 
-    // ✅ KOMODITAS
-    new Chart(document.getElementById('komoditasChart'), {
+
+    // ========================
+    // TOP ASET
+    // ========================
+
+    new Chart(document.getElementById('topAsetChart'), {
+
         type: 'bar',
-        data: {
-            labels: [{% for i in komoditas %}"{{ i.komoditi }}",{% endfor %}],
-            datasets: [{
-                label: 'Komoditas',
-                data: [{% for i in komoditas %}{{ i.total }},{% endfor %}],
-                backgroundColor: '#22c55e'
-            }]
-        }
-    });
 
-    // ✅ STATUS
-    new Chart(document.getElementById('statusChart'), {
-        type: 'doughnut',
         data: {
-            labels: [{% for i in status %}"{{ i.status }}",{% endfor %}],
+
+            labels: [
+                {% for i in chartAsetKelompok %}
+                    "{{ i.kelompok__nmKelo }}",
+                {% endfor %}
+            ],
+
             datasets: [{
-                data: [{% for i in status %}{{ i.total }},{% endfor %}],
-                backgroundColor: ['#22c55e','#ef4444']
+                label: 'Nilai Aset',
+
+                data: [
+                    {% for i in chartAsetKelompok %}
+                        {{ i.total }},
+                    {% endfor %}
+                ],
+
+                backgroundColor: '#8b5cf6'
             }]
+        },
+
+        options: {
+            indexAxis: 'y'
         }
+
     });
 
 });

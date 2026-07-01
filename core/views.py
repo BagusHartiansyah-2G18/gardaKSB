@@ -7,10 +7,15 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from core.apps.wilayah.models import Kecamatan, Desa
 from core.apps.usaha.models import JenisUsaha,ListUsaha
-from core.apps.kelompok.models import Kelompok
+from core.apps.kelompok.models import Kelompok,AsetKelompok,LegalitasKelompok
+from core.apps.keuangan.models import Pendapatan
+
+from core.apps.keuangan.vkeuangan import pkeuangan
+from core.apps.kelompok.vkelompok import pkelompokDetail
+
 
 from django.db.models import Q,Count
-
+from core.utils import summaryDashboard,summaryApproval,chartApprovalModul,chartPendAll,chartPendBulanan,summaryLegalitas,chartKelengkapan,summaryAset,chartKondisiAset,chartLembaga,chartKelompok,chartAsetKelompok,warningApproval,summaryAnggota
 
 # Create your views here.
 
@@ -58,48 +63,75 @@ def login(request):
 @login_required
 def dashboard(request):
     
-    total_kecamatan = Kecamatan.objects.count()
-    total_desa = Desa.objects.count()
-    total_kelompok = Kelompok.objects.count()
-    total_usaha = ListUsaha.objects.count()
+    # total_kecamatan = Kecamatan.objects.count()
+    # total_desa = Desa.objects.count()
+    # total_kelompok = Kelompok.objects.count()
+    # total_usaha = ListUsaha.objects.count()
 
-    # ✅ Distribusi jenis usaha
-    jenis_usaha = ListUsaha.objects.values(
-        'jenisUsaha__nmJUsaha'
-    ).annotate(total=Count('id')).order_by('-total')
+    # # ✅ Distribusi jenis usaha
+    # jenis_usaha = ListUsaha.objects.values(
+    #     'jenisUsaha__nmJUsaha'
+    # ).annotate(total=Count('id')).order_by('-total')
 
-    # ✅ Kelompok per kecamatan
-    kelompok_per_kec = Kelompok.objects.values(
-        'desa__kecamatan__nmKec'
-    ).annotate(total=Count('id')).order_by('-total')
+    # # ✅ Kelompok per kecamatan
+    # kelompok_per_kec = Kelompok.objects.values(
+    #     'desa__kecamatan__nmKec'
+    # ).annotate(total=Count('id')).order_by('-total')
 
-    # ✅ Komoditas
-    komoditas = ListUsaha.objects.values(
-        'komoditi'
-    ).annotate(total=Count('id')).order_by('-total')
+    # # ✅ Komoditas
+    # komoditas = ListUsaha.objects.values(
+    #     'komoditi'
+    # ).annotate(total=Count('id')).order_by('-total')
 
-    # ✅ Status usaha
-    status_usaha = ListUsaha.objects.values(
-        'status'
-    ).annotate(total=Count('id'))
+    # # ✅ Status usaha
+    # status_usaha = ListUsaha.objects.values(
+    #     'status'
+    # ).annotate(total=Count('id'))
 
-    # ✅ Top desa
-    top_desa = Kelompok.objects.values(
-        'desa__nmDesa'
-    ).annotate(total=Count('id')).order_by('-total')[:5]
+    # # ✅ Top desa
+    # top_desa = Kelompok.objects.values(
+    #     'desa__nmDesa'
+    # ).annotate(total=Count('id')).order_by('-total')[:5]
     
-    return render(request, 'dashboard/dashboard.html', {
-        "summary": {
-                "kecamatan": total_kecamatan,
-                "desa": total_desa,
-                "kelompok": total_kelompok,
-                "usaha": total_usaha,
-        },
-        "jenis_usaha": list(jenis_usaha),
-        "kelompok_per_kecamatan": list(kelompok_per_kec),
-        "komoditas": list(komoditas),
-        "status": list(status_usaha),
-        "top_desa": list(top_desa),
+    # return render(request, 'dashboard/dashboard.html', {
+    #     "summary": {
+    #             "kecamatan": total_kecamatan,
+    #             "desa": total_desa,
+    #             "kelompok": total_kelompok,
+    #             "usaha": total_usaha,
+    #     },
+    #     "jenis_usaha": list(jenis_usaha),
+    #     "kelompok_per_kecamatan": list(kelompok_per_kec),
+    #     "komoditas": list(komoditas),
+    #     "status": list(status_usaha),
+    #     "top_desa": list(top_desa),
+    # })
+
+    return render(request,'dashboard/dashboard.html',{
+
+        'summary': summaryDashboard(),
+        'summaryApproval': summaryApproval(),
+
+        'chartApprovalModul': chartApprovalModul(),
+
+        'chartPendAll': chartPendAll(),
+        'chartPendBulanan': chartPendBulanan(),
+
+        'summaryLegalitas': summaryLegalitas(),
+        'chartKelengkapan': chartKelengkapan(),
+
+        'summaryAset': summaryAset(),
+        'chartKondisiAset': chartKondisiAset(),
+
+        'chartLembaga': chartLembaga(),
+
+        'chartKelompok': chartKelompok(),
+        'chartAsetKelompok': chartAsetKelompok(),
+
+        'warningApproval': warningApproval(),
+
+        'totalAnggota': summaryAnggota(),
+        'warnings':earlyWarning()
     })
 
 
@@ -118,6 +150,78 @@ def login_view(request):
 
     return render(request, 'publik/login.html')
 
+
+
+
+from django.urls import reverse
+
+def earlyWarning():
+
+    data = []
+
+    if AsetKelompok.objects.filter(
+        kondisi='rusak'
+    ).exists():
+
+        data.append({
+            'level': 'danger',
+            'judul': 'Aset Rusak',
+            'pesan': 'Terdapat aset dengan kondisi rusak.',
+            'url': reverse(
+                'pmonitorAset',
+                args=['BUMDES']
+            )
+        })
+
+    rugi = (
+        Pendapatan.objects
+        .filter(
+            laba__lt=0,
+            jenis='UMUM'
+        )
+        .select_related(
+            'usaha',
+            'usaha__kelompok'
+        )
+        .first()
+    )
+
+    if rugi:
+
+        data.append({
+            'level': 'danger',
+            'judul': 'Usaha Mengalami Kerugian',
+            'pesan': f'{rugi.usaha.kelompok.nmKelo} mengalami laba negatif.',
+            'url': reverse(
+                'pkeuangan',
+                args=[
+                    rugi.usaha.kelompok.id,
+                    'UMUM'
+                ]
+            )
+        })
+
+    
+    pending = (
+        LegalitasKelompok.objects
+        .filter(aprovalKec=False)
+        .select_related('kelompok')
+        .first()
+    )
+    
+    if pending:
+        data.append({
+            'level': 'warning',
+            'judul': 'Approval Legalitas',
+            'pesan': f'{pending.kelompok.nmKelo} belum disetujui.',
+            'url': reverse(
+                'kelompok_detail',
+                args=[pending.kelompok.id]
+            )
+        })
+
+
+    return data
 
 @api_view(['GET'])
 def seed_sumbawa(request):

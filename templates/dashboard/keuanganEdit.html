@@ -6,11 +6,11 @@
 
     <div class="flex justify-between items-center mb-6">
       <h2 class="text-xl font-semibold dark:text-white">
-        Tambah Pendapatan
+        Edit Pendapatan
       </h2>
 
-      <!-- <a href="{% url 'pendapatan' kelompok.id jenis %}"
-        class="px-4 py-2 border rounded-lg hover:bg-zinc-100">
+      <!-- <a href="{% url 'pendapatan' data.usaha.kelompok.id jenis %}"
+         class="px-4 py-2 border rounded-lg hover:bg-zinc-100">
         ← Kembali
       </a> -->
       <button onclick="window.history.back()"
@@ -18,7 +18,6 @@
           ← Kembali
       </button>
     </div>
-    
     {% if messages %}
         {% for message in messages %}
             <div class="mb-3 px-4 py-3 rounded-lg bg-red-100 text-red-700">
@@ -26,12 +25,11 @@
             </div>
         {% endfor %}
     {% endif %}
-
     <form method="post"
-      class="space-y-4 bg-white dark:bg-zinc-900 p-6 rounded-xl shadow">
+          class="space-y-4 bg-white dark:bg-zinc-900 p-6 rounded-xl shadow">
 
       {% csrf_token %}
-      
+
       <div {% if jenis != 'UMUM' %}style="display: none;"{% endif %}>
         <label class="block text-sm mb-1">Usaha</label>
         <select name="usaha"
@@ -49,10 +47,11 @@
         <label class="block text-sm mb-1">Tanggal</label>
         <input
           type="date"
-          name="tanggal" 
-          value="{% now 'Y-m-d' %}"
+          name="tanggal"
+          value="{{ data.dateCreate|date:'Y-m-d' }}"
           class="w-full p-2 border rounded-lg">
       </div>
+
       {% if jenis == 'UMUM' %}
         <div>
           <label class="block text-sm mb-1">Pendapatan</label>
@@ -60,6 +59,7 @@
             type="number"
             name="pendapatan"
             class="w-full p-2 border rounded-lg"
+            value="{{data.pendapatan}}"
             placeholder="0">
         </div>
       {% else %}
@@ -68,7 +68,7 @@
             type="hidden"
             name="pendapatan"
             class="w-full p-2 border rounded-lg"
-            value="{{ukas}}"
+            value="{{data.total}}"
             placeholder="0">
         </div>
         <div>
@@ -77,19 +77,18 @@
             type="number"
             name=""
             class="w-full p-2 border rounded-lg"
-            value="{{ukas}}"
+            value="{{ data.total}}"
             placeholder="0" disabled>
         </div>
       {% endif %}
+
       <div>
-        <label class="block text-sm mb-1">
-          Pengeluaran {% if jenis != 'UMUM' %}(ke {{ jenis }}){% endif %}
-        </label>
+        <label class="block text-sm mb-1">Pengeluaran</label>
         <input
           type="number"
           name="pengeluaran"
-          class="w-full p-2 border rounded-lg"
-          placeholder="0">
+          value="{{ data.pengeluaran }}"
+          class="w-full p-2 border rounded-lg">
       </div>
 
       <div>
@@ -97,19 +96,19 @@
         <textarea
           name="keterangan"
           rows="3"
-          class="w-full p-2 border rounded-lg"></textarea>
+          class="w-full p-2 border rounded-lg">{{ data.keterangan }}</textarea>
       </div>
 
-      <div class="flex justify-end gap-2 pt-4">
-        <a href="{% url 'pendapatan' kelompok.id jenis %}"
-          class="px-4 py-2 bg-gray-200 rounded-lg">
+      <div class="flex justify-end gap-2">
+        <a href="{% url 'pendapatan' data.usaha.kelompok.id jenis %}"
+           class="px-4 py-2 bg-gray-200 rounded-lg">
           Batal
         </a>
 
         <button
           type="submit"
           class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
-          Simpan
+          Update
         </button>
       </div>
 

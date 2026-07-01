@@ -20,8 +20,9 @@ from django.urls import path,include
 from core.views import home,login,login_view,seed_sumbawa,dashboard
 from core.apps.kelompok.vkelompok import pkelompok,pkelompokDetail,pkelompoAsetAdd,pkelompokAnggotaAdd,anggota_delete,aset_delete,legalitasApprove
 from core.apps.usaha.vusaha import pusaha
-from core.apps.keuangan.vkeuangan import pkeuangan,pkeuanganAdd
+from core.apps.keuangan.vkeuangan import pkeuangan,pkeuanganAdd,pkeuanganEdit,pendapatanApprove
 
+from core.apps.monitor.vmonitor import pmonitor,pmonitorLegalitas,pmonitorAset,pmonitorAproval
 
 
 
@@ -31,12 +32,27 @@ urlpatterns = [
     path('login/', login),
     path('seed-sumbawa/', seed_sumbawa),
     path('dashboard/', dashboard, name="dashboard"),
-    path('kelompok/', pkelompok, name="pkelompok"),
-    path('kelompok/<int:id>/',pkelompokDetail, name='kelompok_detail'),
+    path('kelompok/<str:jenis>/', pkelompok, name="pkelompok"),
+    path('kelompok/detail/<int:id>/',pkelompokDetail, name='kelompok_detail'),
     path('usaha/', pusaha, name="pusaha"),
     path('sigin/', login_view, name='sigin'),
-    path('pendapatan/<int:id>/', pkeuangan, name='pendapatan'),
-    path('pendapatan/add', pkeuanganAdd, name='pkeuanganAdd'),
+    path('pendapatan/<int:id>/<str:jenis>/', pkeuangan, name='pendapatan'),
+    path(
+        'pendapatan/<int:id>/<str:jenis>/add/',
+        pkeuanganAdd,
+        name='pkeuanganAdd'
+    ),
+    
+    path("chaining/", include("smart_selects.urls")),
+
+    path(
+        'pendapatan/edit/<int:id>/<str:jenis>/',
+        pkeuanganEdit,
+        name='pkeuanganEdit'
+    ),
+    path('pendapatan/approve/<int:id>/<str:key>/', pendapatanApprove, name='pendapatanApprove'),
+
+
     
     path('legalitas/approve/<int:id>/<str:key>/', legalitasApprove, name='legalitasApprove'),
     
@@ -50,6 +66,11 @@ urlpatterns = [
     path('anggota/<int:id>/delete/', anggota_delete, name='anggota_delete'),
     path('aset/<int:id>/delete/', aset_delete, name='aset_delete'),
 
+
+    path('monitor/<str:idJLega>/', pmonitor, name="pmonitor"),
+    path('monitor/legalitas/<str:idJLega>/', pmonitorLegalitas, name="pmonitorLegalitas"),
+    path('monitor/aset/<str:idJLega>/', pmonitorAset, name="pmonitorAset"),
+    path('monitor/aproval/<str:idJLega>/', pmonitorAproval, name="pmonitorAproval"),
 
 
 ]

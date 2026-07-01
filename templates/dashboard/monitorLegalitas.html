@@ -1,0 +1,289 @@
+{% extends './layout.html' %}
+
+{% block content %}
+<div
+    class="grow p-6 lg:rounded-lg lg:bg-white lg:p-10 lg:shadow-xs lg:ring-1 lg:ring-zinc-950/5 dark:lg:bg-zinc-900 dark:lg:ring-white/10">
+
+    <div class="mx-auto max-w-6xl">
+
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl/8 font-semibold text-zinc-950 dark:text-white">
+                    Monitoring Legalitas
+                </h1>
+
+                <p class="text-sm text-zinc-500 mt-1">
+                    Monitoring kelengkapan legalitas dan approval lembaga
+                </p>
+            </div>
+
+            <button onclick="window.history.back()"
+                class="px-4 py-2 text-sm border rounded-lg hover:bg-zinc-100">
+                ← Kembali
+            </button>
+        </div>
+
+        <hr class="my-10 mt-6 w-full border-t border-zinc-950/10 dark:border-white/10">
+        
+        <div class="mb-8">
+
+            <div class="flex flex-wrap gap-2">
+
+                {% for item in menu_legalitas %}
+                <a href="{% url 'pmonitorLegalitas' item.idJLega %}"
+                class="px-4 py-2 rounded-lg border text-sm font-medium
+                {% if item.idJLega == currentJLega %}
+                        bg-blue-500 text-white border-blue-500
+                {% else %}
+                        bg-white hover:bg-zinc-100 text-zinc-700
+                {% endif %}">
+                    {{ item.idJLega }}
+                </a>
+                {% endfor %}
+
+            </div>
+
+        </div>
+        <hr class=" w-full border-t border-zinc-950/10 dark:border-white/10">
+        
+        <!-- PILIHAN LEMBAGA -->
+        <div class="mb-8">
+
+            <div class="flex flex-wrap gap-2">
+
+                {% for item in submenu %}
+
+                <a href="?idJLega={{ item.idJLega }}"
+                    class="px-4 py-2 rounded-lg border text-sm font-medium transition
+                    {% if item.idJLega == currentJLega %}
+                        bg-blue-500 text-white border-blue-500
+                    {% else %}
+                        bg-white text-zinc-700 border-zinc-300 hover:bg-zinc-100
+                    {% endif %}">
+                    {{ item.idJLega }}
+                </a>
+
+                {% endfor %}
+
+            </div>
+
+        </div>
+
+        <!-- SUMMARY -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+
+            <div class="bg-blue-500 text-white p-4 rounded-xl">
+                Kelompok
+                <div class="text-2xl font-bold">
+                    {{ summary.kelompok }}
+                </div>
+            </div>
+
+            <div class="bg-green-500 text-white p-4 rounded-xl">
+                Item Dokumen
+                <div class="text-2xl font-bold">
+                    {{ summary.dokumen }}
+                </div>
+            </div>
+
+            <div class="bg-emerald-600 text-white p-4 rounded-xl">
+                Lengkap
+                <div class="text-2xl font-bold">
+                    {{ summary.lengkap }}
+                </div>
+            </div>
+
+            <div class="bg-red-500 text-white p-4 rounded-xl">
+                Belum Lengkap 
+                <div class="text-2xl font-bold">
+                    {{ summary.kurang }}
+                </div>
+            </div>
+
+        </div>
+
+        <!-- CHART ROW 1 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+
+            <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow">
+                <h3 class="mb-4 font-semibold">
+                    Kelengkapan Legalitas
+                </h3>
+
+                <canvas id="chartKelengkapan"></canvas>
+            </div>
+
+            <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow">
+                <h3 class="mb-4 font-semibold">
+                    Approval Legalitas
+                </h3>
+
+                <canvas id="chartApproval"></canvas>
+            </div>
+
+        </div>
+
+        <!-- CHART ROW 2 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+
+            <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow">
+                <h3 class="mb-4 font-semibold">
+                    Dokumen Legalitas
+                </h3>
+
+                <canvas id="chartDokumen"></canvas>
+            </div>
+
+            <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow">
+                <h3 class="mb-4 font-semibold">
+                    Kelompok Belum Lengkap
+                </h3>
+
+                <canvas id="chartKelompokKurang"></canvas>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    // =====================
+    // KELENGKAPAN
+    // =====================
+
+    new Chart(document.getElementById('chartKelengkapan'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Lengkap', 'Belum Lengkap'],
+            datasets: [{
+                data: [
+                    {{ chartKelengkapan.lengkap }},
+                    {{ chartKelengkapan.kurang }}
+                ],
+                backgroundColor: [
+                    '#22c55e',
+                    '#ef4444'
+                ]
+            }]
+        }
+    });
+
+
+    // =====================
+    // APPROVAL
+    // =====================
+
+    
+    new Chart(document.getElementById('chartApproval'), {
+
+        type: 'bar',
+
+        data: {
+            labels: [
+                'Pengawal',
+                'Desa',
+                'Kecamatan'
+            ],
+            datasets: [
+                {
+                    label: 'Approve',
+                    data: [
+                        {{ chartApproval.pengawal_true }},
+                        {{ chartApproval.desa_true }},
+                        {{ chartApproval.kecamatan_true }}
+                    ],
+                    backgroundColor: '#22c55e'
+                },
+                {
+                    label: 'Belum Approve',
+                    data: [
+                        {{ chartApproval.pengawal_false }},
+                        {{ chartApproval.desa_false }},
+                        {{ chartApproval.kecamatan_false }}
+                    ],
+                    backgroundColor: '#ef4444'
+                }
+            ]
+        }
+
+    });
+
+
+
+    // =====================
+    // DOKUMEN LEGALITAS
+    // =====================
+
+    new Chart(document.getElementById('chartDokumen'), {
+
+        type: 'bar',
+
+        data: {
+            labels: [
+                {% for i in chartDokumen %}
+                    "{{ i.itemLegalitas__nmILega }}",
+                {% endfor %}
+            ],
+            datasets: [{
+                label: 'Jumlah',
+                data: [
+                    {% for i in chartDokumen %}
+                        {{ i.total }},
+                    {% endfor %}
+                ],
+                backgroundColor: '#3b82f6'
+            }]
+        },
+
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+
+    });
+
+
+    // =====================
+    // KELOMPOK BELUM LENGKAP
+    // =====================
+
+    new Chart(document.getElementById('chartKelompokKurang'), {
+
+        type: 'bar',
+
+        data: {
+            labels: [
+                {% for i in chartKelompokKurang %}
+                    "{{ i.nmKelo }}",
+                {% endfor %}
+            ],
+            datasets: [{
+                label: 'Dokumen Terisi',
+                data: [
+                    {% for i in chartKelompokKurang %}
+                        {{ i.total_legalitas }},
+                    {% endfor %}
+                ],
+                backgroundColor: '#f59e0b'
+            }]
+        },
+
+        options: {
+            indexAxis: 'y'
+        }
+
+    });
+
+});
+
+</script>
+
+{% endblock %}

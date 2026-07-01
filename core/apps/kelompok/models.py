@@ -1,6 +1,7 @@
 from django.db import models
 from core.apps.wilayah.models import Desa
 from core.apps.legalitas.models import ItemLegalitas
+from django.contrib.auth.models import User
 
 class Kelompok(models.Model):
     nmKelo = models.CharField(max_length=150)
@@ -93,3 +94,35 @@ class AsetKelompok(models.Model):
 
     def __str__(self):
         return f"{self.namaAset} ({self.kelompok.nmKelo})"
+
+
+from smart_selects.db_fields import ChainedForeignKey
+
+class WilayahPengawas(models.Model):
+
+    desa = models.ForeignKey(
+        Desa,
+        on_delete=models.CASCADE
+    )
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE
+    )
+
+    kelompok = ChainedForeignKey(
+        Kelompok,
+        chained_field="desa",
+        chained_model_field="desa",
+        show_all=False,
+        auto_choose=False,
+        sort=True,
+        on_delete=models.CASCADE,
+        
+        null=True,
+        blank=True
+
+    )
+
+    def __str__(self):
+        return f"{self.user} - {self.desa}"

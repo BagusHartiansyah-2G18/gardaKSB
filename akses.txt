@@ -1,5 +1,5 @@
-admin tidak usah wilayah, kalau ditentukan jadi batasan
-pengawas wajib memiliki wilayah agar dapat mengakses desa sesuai datanya
+admin, superuser tidak usah wilayah, kalau ditentukan jadi batasan
+pengawas, staf wajib memiliki wilayah agar dapat mengakses desa sesuai datanya
 
 
 tano,1tano2poto

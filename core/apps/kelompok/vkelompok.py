@@ -11,8 +11,17 @@ from core.utils import getWilaya,isakses
 from datetime import date
 
 @login_required
-def pkelompok(request):
-    qs = Kelompok.objects.select_related('desa', 'desa__kecamatan').all()
+def pkelompok(request,jenis):
+    # qs = Kelompok.objects.select_related('desa', 'desa__kecamatan').all()
+    
+    qs = (
+        Kelompok.objects
+        .select_related('desa', 'desa__kecamatan')
+        .filter(
+            legalitaskelompok__itemLegalitas__idJLega=jenis
+        )
+        # .distinct()
+    )
 
     search = request.GET.get('q')
     if search:
@@ -31,8 +40,7 @@ def pkelompok(request):
             qs = qs.filter(desa_id__in=desa_list)
         else:
             qs = qs.none()
-
-    print("TOTAL DATA:", qs.count())
+ 
 
     # ✅ pagination
     paginator = Paginator(qs, 10)
@@ -41,7 +49,8 @@ def pkelompok(request):
 
     return render(request, 'dashboard/kelompok.html', {
         'data': page_obj,
-        'search': search
+        'search': search,
+        'lembaga':jenis
     })
  
  

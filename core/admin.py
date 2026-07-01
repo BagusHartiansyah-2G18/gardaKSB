@@ -3,12 +3,14 @@ from django.urls import reverse
 from django.shortcuts import render,redirect
 from django.utils.html import format_html
 
-from core.apps.wilayah.models import Kecamatan, Desa, WilayahPengawas
+from core.apps.wilayah.models import Kecamatan, Desa
 from core.apps.legalitas.models import ItemLegalitas 
 from core.apps.keuangan.models import Pendapatan 
-from core.apps.kelompok.models import Kelompok, LegalitasKelompok,AnggotaKelompok,AsetKelompok
+from core.apps.kelompok.models import Kelompok, LegalitasKelompok,AnggotaKelompok,AsetKelompok,WilayahPengawas
 from core.apps.usaha.models import JenisUsaha, ListUsaha
 
+
+from django import forms
 
 
 
@@ -177,14 +179,69 @@ class PendapatanAdmin(admin.ModelAdmin):
 
 
 # ✅ WILAYAH PENGAWAS
+# @admin.register(WilayahPengawas)
+# class WilayahPengawasAdmin(admin.ModelAdmin):
+#     list_display = ('id', 'user', 'desa')
+#     search_fields = ('user__username', 'desa__nmDesa')
+#     list_filter = ('desa',) 
+
+class WilayahPengawasForm(forms.ModelForm):
+
+    class Meta:
+        model = WilayahPengawas
+        fields = "__all__"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields["desa"].queryset = Desa.objects.filter(
+            kelompok__isnull=False
+        ).distinct()
+
 @admin.register(WilayahPengawas)
 class WilayahPengawasAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'desa')
-    search_fields = ('user__username', 'desa__nmDesa')
-    list_filter = ('desa',)
+    form = WilayahPengawasForm
+    
+    list_display = (
+        "user",
+        "desa",
+        "get_kelompok",
+    )   
+    
+    list_filter = (
+        "user", 
+    )
 
+    search_fields = (
+        "user__username",
+        "user__first_name",
+        "user__last_name",
+        "desa__nmDesa",
+        "kelompok__nmKelo",
+    )
 
+    
+    def get_kelompok(self, obj):
+        return obj.kelompok.nmKelo if obj.kelompok else "-"
 
+    get_kelompok.short_description = "Kelompok"
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+
+        if db_field.name == "kelompok":
+
+            desa_id = request.GET.get("desa")
+
+            if desa_id:
+                kwargs["queryset"] = Kelompok.objects.filter(
+                    desa_id=desa_id
+                )
+
+        return super().formfield_for_foreignkey(
+            db_field,
+            request,
+            **kwargs
+        )
 
 @admin.register(AnggotaKelompok)
 class AnggotaAdmin(admin.ModelAdmin):
