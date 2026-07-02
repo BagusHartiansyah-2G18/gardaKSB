@@ -47,9 +47,30 @@ def getFilter(jenis=None, kelompok_id=None, id_jlega=None):
         ] = id_jlega
     return filters
 
+BULAN = {
+    1: 'Jan',
+    2: 'Feb',
+    3: 'Mar',
+    4: 'Apr',
+    5: 'Mei',
+    6: 'Jun',
+    7: 'Jul',
+    8: 'Agu',
+    9: 'Sep',
+    10: 'Okt',
+    11: 'Nov',
+    12: 'Des',
+}
+
 def chartPendBulanan(jenis=None, kelompok_id=None, id_jlega=None):
-    filters =getFilter(jenis,kelompok_id,id_jlega)
-    return (
+
+    filters = getFilter(
+        jenis,
+        kelompok_id,
+        id_jlega
+    )
+
+    data = (
         Pendapatan.objects
         .filter(**filters)
         .annotate(month=ExtractMonth("dateCreate"))
@@ -61,6 +82,18 @@ def chartPendBulanan(jenis=None, kelompok_id=None, id_jlega=None):
         )
         .order_by("month")
     )
+
+    hasil = []
+
+    for item in data:
+        hasil.append({
+            'bulan': BULAN[item['month']],
+            'pendapatan': item['pendapatan'] or 0,
+            'pengeluaran': item['pengeluaran'] or 0,
+            'laba': item['laba'] or 0,
+        })
+
+    return hasil
 
 def chartPendAll(jenis=None, kelompok_id=None, id_jlega=None):
     

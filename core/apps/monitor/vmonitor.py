@@ -17,7 +17,8 @@ def pmonitor(request,idJLega):
         'chartPendBulanan': chartPendBulanan(jenis='UMUM',id_jlega=idJLega), 
         'chartPendAll':chartPendAll(jenis='UMUM',id_jlega=idJLega),
         'chartPendJUsaha':chartPendJUsaha(jenis='UMUM',id_jlega=idJLega),
-        'chartKelompok':chartKelompok(id_jlega=idJLega)
+        'chartKelompok':chartKelompok(id_jlega=idJLega),
+        'currentJLega':idJLega
     })
  
  

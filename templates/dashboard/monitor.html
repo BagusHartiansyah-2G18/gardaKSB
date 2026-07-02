@@ -11,7 +11,27 @@
         </h1>
 
         <hr class="my-10 mt-6 w-full border-t border-zinc-950/10 dark:border-white/10">
+        <div class="mb-8">
 
+            <div class="flex flex-wrap gap-2">
+
+                {% for item in menu_legalitas %}
+                <a href="{% url 'pmonitorAproval' item.idJLega %}"
+                class="px-4 py-2 rounded-lg border text-sm font-medium
+                {% if item.idJLega == currentJLega %}
+                        bg-blue-500 text-white border-blue-500
+                {% else %}
+                        bg-white hover:bg-zinc-100 text-zinc-700
+                {% endif %}">
+                    {{ item.idJLega }}
+                </a>
+                {% endfor %}
+
+            </div>
+
+        </div>
+        <hr class=" w-full border-t my-2 border-zinc-950/10 dark:border-white/10">
+        
         <!-- KPI -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
 

@@ -9,7 +9,7 @@ from core.apps.keuangan.models import Pendapatan
 from core.apps.kelompok.models import Kelompok, LegalitasKelompok,AnggotaKelompok,AsetKelompok,WilayahPengawas
 from core.apps.usaha.models import JenisUsaha, ListUsaha
 
-
+from itertools import groupby
 from django import forms
 
 
@@ -143,23 +143,79 @@ class ListUsahaAdmin(admin.ModelAdmin):
     btnEdit.short_description = 'Aksi'
 
 
+class LegalitasKelompokForm(forms.ModelForm):
+
+    class Meta:
+        model = LegalitasKelompok
+        fields = "__all__"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        queryset = ItemLegalitas.objects.order_by(
+            'idJLega',
+            'nmILega'
+        )
+
+        choices = []
+
+        for id_jlega, items in groupby(
+            queryset,
+            lambda x: x.idJLega
+        ):
+
+            choices.append((
+                id_jlega,
+                [
+                    (item.id, item.nmILega)
+                    for item in items
+                ]
+            ))
+
+        self.fields['itemLegalitas'].choices = choices
+
+
 # ✅ LEGALITAS KELOMPOK
 @admin.register(LegalitasKelompok)
 class LegalitasKelompokAdmin(admin.ModelAdmin):
-    list_display = ('id', 'nama_kelompok', 'nama_itemLegalitas', 'value','btnEdit')
-    search_fields = ('kelompok__nmKelo', 'value')
-    list_filter = ('itemLegalitas__nmILega', 'aprovalPengawal', 'aprovalDesa', 'aprovalKec')
+
+    form = LegalitasKelompokForm
+
+    list_display = (
+        'id',
+        'nama_kelompok',
+        'jenis_legalitas',
+        'nama_itemLegalitas',
+        'value', 
+    )
+
+    search_fields = (
+        'kelompok__nmKelo',
+        'value'
+    )
+
+    list_filter = (
+        'itemLegalitas__idJLega',
+        'itemLegalitas__nmILega',
+        'aprovalPengawal',
+        'aprovalDesa',
+        'aprovalKec'
+    )
+
     def nama_kelompok(self, obj):
         return obj.kelompok.nmKelo
+
+    nama_kelompok.short_description = 'Kelompok'
+
+    def jenis_legalitas(self, obj):
+        return obj.itemLegalitas.idJLega
+
+    jenis_legalitas.short_description = 'Jenis'
+
     def nama_itemLegalitas(self, obj):
         return obj.itemLegalitas.nmILega
-    def btnEdit(self, obj):
-        url = reverse('admin:core_legalitaskelompok_change', args=[obj.id])
-        return format_html(
-            '<a class="button" href="{}" style="background:#3b82f6;color:white;padding:4px 10px;border-radius:6px;">Edit</a>',
-            url
-        )
-    btnEdit.short_description = 'Aksi'
+
+    nama_itemLegalitas.short_description = 'Item Legalitas'
 
 
 # ✅ PENDAPATAN

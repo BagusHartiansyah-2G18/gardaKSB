@@ -17,7 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path,include
 
-from core.views import home,login,login_view,seed_sumbawa,dashboard
+from core.views import home,login,login_view,seed_sumbawa,dashboard,early
 from core.apps.kelompok.vkelompok import pkelompok,pkelompokDetail,pkelompoAsetAdd,pkelompokAnggotaAdd,anggota_delete,aset_delete,legalitasApprove
 from core.apps.usaha.vusaha import pusaha
 from core.apps.keuangan.vkeuangan import pkeuangan,pkeuanganAdd,pkeuanganEdit,pendapatanApprove
@@ -51,8 +51,6 @@ urlpatterns = [
         name='pkeuanganEdit'
     ),
     path('pendapatan/approve/<int:id>/<str:key>/', pendapatanApprove, name='pendapatanApprove'),
-
-
     
     path('legalitas/approve/<int:id>/<str:key>/', legalitasApprove, name='legalitasApprove'),
     
@@ -65,6 +63,7 @@ urlpatterns = [
     
     path('anggota/<int:id>/delete/', anggota_delete, name='anggota_delete'),
     path('aset/<int:id>/delete/', aset_delete, name='aset_delete'),
+    path('early/', early, name='early'),
 
 
     path('monitor/<str:idJLega>/', pmonitor, name="pmonitor"),

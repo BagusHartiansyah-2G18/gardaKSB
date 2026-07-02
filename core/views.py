@@ -61,51 +61,7 @@ def login(request):
     })
 
 @login_required
-def dashboard(request):
-    
-    # total_kecamatan = Kecamatan.objects.count()
-    # total_desa = Desa.objects.count()
-    # total_kelompok = Kelompok.objects.count()
-    # total_usaha = ListUsaha.objects.count()
-
-    # # ✅ Distribusi jenis usaha
-    # jenis_usaha = ListUsaha.objects.values(
-    #     'jenisUsaha__nmJUsaha'
-    # ).annotate(total=Count('id')).order_by('-total')
-
-    # # ✅ Kelompok per kecamatan
-    # kelompok_per_kec = Kelompok.objects.values(
-    #     'desa__kecamatan__nmKec'
-    # ).annotate(total=Count('id')).order_by('-total')
-
-    # # ✅ Komoditas
-    # komoditas = ListUsaha.objects.values(
-    #     'komoditi'
-    # ).annotate(total=Count('id')).order_by('-total')
-
-    # # ✅ Status usaha
-    # status_usaha = ListUsaha.objects.values(
-    #     'status'
-    # ).annotate(total=Count('id'))
-
-    # # ✅ Top desa
-    # top_desa = Kelompok.objects.values(
-    #     'desa__nmDesa'
-    # ).annotate(total=Count('id')).order_by('-total')[:5]
-    
-    # return render(request, 'dashboard/dashboard.html', {
-    #     "summary": {
-    #             "kecamatan": total_kecamatan,
-    #             "desa": total_desa,
-    #             "kelompok": total_kelompok,
-    #             "usaha": total_usaha,
-    #     },
-    #     "jenis_usaha": list(jenis_usaha),
-    #     "kelompok_per_kecamatan": list(kelompok_per_kec),
-    #     "komoditas": list(komoditas),
-    #     "status": list(status_usaha),
-    #     "top_desa": list(top_desa),
-    # })
+def dashboard(request): 
 
     return render(request,'dashboard/dashboard.html',{
 
@@ -134,7 +90,7 @@ def dashboard(request):
         'warnings':earlyWarning()
     })
 
-
+@login_required
 def login_view(request):
     if request.method == 'POST':
         username = request.POST.get('username')
@@ -150,6 +106,11 @@ def login_view(request):
 
     return render(request, 'publik/login.html')
 
+@login_required
+def early(request):
+    return render(request,'dashboard/earlyWarning.html',{
+        'warnings':earlyWarning()
+    })
 
 
 

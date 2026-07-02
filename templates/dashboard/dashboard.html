@@ -148,12 +148,12 @@
                 <canvas id="lembagaChart"></canvas>
             </div>
 
-            <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow">
+           <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow" >
                 <h3 class="mb-4 font-semibold">
-                    Status Approval
+                    Tren Pendapatan
                 </h3>
 
-                <canvas id="approvalChart"></canvas>
+                <canvas id="pendapatanChart"></canvas>
             </div>
 
         </div>
@@ -161,12 +161,13 @@
         <!-- ROW 2 -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
 
-            <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow">
+            
+             <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow" >
                 <h3 class="mb-4 font-semibold">
-                    Tren Pendapatan
+                    Status Approval
                 </h3>
 
-                <canvas id="pendapatanChart"></canvas>
+                <canvas id="approvalChart"></canvas>
             </div>
 
             <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow">
@@ -217,7 +218,7 @@ document.addEventListener("DOMContentLoaded", function () {
         data: {
             labels: [
                 {% for i in chartLembaga %}
-                    "{{ i.idJLega }}",
+                    "{{ i.itemLegalitas__idJLega }}",
                 {% endfor %}
             ],
 
@@ -287,23 +288,53 @@ document.addEventListener("DOMContentLoaded", function () {
                 {% endfor %}
             ],
 
-            datasets: [{
-                label: 'Pendapatan',
+            datasets: [
+                {
+                    label: 'Pendapatan',
+                    data: [
+                        {% for i in chartPendBulanan %}
+                            {{ i.pendapatan|default:0 }},
+                        {% endfor %}
+                    ],
+                    borderColor: '#22c55e',
+                    backgroundColor: '#22c55e20',
+                    tension: 0.4
+                },
+                {
+                    label: 'Pengeluaran',
+                    data: [
+                        {% for i in chartPendBulanan %}
+                            {{ i.pengeluaran|default:0 }},
+                        {% endfor %}
+                    ],
+                    borderColor: '#ef4444',
+                    backgroundColor: '#ef444420',
+                    tension: 0.4
+                },
+                {
+                    label: 'Laba',
+                    data: [
+                        {% for i in chartPendBulanan %}
+                            {{ i.laba|default:0 }},
+                        {% endfor %}
+                    ],
+                    borderColor: '#3b82f6',
+                    backgroundColor: '#3b82f620',
+                    tension: 0.4
+                }
+            ]
+        },
 
-                data: [
-                    {% for i in chartPendBulanan %}
-                        {{ i.pendapatan }},
-                    {% endfor %}
-                ],
-
-                borderColor: '#22c55e',
-                backgroundColor: '#22c55e20',
-                tension: 0.4
-            }]
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
         }
 
     });
-
 
     // ========================
     // KONDISI ASET
