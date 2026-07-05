@@ -1,5 +1,4 @@
 {% extends './layout.html' %}
-
 {% block content %}
 
 <div
@@ -61,14 +60,14 @@
             <div class="bg-emerald-600 text-white p-4 rounded-xl">
                 Legalitas
                 <div class="text-2xl font-bold">
-                    {{ summary.legalitas }}
+                    {{ summaryLegalitas.lengkap|floatformat:0 }}
                 </div>
             </div>
 
             <div class="bg-purple-500 text-white p-4 rounded-xl">
                 Nilai Aset
                 <div class="text-lg font-bold">
-                    Rp {{ summary.nilai_aset|floatformat:0 }}
+                    Rp {{ summaryAset.nilai_aset|floatformat:0 }}
                 </div>
             </div>
 

@@ -16,7 +16,7 @@
             <div class="flex flex-wrap gap-2">
 
                 {% for item in menu_legalitas %}
-                <a href="{% url 'pmonitorAproval' item.idJLega %}"
+                <a href="{% url 'pmonitor' item.idJLega %}"
                 class="px-4 py-2 rounded-lg border text-sm font-medium
                 {% if item.idJLega == currentJLega %}
                         bg-blue-500 text-white border-blue-500

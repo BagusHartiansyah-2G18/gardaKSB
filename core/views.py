@@ -53,7 +53,10 @@ def home(request):
 
 
     return render(request, 'publik/home.html', {
-        'features': data
+        'features': data,
+        'chartLembaga': chartLembaga(),
+        'chartKelompok': chartKelompok(),
+
     })
 def login(request):
     return render(request, 'publik/login.html', {
@@ -62,7 +65,7 @@ def login(request):
 
 @login_required
 def dashboard(request): 
-
+    print(summaryAset())
     return render(request,'dashboard/dashboard.html',{
 
         'summary': summaryDashboard(),
@@ -90,7 +93,6 @@ def dashboard(request):
         'warnings':earlyWarning()
     })
 
-@login_required
 def login_view(request):
     if request.method == 'POST':
         username = request.POST.get('username')
