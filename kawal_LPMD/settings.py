@@ -23,11 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-j9mf#o%@q2l8s)r%!luw5dxlhsf%^kfc(&s$u2tr#20yd$*m95'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = []
-
-
+DEBUG = True 
 # Application definition
 
 INSTALLED_APPS = [
@@ -141,3 +137,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_URL = '/login/'
 LOGOUT_REDIRECT_URL = '/login/'
 LOGIN_REDIRECT_URL = '/dashboard/'
+
+ALLOWED_HOSTS = [
+    '127.0.0.1',
+    'localhost',
+    'lpmd.kabsumbawabarat.com',
+    'www.lpmd.kabsumbawabarat.com',
+]
