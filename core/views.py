@@ -21,7 +21,7 @@ import pandas as pd
 
 
 from django.db.models import Q,Count
-from core.utils import summaryDashboard,summaryApproval,chartApprovalModul,chartPendAll,chartPendBulanan,summaryLegalitas,chartKelengkapan,summaryAset,chartKondisiAset,chartLembaga,chartKelompok,chartAsetKelompok,warningApproval,summaryAnggota,chartStatusKelompok,getWilaya
+from core.utils import summaryDashboard,summaryApproval,chartApprovalModul,chartPendAll,chartPendBulanan,summaryLegalitas,chartKelengkapan,summaryAset,chartKondisiAset,chartLembaga,chartKelompok,chartAsetKelompok,warningApproval,summaryAnggota,chartStatusKelompok,getWilaya,chartPendJUsaha
  
 def home(request):
     data =  [
@@ -56,6 +56,16 @@ def home(request):
         'features': data,
         'chartLembaga': chartLembaga(request),
         'chartKelompok': chartKelompok(request),
+        
+        'chartPendBulanan': chartPendBulanan(request),
+        'chartPendJUsaha':chartPendJUsaha(request,jenis='UMUM'),
+        'chartKelengkapan': chartKelengkapan(request),
+
+        "aktif":chartStatusKelompok(request),
+        'summaryLegalitas': summaryLegalitas(request),
+
+
+
 
     })
 def login(request):
@@ -112,6 +122,8 @@ def dashboard(request):
         'chartPendBulanan': chartPendBulanan(request),
 
         'summaryLegalitas': summaryLegalitas(request),
+        'chartPendJUsaha':chartPendJUsaha(request,jenis='UMUM'),
+
         'chartKelengkapan': chartKelengkapan(request),
 
         'summaryAset': summaryAset(request),
