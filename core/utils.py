@@ -589,6 +589,27 @@ def summaryStatusKelompok(
         ) if total else 0
     }
 
+def chartStatusKelompok(
+        request=None,
+        id_jlega=None
+    ):
+
+    data = summaryStatusKelompok(
+        request,
+        id_jlega
+    )
+
+    return {
+        'labels': [
+            'Aktif',
+            'Tidak Aktif'
+        ],
+        'values': [
+            data['aktif'],
+            data['tidak_aktif']
+        ]
+    }
+
 def chartAsetBermasalah(
     request=None,
     id_jlega=None

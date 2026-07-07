@@ -21,7 +21,7 @@ import pandas as pd
 
 
 from django.db.models import Q,Count
-from core.utils import summaryDashboard,summaryApproval,chartApprovalModul,chartPendAll,chartPendBulanan,summaryLegalitas,chartKelengkapan,summaryAset,chartKondisiAset,chartLembaga,chartKelompok,chartAsetKelompok,warningApproval,summaryAnggota,summaryStatusKelompok,getWilaya
+from core.utils import summaryDashboard,summaryApproval,chartApprovalModul,chartPendAll,chartPendBulanan,summaryLegalitas,chartKelengkapan,summaryAset,chartKondisiAset,chartLembaga,chartKelompok,chartAsetKelompok,warningApproval,summaryAnggota,chartStatusKelompok,getWilaya
  
 def home(request):
     data =  [
@@ -100,8 +100,7 @@ def ajaxItemLegalitas(request):
 
 
 @login_required
-def dashboard(request):  
-    # print(chartKelompok(request)) 
+def dashboard(request):   
     return render(request,'dashboard/dashboard.html',{
 
         'summary': summaryDashboard(request),
@@ -127,7 +126,7 @@ def dashboard(request):
 
         'totalAnggota': summaryAnggota(request),
         'warnings':earlyWarning(request),
-        "aktif":summaryStatusKelompok(request)
+        "aktif":chartStatusKelompok(request)
     })
 
 def login_view(request):

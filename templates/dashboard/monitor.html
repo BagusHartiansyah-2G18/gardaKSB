@@ -76,7 +76,10 @@
                 <h3 class="mb-2 font-semibold">
                     Tren Pendapatan Bulanan
                 </h3>
-                <canvas id="chartBulanan"></canvas>
+
+                <div class="h-[300px] ">
+                    <canvas id="chartBulanan"></canvas>
+                </div>
             </div>
 
             <!-- JENIS USAHA -->
@@ -84,15 +87,32 @@
                 <h3 class="mb-2 font-semibold">
                     Pendapatan per Jenis Usaha
                 </h3>
-                <canvas id="chartJenisUsaha"></canvas>
+
+                <div class="h-[300px] flex items-center justify-center">
+                    <canvas id="chartJenisUsaha"></canvas>
+                </div>
             </div>
 
             <!-- TOP KELOMPOK -->
-            <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow md:col-span-2">
+            <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow">
                 <h3 class="mb-2 font-semibold">
                     Top Kelompok Berdasarkan Pendapatan
                 </h3>
-                <canvas id="chartKelompok"></canvas>
+
+                <div class="h-[300px]">
+                    <canvas id="chartKelompok"></canvas>
+                </div>
+            </div>
+
+            <!-- STATUS KEAKTIFAN -->
+            <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow">
+                <h3 class="mb-2 font-semibold">
+                    Status Keaktifan
+                </h3>
+
+                <div class="h-[300px]">
+                    <canvas id="aktifChart"></canvas>
+                </div>
             </div>
 
         </div>
@@ -219,6 +239,43 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
     });
+
+    new Chart(
+        document.getElementById('aktifChart'),
+        {
+            type: 'doughnut',
+
+            data: {
+                labels: [
+                    {% for i in aktif.labels %}
+                        "{{ i }}",
+                    {% endfor %}
+                ],
+
+                datasets: [{
+                    data: [
+                        {% for i in aktif.values %}
+                            {{ i }},
+                        {% endfor %}
+                    ],
+                    backgroundColor: [
+                        '#22c55e',
+                        '#ef4444'
+                    ]
+                }]
+            },
+
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        }
+    );
 
 });
 </script>

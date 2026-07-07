@@ -7,7 +7,7 @@ from django.contrib import messages
 from core.apps.kelompok.models import Kelompok,LegalitasKelompok,AnggotaKelompok,AsetKelompok
 from core.apps.usaha.models import ListUsaha
 from django.contrib.auth.decorators import login_required
-from core.utils import getWilaya,chartPendBulanan,chartPendAll,chartPendJUsaha,chartKelompok,subMenu,summaryLegalitas,chartKelengkapan,chartApproval,chartDokumen,chartKelompokKurang,summaryAset,chartKondisiAset,chartKategoriAset,chartAsetKelompok,chartAsetBermasalah,summaryApproval,chartApprovalModul,chartApprovalLevel,chartPendingModul,chartKelompokPending
+from core.utils import getWilaya,chartPendBulanan,chartPendAll,chartPendJUsaha,chartKelompok,subMenu,summaryLegalitas,chartKelengkapan,chartApproval,chartDokumen,chartKelompokKurang,summaryAset,chartKondisiAset,chartKategoriAset,chartAsetKelompok,chartAsetBermasalah,summaryApproval,chartApprovalModul,chartApprovalLevel,chartPendingModul,chartKelompokPending,chartStatusKelompok
 from datetime import date
 
 @login_required
@@ -18,7 +18,8 @@ def pmonitor(request,idJLega):
         'chartPendAll':chartPendAll(request,jenis='UMUM',id_jlega=idJLega),
         'chartPendJUsaha':chartPendJUsaha(request,jenis='UMUM',id_jlega=idJLega),
         'chartKelompok':chartKelompok(request,id_jlega=idJLega),
-        'currentJLega':idJLega
+        'currentJLega':idJLega,
+        "aktif":chartStatusKelompok(request)
     })
  
  

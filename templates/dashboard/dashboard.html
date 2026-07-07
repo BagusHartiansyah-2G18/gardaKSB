@@ -139,23 +139,56 @@
         <!-- ROW 1 -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
 
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+    <!-- BULANAN -->
+    <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow">
+        <h3 class="mb-2 font-semibold">
+            Tren Pendapatan Bulanan
+        </h3>
+
+        <div class="h-[500px]">
+            <canvas id="chartBulanan"></canvas>
+        </div>
+    </div>
+
+    <!-- KOLOM KANAN -->
+        <div class="flex flex-col gap-6">
+
             <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow">
-                <h3 class="mb-4 font-semibold">
-                    Sebaran Lembaga
+                <h3 class="mb-2 font-semibold">
+                    Pendapatan per Jenis Usaha
                 </h3>
 
-                <canvas id="lembagaChart"></canvas>
+                <div class="h-[220px]">
+                    <canvas id="chartJenisUsaha"></canvas>
+                </div>
             </div>
 
-           <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow" >
-                <h3 class="mb-4 font-semibold">
-                    Tren Pendapatan
+            <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow">
+                <h3 class="mb-2 font-semibold">
+                    Status Keaktifan
                 </h3>
 
-                <canvas id="pendapatanChart"></canvas>
+                <div class="h-[220px]">
+                    <canvas id="aktifChart"></canvas>
+                </div>
             </div>
 
         </div>
+
+        <!-- TOP KELOMPOK -->
+        <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow md:col-span-2">
+            <h3 class="mb-2 font-semibold">
+                Top Kelompok Berdasarkan Pendapatan
+            </h3>
+
+            <div class="h-[300px]">
+                <canvas id="chartKelompok"></canvas>
+            </div>
+        </div>
+ 
+</div>
 
         <!-- ROW 2 -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -203,6 +236,8 @@
     </div>
 </div>
 
+    {{ warningApproval|json_script:"warningApproval" }}
+
 <script>
 document.addEventListener("DOMContentLoaded", function () {
 
@@ -241,34 +276,35 @@ document.addEventListener("DOMContentLoaded", function () {
 
     });
 
+ 
+    
+    const canvas = document.getElementById('approvalChart');
 
-    // ========================
-    // STATUS APPROVAL
-    // ========================
+    
+    
+    
+    const warningApproval = JSON.parse(
+        document.getElementById('warningApproval').textContent
+    );
 
-    new Chart(document.getElementById('approvalChart'), {
+    const labels = Object.keys(warningApproval);
+    const values = Object.values(warningApproval);
 
-        type: 'doughnut',
-
+    new Chart(canvas, {
+        type: 'bar',
         data: {
-            labels: [
-                'Approve',
-                'Pending'
-            ],
-
+            labels: labels,
             datasets: [{
-                data: [
-                    {{ summaryApproval.approve }},
-                    {{ summaryApproval.pending }}
-                ],
-
+                label: 'Pending',
+                data: [1, 1, 0, 0],
                 backgroundColor: [
-                    '#22c55e',
-                    '#ef4444'
+                    '#ef4444',
+                    '#f59e0b',
+                    '#3b82f6',
+                    '#8b5cf6'
                 ]
             }]
         }
-
     });
 
 
@@ -340,7 +376,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // ========================
     // KONDISI ASET
-    // ========================
+    // =====================    ===
 
     new Chart(document.getElementById('asetChart'), {
 
@@ -441,6 +477,44 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
     });
+
+     
+    new Chart(
+        document.getElementById('aktifChart'),
+        {
+            type: 'doughnut',
+
+            data: {
+                labels: [
+                    {% for i in aktif.labels %}
+                        "{{ i }}",
+                    {% endfor %}
+                ],
+
+                datasets: [{
+                    data: [
+                        {% for i in aktif.values %}
+                            {{ i }},
+                        {% endfor %}
+                    ],
+                    backgroundColor: [
+                        '#22c55e',
+                        '#ef4444'
+                    ]
+                }]
+            },
+
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        }
+    );
 
 });
 </script>
