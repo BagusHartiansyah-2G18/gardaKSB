@@ -34,6 +34,7 @@
     <link rel="icon" href="/favicon.ico?favicon.0m..p4rocib1t.ico" sizes="48x48" type="image/x-icon">
     <script src="{% static 'assets/03~yq9q893hmn.js'%}" nomodule=""></script>
     <script src="{% static 'assets/05j62z02hzh1t.js'%}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body>
@@ -160,6 +161,26 @@
             </div>
         </div>
     </footer>
+    {% if messages %}
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+
+                {% for message in messages %}
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: '{% if message.tags == "error" %}error{% elif message.tags == "success" %}success{% else %}warning{% endif %}',
+                    title: '{{ message|escapejs }}',
+                    showConfirmButton: false,
+                    timer: 4000,
+                    timerProgressBar: true,
+                    background: '#fff'
+                });
+                {% endfor %}
+
+            });
+        </script>
+    {% endif %}
     <script src="{% static 'assets/0dplp6vf-6guo.js'%}" id="_R_" async=""></script>
     <script>(self.__next_f = self.__next_f || []).push([0])</script>
     <script>self.__next_f.push([1, "1:\"$Sreact.fragment\"\n2:I[39756,[\"{% static 'assets/01xlw8hd842-c.js\",\"{% static 'assets/0eewamb49pw7k.js\"],\"default\"]\n3:I[37457,[\"{% static 'assets/01xlw8hd842-c.js\",\"{% static 'assets/0eewamb49pw7k.js\"],\"default\"]\n4:I[2971,[\"{% static 'assets/01xlw8hd842-c.js\",\"{% static 'assets/0eewamb49pw7k.js\",\"{% static 'assets/0sc5rxit7_bnz.js\",\"{% static 'assets/162aewo.05s05.js\",\"{% static 'assets/0p5r0fso9vbul.js\"],\"Header\"]\n5:I[22016,[\"{% static 'assets/01xlw8hd842-c.js\",\"{% static 'assets/0eewamb49pw7k.js\",\"{% static 'assets/0sc5rxit7_bnz.js\",\"{% static 'assets/162aewo.05s05.js\",\"{% static 'assets/0p5r0fso9vbul.js\",\"{% static 'assets/0jsbnjts~wm~h.js\",\"{% static 'assets/04egontzae81q.js\"],\"\"]\n6:I[36934,[\"{% static 'assets/01xlw8hd842-c.js\",\"{% static 'assets/0eewamb49pw7k.js\",\"{% static 'assets/0sc5rxit7_bnz.js\",\"{% static 'assets/162aewo.05s05.js\",\"{% static 'assets/0p5r0fso9vbul.js\"],\"NavLinks\"]\n7:I[85437,[\"{% static 'assets/01xlw8hd842-c.js\",\"{% static 'assets/0eewamb49pw7k.js\",\"{% static 'assets/0sc5rxit7_bnz.js\",\"{% static 'assets/162aewo.05s05.js\",\"{% static 'assets/0p5r0fso9vbul.js\",\"{% static 'assets/0jsbnjts~wm~h.js\",\"{% static 'assets/04egontzae81q.js\"],\"Image\"]\nd:I[68027,[\"{% static 'assets/01xlw8hd842-c.js\",\"{% static 'assets/0eewamb49pw7k.js\"],\"default\",1]\n:HL[\"{% static 'assets/16.p7tfbzka_n.css\",\"style\"]\n:HL[\"/_next/static/media/83afe278b6a6bb3c-s.p.0q-301v4kxxnr.woff2\",\"font\",{\"crossOrigin\":\"\",\"type\":\"font/woff2\"}]\n"])</script>

@@ -1,7 +1,8 @@
 admin, superuser tidak usah wilayah, kalau ditentukan jadi batasan
 pengawas, staf wajib memiliki wilayah agar dapat mengakses desa sesuai datanya
+desa tidak usah wilayah, 
 
-
-tano,1tano2poto
-admtano,1desa2kec
-pengawastano1,1desa2kec 
+desa : pototano,1desa2kec
+pengawas: pototano1,1desa2kec
+kelompok: lawangdesa593, 1desa2kec
+admin : admtano, 1desa2kec

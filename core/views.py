@@ -7,19 +7,22 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from core.apps.wilayah.models import Kecamatan, Desa
 from core.apps.usaha.models import JenisUsaha,ListUsaha
-from core.apps.kelompok.models import Kelompok,AsetKelompok,LegalitasKelompok
+from core.apps.legalitas.models import ItemLegalitas
+
+from core.apps.kelompok.models import Kelompok,AsetKelompok,LegalitasKelompok,WilayahPengawas
 from core.apps.keuangan.models import Pendapatan
 
 from core.apps.keuangan.vkeuangan import pkeuangan
 from core.apps.kelompok.vkelompok import pkelompokDetail
 
+from django.http import JsonResponse
+
+import pandas as pd
+
 
 from django.db.models import Q,Count
-from core.utils import summaryDashboard,summaryApproval,chartApprovalModul,chartPendAll,chartPendBulanan,summaryLegalitas,chartKelengkapan,summaryAset,chartKondisiAset,chartLembaga,chartKelompok,chartAsetKelompok,warningApproval,summaryAnggota
-
-# Create your views here.
-
-
+from core.utils import summaryDashboard,summaryApproval,chartApprovalModul,chartPendAll,chartPendBulanan,summaryLegalitas,chartKelengkapan,summaryAset,chartKondisiAset,chartLembaga,chartKelompok,chartAsetKelompok,warningApproval,summaryAnggota,summaryStatusKelompok,getWilaya
+ 
 def home(request):
     data =  [
         {
@@ -47,15 +50,12 @@ def home(request):
             "deskripsi": "Kelompok masyarakat pengawas kegiatan kelautan dan perikanan",
             "url": "https://img.icons8.com/color/96/shield.png"
         }
-    ]
-
-
-
+    ] 
 
     return render(request, 'publik/home.html', {
         'features': data,
-        'chartLembaga': chartLembaga(),
-        'chartKelompok': chartKelompok(),
+        'chartLembaga': chartLembaga(request),
+        'chartKelompok': chartKelompok(request),
 
     })
 def login(request):
@@ -63,34 +63,71 @@ def login(request):
         'features': []
     })
 
+
+def ajaxItemLegalitas(request):
+
+    kelompok_id = request.GET.get(
+        'kelompok_id'
+    )
+
+    data = []
+
+    if kelompok_id:
+
+        try:
+
+            kelompok = Kelompok.objects.get(
+                pk=kelompok_id
+            )
+
+            data = list(
+                ItemLegalitas.objects.filter(
+                    idJLega__iexact=
+                    kelompok.jenisKelompok
+                ).values(
+                    'id',
+                    'nmILega'
+                )
+            )
+
+        except Kelompok.DoesNotExist:
+            pass
+
+    return JsonResponse(
+        data,
+        safe=False
+    )
+
+
 @login_required
-def dashboard(request): 
-    print(summaryAset())
+def dashboard(request):  
+    # print(chartKelompok(request)) 
     return render(request,'dashboard/dashboard.html',{
 
-        'summary': summaryDashboard(),
-        'summaryApproval': summaryApproval(),
+        'summary': summaryDashboard(request),
+        'summaryApproval': summaryApproval(None,request),
 
-        'chartApprovalModul': chartApprovalModul(),
+        'chartApprovalModul': chartApprovalModul(None,request),
 
-        'chartPendAll': chartPendAll(),
-        'chartPendBulanan': chartPendBulanan(),
+        'chartPendAll': chartPendAll(None,None,None,request),
+        'chartPendBulanan': chartPendBulanan(request),
 
-        'summaryLegalitas': summaryLegalitas(),
-        'chartKelengkapan': chartKelengkapan(),
+        'summaryLegalitas': summaryLegalitas(request),
+        'chartKelengkapan': chartKelengkapan(request),
 
-        'summaryAset': summaryAset(),
-        'chartKondisiAset': chartKondisiAset(),
+        'summaryAset': summaryAset(request),
+        'chartKondisiAset': chartKondisiAset(request),
 
-        'chartLembaga': chartLembaga(),
+        'chartLembaga': chartLembaga(request),
 
-        'chartKelompok': chartKelompok(),
-        'chartAsetKelompok': chartAsetKelompok(),
+        'chartKelompok': chartKelompok(request),
+        'chartAsetKelompok': chartAsetKelompok(request),
 
-        'warningApproval': warningApproval(),
+        'warningApproval': warningApproval(request),
 
-        'totalAnggota': summaryAnggota(),
-        'warnings':earlyWarning()
+        'totalAnggota': summaryAnggota(request),
+        'warnings':earlyWarning(request),
+        "aktif":summaryStatusKelompok(request)
     })
 
 def login_view(request):
@@ -111,18 +148,51 @@ def login_view(request):
 @login_required
 def early(request):
     return render(request,'dashboard/earlyWarning.html',{
-        'warnings':earlyWarning()
+        'warnings':earlyWarning(request)
     })
 
 
 
 from django.urls import reverse
 
-def earlyWarning():
+def earlyWarning(request):
 
     data = []
+ 
 
-    if AsetKelompok.objects.filter(
+    aset_qs = AsetKelompok.objects.all()
+    pendapatan_qs = Pendapatan.objects.all()
+    legalitas_qs = LegalitasKelompok.objects.all()
+
+    if request: 
+        wilayah = getWilaya(request)
+
+        if wilayah:
+            aset_qs = aset_qs.filter(
+                    Q(
+                        kelompok__desa_id__in=wilayah["desa_ids"]
+                    ) |
+                    Q(
+                        kelompok__id__in=wilayah["kelompok_ids"]
+                    )
+                ).distinct()    
+            pendapatan_qs = pendapatan_qs.filter(
+                    Q(
+                        usaha__kelompok__desa_id__in=wilayah["desa_ids"]
+                    ) |
+                    Q(
+                        usaha__kelompok__id__in=wilayah["kelompok_ids"]
+                    )
+                ).distinct()  
+            legalitas_qs = legalitas_qs.filter(
+                    Q(
+                        kelompok__desa_id__in=wilayah["desa_ids"]
+                    ) |
+                    Q(
+                        kelompok__id__in=wilayah["kelompok_ids"]
+                    )
+                ).distinct()   
+    if aset_qs.filter(
         kondisi='rusak'
     ).exists():
 
@@ -137,7 +207,7 @@ def earlyWarning():
         })
 
     rugi = (
-        Pendapatan.objects
+        pendapatan_qs
         .filter(
             laba__lt=0,
             jenis='UMUM'
@@ -154,7 +224,10 @@ def earlyWarning():
         data.append({
             'level': 'danger',
             'judul': 'Usaha Mengalami Kerugian',
-            'pesan': f'{rugi.usaha.kelompok.nmKelo} mengalami laba negatif.',
+            'pesan': (
+                f'{rugi.usaha.kelompok.nmKelo} '
+                f'mengalami laba negatif.'
+            ),
             'url': reverse(
                 'pkeuangan',
                 args=[
@@ -164,31 +237,37 @@ def earlyWarning():
             )
         })
 
-    
     pending = (
-        LegalitasKelompok.objects
-        .filter(aprovalKec=False)
-        .select_related('kelompok')
+        legalitas_qs
+        .filter(
+            aprovalKec=False
+        )
+        .select_related(
+            'kelompok'
+        )
         .first()
     )
-    
+
     if pending:
+
         data.append({
             'level': 'warning',
             'judul': 'Approval Legalitas',
-            'pesan': f'{pending.kelompok.nmKelo} belum disetujui.',
+            'pesan': (
+                f'{pending.kelompok.nmKelo} '
+                f'belum disetujui.'
+            ),
             'url': reverse(
                 'kelompok_detail',
                 args=[pending.kelompok.id]
             )
         })
 
-
     return data
 
 @api_view(['GET'])
 def seed_sumbawa(request):
-    # # KECAMATAN
+    # KECAMATAN
     # data_kecamatan = [
     #     {"id": 1, "nmKec": "Jereweh"},
     #     {"id": 2, "nmKec": "Taliwang"},
@@ -225,6 +304,9 @@ def seed_sumbawa(request):
     #         nmDesa=desa["nmDesa"],
     #         kecamatan_id=desa["kecamatan_id"]
     #     )
+
+    
+
     # return Response({"message": "Data Sumbawa Barat inserted ✅"})
     # data = [
     #     "Penangkapan",

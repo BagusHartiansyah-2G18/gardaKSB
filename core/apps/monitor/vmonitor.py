@@ -12,12 +12,12 @@ from datetime import date
 
 @login_required
 def pmonitor(request,idJLega): 
-    
+    # print(chartPendBulanan(request,jenis='UMUM',id_jlega=idJLega))
     return render(request, 'dashboard/monitor.html', {
-        'chartPendBulanan': chartPendBulanan(jenis='UMUM',id_jlega=idJLega), 
-        'chartPendAll':chartPendAll(jenis='UMUM',id_jlega=idJLega),
-        'chartPendJUsaha':chartPendJUsaha(jenis='UMUM',id_jlega=idJLega),
-        'chartKelompok':chartKelompok(id_jlega=idJLega),
+        'chartPendBulanan': chartPendBulanan(request,jenis='UMUM',id_jlega=idJLega), 
+        'chartPendAll':chartPendAll(request,jenis='UMUM',id_jlega=idJLega),
+        'chartPendJUsaha':chartPendJUsaha(request,jenis='UMUM',id_jlega=idJLega),
+        'chartKelompok':chartKelompok(request,id_jlega=idJLega),
         'currentJLega':idJLega
     })
  
@@ -26,11 +26,11 @@ def pmonitor(request,idJLega):
 def pmonitorLegalitas(request, idJLega): 
     
     return render(request,'dashboard/monitorLegalitas.html',{
-        'summary': summaryLegalitas(idJLega),
-        'chartKelengkapan': chartKelengkapan(idJLega),
-        'chartApproval': chartApproval(idJLega),
-        'chartDokumen': chartDokumen(idJLega),
-        'chartKelompokKurang': chartKelompokKurang(idJLega),
+        'summary': summaryLegalitas(request,idJLega),
+        'chartKelengkapan': chartKelengkapan(request,idJLega),
+        'chartApproval': chartApproval(request,idJLega),
+        'chartDokumen': chartDokumen(request,idJLega),
+        'chartKelompokKurang': chartKelompokKurang(request,idJLega),
         'subMenu':subMenu(),
         'currentJLega':idJLega
     })
@@ -39,14 +39,13 @@ def pmonitorLegalitas(request, idJLega):
 
 
 @login_required
-def pmonitorAset(request, idJLega):
-    print( chartApproval(idJLega))
+def pmonitorAset(request, idJLega): 
     return render(request,'dashboard/monitorAset.html',{
-        'summary': summaryAset(idJLega),
-        'chartKondisi': chartKondisiAset(idJLega),
-        'chartKategori': chartKategoriAset(idJLega),
-        'chartKelompok': chartAsetKelompok(idJLega),
-        'asetBermasalah': chartAsetBermasalah(idJLega),
+        'summary': summaryAset(request,idJLega),
+        'chartKondisi': chartKondisiAset(request,idJLega),
+        'chartKategori': chartKategoriAset(request,idJLega),
+        'chartKelompok': chartAsetKelompok(request,idJLega),
+        'asetBermasalah': chartAsetBermasalah(request,idJLega),
         'currentJLega':idJLega
     })
 
@@ -56,13 +55,13 @@ def pmonitorAset(request, idJLega):
 def pmonitorAproval(request, idJLega):
     
     return render(request,'dashboard/monitorApproval.html',{
-        'summary': summaryApproval(idJLega),
+        'summary': summaryApproval(request,idJLega),
 
-        'chartApprovalModul': chartApprovalModul(idJLega),
-        'chartApprovalLevel': chartApprovalLevel(idJLega),
+        'chartApprovalModul': chartApprovalModul(request,idJLega),
+        'chartApprovalLevel': chartApprovalLevel(request,idJLega),
 
-        'chartPendingModul': chartPendingModul(idJLega),
-        'chartKelompokPending': chartKelompokPending(idJLega),
+        'chartPendingModul': chartPendingModul(request,idJLega),
+        'chartKelompokPending': chartKelompokPending(request,idJLega),
         'currentJLega': idJLega
     })
 

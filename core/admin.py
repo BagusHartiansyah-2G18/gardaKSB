@@ -125,22 +125,110 @@ class KelompokAdmin(admin.ModelAdmin):
 
 # ✅ LIST USAHA
 @admin.register(ListUsaha)
+
 class ListUsahaAdmin(admin.ModelAdmin):
-    list_display = ('id', 'nama_kelompok', 'nama_jenisUsaha', 'komoditi','btnEdit')
-    search_fields = ('kelompok__nmKelo', 'komoditi')
-    list_filter = ('jenisUsaha__nmJUsaha','komoditi','status')
+    
+    autocomplete_fields = (
+        'kelompok',
+        'jenisUsaha',
+    )
+
+    list_display = (
+        'id',
+        'nama_kelompok',
+        'nama_jenisUsaha',
+    )
+
+    search_fields = (
+        'kelompok__nmKelo',
+    )
+
+    list_filter = (
+        'jenisUsaha',
+    )
+
     def nama_kelompok(self, obj):
         return obj.kelompok.nmKelo
+
     def nama_jenisUsaha(self, obj):
         return obj.jenisUsaha.nmJUsaha
 
-    def btnEdit(self, obj):
-        url = reverse('admin:core_listusaha_change', args=[obj.id])
-        return format_html(
-            '<a class="button" href="{}" style="background:#3b82f6;color:white;padding:4px 10px;border-radius:6px;">Edit</a>',
-            url
-        )
-    btnEdit.short_description = 'Aksi'
+    nama_kelompok.short_description = "Kelompok"
+    nama_jenisUsaha.short_description = "Jenis Usaha"
+
+ 
+
+
+
+
+
+# class LegalitasKelompokForm(forms.ModelForm):
+
+#     class Meta:
+#         model = LegalitasKelompok
+#         fields = "__all__"
+
+#     def __init__(self, *args, **kwargs):
+#         super().__init__(*args, **kwargs)
+
+#         queryset = ItemLegalitas.objects.order_by(
+#             'idJLega',
+#             'nmILega'
+#         )
+
+#         kelompok = None
+
+#         # Edit mode
+#         if self.instance.pk and self.instance.kelompok:
+#             kelompok = self.instance.kelompok
+
+#         # Add mode
+#         kelompok_id = self.data.get('kelompok')
+
+#         if kelompok_id:
+#             try:
+#                 kelompok = Kelompok.objects.get(
+#                     pk=kelompok_id
+#                 )
+#             except Kelompok.DoesNotExist:
+#                 pass
+
+#         # Filter sesuai jenis kelompok
+#         if kelompok:
+#             queryset = queryset.filter(
+#                 idJLega__iexact=kelompok.jenisKelompok
+#             )
+
+#         # Tetap grouping
+#         choices = []
+
+#         for id_jlega, items in groupby(
+#             queryset,
+#             key=lambda x: x.idJLega
+#         ):
+#             choices.append(
+#                 (
+#                     id_jlega,
+#                     [
+#                         (
+#                             item.id,
+#                             item.nmILega
+#                         )
+#                         for item in items
+#                     ]
+#                 )
+#             )
+
+#         self.fields['itemLegalitas'].choices = choices
+
+#         self.fields['kelompok'].queryset = (
+#             Kelompok.objects
+#             .select_related('desa')
+#             .order_by(
+#                 'desa__nmDesa',
+#                 'nmKelo'
+#             )
+#         )
 
 
 class LegalitasKelompokForm(forms.ModelForm):
@@ -157,41 +245,92 @@ class LegalitasKelompokForm(forms.ModelForm):
             'nmILega'
         )
 
-        choices = []
+        kelompok = None
 
-        for id_jlega, items in groupby(
-            queryset,
-            lambda x: x.idJLega
-        ):
+        if self.instance.pk and self.instance.kelompok:
+            kelompok = self.instance.kelompok
 
-            choices.append((
-                id_jlega,
-                [
-                    (item.id, item.nmILega)
-                    for item in items
-                ]
-            ))
+        kelompok_id = self.data.get('kelompok')
 
-        self.fields['itemLegalitas'].choices = choices
+        if kelompok_id:
+            try:
+                kelompok = Kelompok.objects.get(
+                    pk=kelompok_id
+                )
+            except Kelompok.DoesNotExist:
+                pass
+
+        if kelompok:
+            queryset = queryset.filter(
+                idJLega__iexact=
+                kelompok.jenisKelompok
+            )
+
+        self.fields[
+            'itemLegalitas'
+        ].queryset = queryset
+
+        self.fields[
+            'kelompok'
+        ].queryset = (
+            Kelompok.objects
+            .select_related('desa')
+            .order_by(
+                'desa__nmDesa',
+                'nmKelo'
+            )
+        )
+
+    def clean(self):
+        cleaned = super().clean()
+
+        kelompok = cleaned.get(
+            'kelompok'
+        )
+
+        item = cleaned.get(
+            'itemLegalitas'
+        )
+
+        if kelompok and item:
+
+            if (
+                kelompok.jenisKelompok.upper()
+                !=
+                item.idJLega.upper()
+            ):
+                raise forms.ValidationError(
+                    'Item Legalitas tidak sesuai dengan jenis kelompok'
+                )
+
+        return cleaned
+
 
 
 # ✅ LEGALITAS KELOMPOK
 @admin.register(LegalitasKelompok)
+
 class LegalitasKelompokAdmin(admin.ModelAdmin):
 
     form = LegalitasKelompokForm
+        
+    class Media:
+            js = (
+                'admin/js/legalitas_kelompok.js',
+            )
 
     list_display = (
         'id',
         'nama_kelompok',
         'jenis_legalitas',
         'nama_itemLegalitas',
-        'value', 
+        'value',
     )
 
     search_fields = (
         'kelompok__nmKelo',
-        'value'
+        'kelompok__desa__nmDesa',
+        'value',
     )
 
     list_filter = (
@@ -199,8 +338,22 @@ class LegalitasKelompokAdmin(admin.ModelAdmin):
         'itemLegalitas__nmILega',
         'aprovalPengawal',
         'aprovalDesa',
-        'aprovalKec'
+        'aprovalKec',
     )
+
+    autocomplete_fields = (
+        'kelompok',
+    )
+
+    def get_form(self, request, obj=None, **kwargs):
+
+        form = super().get_form(
+            request,
+            obj,
+            **kwargs
+        )
+
+        return form
 
     def nama_kelompok(self, obj):
         return obj.kelompok.nmKelo
@@ -221,9 +374,9 @@ class LegalitasKelompokAdmin(admin.ModelAdmin):
 # ✅ PENDAPATAN
 @admin.register(Pendapatan)
 class PendapatanAdmin(admin.ModelAdmin):
-    list_display = ('id', 'nama_usaha','nama_komoditi', 'nama_kelompok', 'pendapatan', 'pengeluaran')
+    list_display = ('id', 'nama_usaha', 'nama_kelompok', 'pendapatan', 'pengeluaran')
     search_fields = ('usaha__kelompok__nmKelo',)
-    list_filter = ('dateCreate', 'usaha__jenisUsaha__nmJUsaha', 'usaha__komoditi')
+    list_filter = ('dateCreate', 'usaha__jenisUsaha__nmJUsaha')
 
     def nama_kelompok(self, obj):
         return obj.usaha.kelompok.nmKelo
@@ -242,6 +395,8 @@ class PendapatanAdmin(admin.ModelAdmin):
 #     list_filter = ('desa',) 
 
 class WilayahPengawasForm(forms.ModelForm):
+    
+    
 
     class Meta:
         model = WilayahPengawas
@@ -257,7 +412,11 @@ class WilayahPengawasForm(forms.ModelForm):
 @admin.register(WilayahPengawas)
 class WilayahPengawasAdmin(admin.ModelAdmin):
     form = WilayahPengawasForm
-    
+    autocomplete_fields = (
+        'desa',
+        'kelompok',
+        'user',
+    )
     list_display = (
         "user",
         "desa",

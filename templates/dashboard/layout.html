@@ -37,10 +37,10 @@
     <script src="{% static 'assets/dashboard/0fnu9b0~3ptz1.js'%}"></script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Settings - Catalyst</title>
+    <title>Kawal LPDM</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
-
+    
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <link rel="icon" href="/favicon.ico?favicon.0ge~kozjzmhjf.ico" sizes="32x32" type="image/x-icon">
@@ -808,6 +808,31 @@
 
 
     </script>
+    
+    {% if messages %}
+        <div
+            x-data="{ show: true }"
+            x-show="show"
+            x-init="setTimeout(() => show = false, 3000)"
+            class="fixed top-4 right-4 z-50 space-y-2"
+        >
+            {% for message in messages %}
+                <div class="
+                    px-4 py-3 rounded shadow text-white
+                    {% if message.tags == 'error' %}
+                        bg-red-500
+                    {% elif message.tags == 'success' %}
+                        bg-green-500
+                    {% else %}
+                        bg-blue-500
+                    {% endif %}
+                ">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
 </body>
 
 </html>

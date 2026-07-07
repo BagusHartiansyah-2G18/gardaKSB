@@ -17,7 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path,include
 
-from core.views import home,login,login_view,seed_sumbawa,dashboard,early
+from core.views import home,login,login_view,seed_sumbawa,dashboard,early,ajaxItemLegalitas
 from core.apps.kelompok.vkelompok import pkelompok,pkelompokDetail,pkelompoAsetAdd,pkelompokAnggotaAdd,anggota_delete,aset_delete,legalitasApprove
 from core.apps.usaha.vusaha import pusaha
 from core.apps.keuangan.vkeuangan import pkeuangan,pkeuanganAdd,pkeuanganEdit,pendapatanApprove
@@ -43,6 +43,12 @@ urlpatterns = [
         name='pkeuanganAdd'
     ),
     
+    path(
+        'ajax/item-legalitas/',
+        ajaxItemLegalitas,
+        name='ajaxItemLegalitas'
+    ),
+
     path("chaining/", include("smart_selects.urls")),
 
     path(

@@ -275,65 +275,68 @@ document.addEventListener("DOMContentLoaded", function () {
     // ========================
     // TREN PENDAPATAN
     // ========================
-
-    new Chart(document.getElementById('pendapatanChart'), {
-
-        type: 'line',
-
-        data: {
-            labels: [
-                {% for i in chartPendBulanan %}
-                    "{{ i.bulan }}",
-                {% endfor %}
-            ],
-
-            datasets: [
-                {
-                    label: 'Pendapatan',
-                    data: [
-                        {% for i in chartPendBulanan %}
-                            {{ i.pendapatan|default:0 }},
-                        {% endfor %}
-                    ],
-                    borderColor: '#22c55e',
-                    backgroundColor: '#22c55e20',
-                    tension: 0.4
-                },
-                {
-                    label: 'Pengeluaran',
-                    data: [
-                        {% for i in chartPendBulanan %}
-                            {{ i.pengeluaran|default:0 }},
-                        {% endfor %}
-                    ],
-                    borderColor: '#ef4444',
-                    backgroundColor: '#ef444420',
-                    tension: 0.4
-                },
-                {
-                    label: 'Laba',
-                    data: [
-                        {% for i in chartPendBulanan %}
-                            {{ i.laba|default:0 }},
-                        {% endfor %}
-                    ],
-                    borderColor: '#3b82f6',
-                    backgroundColor: '#3b82f620',
-                    tension: 0.4
-                }
-            ]
+    
+    const chartData = [
+        {% for i in chartPendBulanan %}
+        {
+            bulan: "{{ i.bulan }}",
+            pendapatan: {{ i.pendapatan|default:0 }},
+            pengeluaran: {{ i.pengeluaran|default:0 }},
+            laba: {{ i.laba|default:0 }}
         },
+        {% endfor %}
+    ];
+ 
+    new Chart(
+        document.getElementById('pendapatanChart'),
+        {
+            type: 'line',
 
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: 'bottom'
+            data: {
+                labels: chartData.map(x => x.bulan),
+
+                datasets: [
+                    {
+                        label: 'Pendapatan',
+                        data: chartData.map(x => x.pendapatan),
+                        borderColor: '#22c55e',
+                        backgroundColor: '#22c55e20',
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Pengeluaran',
+                        data: chartData.map(x => x.pengeluaran),
+                        borderColor: '#ef4444',
+                        backgroundColor: '#ef444420',
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Laba',
+                        data: chartData.map(x => x.laba),
+                        borderColor: '#3b82f6',
+                        backgroundColor: '#3b82f620',
+                        tension: 0.4
+                    }
+                ]
+            },
+
+            options: {
+                responsive: true,
+
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                },
+
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
                 }
             }
         }
-
-    });
+    );
 
     // ========================
     // KONDISI ASET

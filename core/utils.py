@@ -1,7 +1,9 @@
 
 from core.apps.kelompok.models import WilayahPengawas
 
-from django.db.models import Sum,Count,Q
+from django.db.models.functions import Coalesce
+from django.db.models import Sum,Count,Q,F,Value ,DecimalField
+
 from django.db.models.functions import ExtractMonth
 from core.apps.kelompok.models import Kelompok,LegalitasKelompok,AnggotaKelompok,AsetKelompok
 from core.apps.wilayah.models import Kecamatan, Desa 
@@ -10,28 +12,129 @@ from core.apps.usaha.models import ListUsaha
 from core.apps.keuangan.models import Pendapatan 
 from core.apps.legalitas.models import ItemLegalitas
 
-def subMenu():
-    return ( ItemLegalitas.objects
-        .values('idJLega')
-        .distinct())
-def getWilaya(request):
+def subMenu(request=None):
+
+    qs = Kelompok.objects.all()
+
+    if request:
+        
+        wilayah = getWilaya(request)
+
+        if wilayah:
+            qs = qs.filter(
+                Q(
+                    desa_id__in=wilayah["desa_ids"]
+                ) |
+                Q(
+                    id__in=wilayah["kelompok_ids"]
+                )
+            ).distinct()
+
+    return (
+        qs.values( 
+            idJLega=F('jenisKelompok') 
+        )
+        .distinct()
+        .order_by(
+            'jenisKelompok'
+        )
+    ) 
+def getWilaya(request): 
+    if not request.user:
+        return None
+
     user = request.user
 
-    if user.is_superuser:
-        return None  # ✅ artinya semua akses
+    if not user.is_authenticated:
+        return None
 
-    return WilayahPengawas.objects.filter(
-        user=user
-    ).values_list('desa_id', flat=True).distinct()
-
-def isakses(request):
-    user = request.user
     if user.is_superuser:
         return None
-    elif user.is_staff:
-        return True
-    return False
 
+    wilayah = WilayahPengawas.objects.filter(
+        user=user
+    )
+
+    desa_ids = []
+    kelompok_ids = []
+
+    for item in wilayah:
+
+        if item.kelompok_id:
+            kelompok_ids.append(
+                item.kelompok_id
+            )
+        else:
+            desa_ids.append(
+                item.desa_id
+            )
+
+    return {
+        "desa_ids": desa_ids,
+        "kelompok_ids": kelompok_ids
+    }
+
+def get_wilayah_qs(request):
+
+    qs = Kelompok.objects.all()
+
+    wilayah = getWilaya(request)
+
+    if not wilayah:
+        return qs
+
+    desa_ids = wilayah.get('desa_ids', [])
+    kelompok_ids = wilayah.get('kelompok_ids', [])
+
+    return qs.filter(
+        Q(desa_id__in=desa_ids) |
+        Q(id__in=kelompok_ids)
+    ).distinct()
+
+
+
+def filterWilayahPendapatan(qs, request=None):
+
+    if not request:
+        return qs
+
+    wilayah = getWilaya(request)
+
+    if wilayah:
+        qs = qs.filter(
+                Q(
+                    usaha__kelompok__desa_id__in=wilayah["desa_ids"]
+                ) |
+                Q(
+                    usaha__kelompok__id__in=wilayah["kelompok_ids"]
+                )
+            ).distinct() 
+    return qs
+
+
+def isakses(request):
+
+    user = request.user
+
+    if user.is_superuser:
+        return 'KECAMATAN'
+
+    wilayah = WilayahPengawas.objects.filter(
+        user=user
+    )
+
+    # Pengawal = ada kelompok spesifik
+    if wilayah.filter(
+        kelompok__isnull=False
+    ).exists():
+        return 'PENGAWAL'
+
+    # Desa = hanya desa
+    if user.is_staff:
+        return 'DESA'
+
+    return None
+    
 def getFilter(jenis=None, kelompok_id=None, id_jlega=None):
     filters = {}
 
@@ -43,7 +146,7 @@ def getFilter(jenis=None, kelompok_id=None, id_jlega=None):
 
     if id_jlega:
         filters[
-            'usaha__kelompok__legalitaskelompok__itemLegalitas__idJLega'
+            'usaha__kelompok__jenisKelompok__iexact'
         ] = id_jlega
     return filters
 
@@ -62,18 +165,43 @@ BULAN = {
     12: 'Des',
 }
 
-def chartPendBulanan(jenis=None, kelompok_id=None, id_jlega=None):
+
+
+def chartPendBulanan(
+        request=None,
+        jenis=None,
+        kelompok_id=None,
+        id_jlega=None
+    ):
 
     filters = getFilter(
         jenis,
         kelompok_id,
         id_jlega
+    ) 
+     
+    qs = Pendapatan.objects.filter(
+        **filters
     )
+     
+    if request:
+        wilayah = getWilaya(request)
+
+        if wilayah:
+            qs = qs.filter(
+                    Q(
+                        usaha__kelompok__desa_id__in=wilayah["desa_ids"]
+                    ) |
+                    Q(
+                        usaha__kelompok__id__in=wilayah["kelompok_ids"]
+                    )
+                ).distinct()  
 
     data = (
-        Pendapatan.objects
-        .filter(**filters)
-        .annotate(month=ExtractMonth("dateCreate"))
+        qs
+        .annotate(
+            month=ExtractMonth("dateCreate")
+        )
         .values("month")
         .annotate(
             pendapatan=Sum("pendapatan"),
@@ -86,6 +214,7 @@ def chartPendBulanan(jenis=None, kelompok_id=None, id_jlega=None):
     hasil = []
 
     for item in data:
+
         hasil.append({
             'bulan': BULAN[item['month']],
             'pendapatan': item['pendapatan'] or 0,
@@ -95,10 +224,31 @@ def chartPendBulanan(jenis=None, kelompok_id=None, id_jlega=None):
 
     return hasil
 
-def chartPendAll(jenis=None, kelompok_id=None, id_jlega=None):
-    
-    filters =getFilter(jenis,kelompok_id,id_jlega)
-    qs = Pendapatan.objects.filter(**filters)
+
+
+
+
+def chartPendAll(
+    request=None,
+    jenis=None,
+    kelompok_id=None,
+    id_jlega=None
+):
+
+    filters = getFilter(
+        jenis,
+        kelompok_id,
+        id_jlega
+    )
+
+    qs = Pendapatan.objects.filter(
+        **filters
+    )
+
+    qs = filterWilayahPendapatan(
+        qs,
+        request
+    )
 
     return qs.aggregate(
         total_pendapatan=Sum('pendapatan'),
@@ -106,12 +256,41 @@ def chartPendAll(jenis=None, kelompok_id=None, id_jlega=None):
         total_laba=Sum('laba')
     )
 
-def chartPendJUsaha(jenis=None, kelompok_id=None, id_jlega=None):
-    filters =getFilter(jenis,kelompok_id,id_jlega)
+
+
+
+def chartPendJUsaha(
+        request=None,
+        jenis=None,
+        kelompok_id=None,
+        id_jlega=None
+    ):
+
+    filters = getFilter(
+        jenis,
+        kelompok_id,
+        id_jlega
+    )
+
+    qs = Pendapatan.objects.filter(
+        **filters
+    )
+
+    if request:
+        wilayah = getWilaya(request)
+
+        if wilayah:
+            qs = qs.filter(
+                    Q(
+                        usaha__kelompok__desa_id__in=wilayah["desa_ids"]
+                    ) |
+                    Q(
+                        usaha__kelompok__id__in=wilayah["kelompok_ids"]
+                    )
+                ).distinct()  
+
     return (
-        Pendapatan.objects
-        .filter(**filters)
-        .values(
+        qs.values(
             'usaha__jenisUsaha__nmJUsaha'
         )
         .annotate(
@@ -120,13 +299,36 @@ def chartPendJUsaha(jenis=None, kelompok_id=None, id_jlega=None):
         .order_by('-total')
     )
 
-def chartKelompok(id_jlega=None):
 
-    filters = getFilter(None,None,id_jlega)
+def chartKelompok(
+        request=None,
+        id_jlega=None
+    ):
+
+    filters = getFilter(
+        None,
+        None,
+        id_jlega
+    )
+
+    qs = Pendapatan.objects.filter(
+        **filters
+    )
+
+    if request:
+        wilayah = getWilaya(request)
+
+        if wilayah:
+            qs = qs.filter(
+                    Q(
+                        usaha__kelompok__desa_id__in=wilayah["desa_ids"]
+                    ) |
+                    Q(
+                        usaha__kelompok__id__in=wilayah["kelompok_ids"]
+                    )
+                ).distinct()  
     return (
-        Pendapatan.objects
-        .filter(**filters)
-        .values(
+        qs.values(
             'usaha__kelompok__nmKelo'
         )
         .annotate(
@@ -175,17 +377,40 @@ def chartAnggotaAll():
         legalitaskelompok__itemLegalitas__idJLega='BUMDES'
     ).distinct().count()
 
-def summaryAset(id_jlega='BUMDES'):
 
-    qs = AsetKelompok.objects.filter(
-        kelompok__legalitaskelompok__itemLegalitas__idJLega=id_jlega
-    )
 
+def summaryAset(
+        request,
+        id_jlega=None
+    ):
+
+    qs = AsetKelompok.objects.all()
+
+    if id_jlega:
+        qs = qs.filter(
+            kelompok__jenisKelompok__iexact=id_jlega
+        )
+    
+    if request:
+        wilayah = getWilaya(request)
+
+        if wilayah:
+            qs = qs.filter(
+                    Q(
+                        kelompok__desa_id__in=wilayah["desa_ids"]
+                    ) |
+                    Q(
+                        kelompok__id__in=wilayah["kelompok_ids"]
+                    )
+                ).distinct()  
     return {
         'total_aset': qs.count(),
-        'nilai_aset': qs.aggregate(
-            total=Sum('nilai')
-        )['total'] or 0,
+
+        'nilai_aset': (
+            qs.aggregate(
+                total=Sum('nilai')
+            )['total'] or 0
+        ),
 
         'baik': qs.filter(
             kondisi='baik'
@@ -195,30 +420,78 @@ def summaryAset(id_jlega='BUMDES'):
             kondisi='rusak'
         ).count(),
     }
-def chartKondisiAset(id_jlega='BUMDES'):
 
-    qs = AsetKelompok.objects.filter(
-        kelompok__legalitaskelompok__itemLegalitas__idJLega=id_jlega
-    )
+
+
+def chartKondisiAset(
+    request,
+    id_jlega=None
+):
+
+    qs = AsetKelompok.objects.all()
+
+    if id_jlega:
+        qs = qs.filter(
+            kelompok__jenisKelompok__iexact=id_jlega
+        )
+    if request:
+        wilayah = getWilaya(request)
+
+        if wilayah:
+            qs = qs.filter(
+                    Q(
+                        kelompok__desa_id__in=wilayah["desa_ids"]
+                    ) |
+                    Q(
+                        kelompok__id__in=wilayah["kelompok_ids"]
+                    )
+                ).distinct()   
 
     return {
-        'baik': qs.filter(kondisi='baik').count(),
+        'baik': qs.filter(
+            kondisi='baik'
+        ).count(),
+
         'perlu': qs.filter(
             kondisi='perlu_perbaikan'
         ).count(),
+
         'rusak': qs.filter(
             kondisi='rusak'
         ).count()
     }
 
-def chartKategoriAset(id_jlega='BUMDES'):
+
+
+def chartKategoriAset(
+    request,
+    id_jlega=None
+):
+
+    qs = AsetKelompok.objects.all()
+
+    if id_jlega:
+        qs = qs.filter(
+            kelompok__jenisKelompok__iexact=id_jlega
+        )
+
+    if request:
+        wilayah = getWilaya(request)
+
+        if wilayah:
+            qs = qs.filter(
+                    Q(
+                        kelompok__desa_id__in=wilayah["desa_ids"]
+                    ) |
+                    Q(
+                        kelompok__id__in=wilayah["kelompok_ids"]
+                    )
+                ).distinct()  
 
     return (
-        AsetKelompok.objects
-        .filter(
-            kelompok__legalitaskelompok__itemLegalitas__idJLega=id_jlega
+        qs.values(
+            'kategori'
         )
-        .values('kategori')
         .annotate(
             total=Count('id')
         )
@@ -226,45 +499,156 @@ def chartKategoriAset(id_jlega='BUMDES'):
     )
 
 
-def chartAsetKelompok(id_jlega='BUMDES'):
+
+
+
+def chartAsetKelompok(
+    request,
+    id_jlega=None
+):
+
+    qs = AsetKelompok.objects.all()
+
+    if id_jlega:
+        qs = qs.filter(
+            kelompok__jenisKelompok__iexact=id_jlega
+        )
+
+    if request:
+        wilayah = getWilaya(request)
+
+        if wilayah:
+            qs = qs.filter(
+                    Q(
+                        kelompok__desa_id__in=wilayah["desa_ids"]
+                    ) |
+                    Q(
+                        kelompok__id__in=wilayah["kelompok_ids"]
+                    )
+                ).distinct()  
 
     return (
-        AsetKelompok.objects
-        .filter(
-            kelompok__legalitaskelompok__itemLegalitas__idJLega=id_jlega
-        )
-        .values(
+        qs.values(
             'kelompok__nmKelo'
         )
         .annotate(
-            total=Sum('nilai')
+            total=Coalesce(
+                Sum('nilai'),
+                Value(0),
+                output_field=DecimalField(
+                    max_digits=18,
+                    decimal_places=2
+                )
+            )
         )
         .order_by('-total')
     )
 
-def chartAsetBermasalah(id_jlega='BUMDES'):
 
-    return (
-        AsetKelompok.objects
-        .filter(
-            kelompok__legalitaskelompok__itemLegalitas__idJLega=id_jlega
+
+def summaryStatusKelompok(
+        request,
+        id_jlega=None
+    ):
+
+    qs = Kelompok.objects.all()
+    if request:
+        wilayah = getWilaya(request)
+
+        if wilayah:
+            qs = qs.filter(
+                    Q(
+                        desa_id__in=wilayah["desa_ids"]
+                    ) |
+                    Q(
+                        id__in=wilayah["kelompok_ids"]
+                    )
+                ).distinct()    
+    if id_jlega:
+        qs = qs.filter(
+            jenisKelompok__iexact=id_jlega
         )
-        .exclude(
-            kondisi='baik'
+
+    aktif = qs.filter(
+        statusOperasional__iexact='Aktif'
+    ).count()
+
+    tidak_aktif = qs.filter(
+        statusOperasional__iexact='Tidak Aktif'
+    ).count()
+
+    total = qs.count()
+
+    return {
+        'total': total,
+        'aktif': aktif,
+        'tidak_aktif': tidak_aktif,
+        'persen_aktif': round(
+            (aktif / total) * 100,
+            1
+        ) if total else 0
+    }
+
+def chartAsetBermasalah(
+    request=None,
+    id_jlega=None
+):
+
+    qs = AsetKelompok.objects.exclude(
+        kondisi='baik'
+    )
+
+    if id_jlega:
+        qs = qs.filter(
+            kelompok__jenisKelompok__iexact=id_jlega
         )
-        .select_related(
-            'kelompok'
-        )
+
+    if request:
+
+        wilayah = getWilaya(request)
+
+        if wilayah:
+            qs = qs.filter(
+                Q(
+                    kelompok__desa_id__in=wilayah["desa_ids"]
+                ) |
+                Q(
+                    kelompok_id__in=wilayah["kelompok_ids"]
+                )
+            ).distinct()
+
+    return qs.select_related(
+        'kelompok',
+        'kelompok__desa'
     )
 
 
 
-def summaryLegalitas(id_jlega='BUMDES'):
 
+
+def summaryLegalitas(
+    request,
+    id_jlega='BUMDES'
+):
+
+    kelompok = Kelompok.objects.all()
+
+    if request:
+        wilayah = getWilaya(request)
+
+        if wilayah:
+            kelompok = kelompok.filter(
+                    Q(
+                        desa_id__in=wilayah["desa_ids"]
+                    ) |
+                    Q(
+                        id__in=wilayah["kelompok_ids"]
+                    )
+                ).distinct()    
     total_kelompok = (
-        Kelompok.objects
+        kelompok
         .filter(
-            legalitaskelompok__itemLegalitas__idJLega=id_jlega
+            jenisKelompok__iexact=id_jlega
         )
         .distinct()
         .count()
@@ -279,13 +663,17 @@ def summaryLegalitas(id_jlega='BUMDES'):
     )
 
     kelompok = (
-        Kelompok.objects
+        kelompok
+        .filter(
+            jenisKelompok__iexact=id_jlega
+        )
         .annotate(
             total_legalitas=Count(
                 'legalitaskelompok',
                 filter=Q(
                     legalitaskelompok__itemLegalitas__idJLega=id_jlega
-                )
+                ),
+                distinct=True
             )
         )
     )
@@ -301,22 +689,47 @@ def summaryLegalitas(id_jlega='BUMDES'):
         'kurang': total_kelompok - lengkap,
     }
 
-def chartKelengkapan(id_jlega='BUMDES'):
 
-    summary = summaryLegalitas(id_jlega)
+def chartKelengkapan(
+        request,
+        id_jlega='BUMDES'
+    ):
+
+    summary = summaryLegalitas(
+        request,
+        id_jlega
+    )
 
     return {
         'lengkap': summary['lengkap'],
         'kurang': summary['kurang']
     }
 
-def chartApproval(id_jlega='BUMDES'):
 
-    qs = LegalitasKelompok.objects.filter(
-        itemLegalitas__idJLega=id_jlega
-    )
+def chartApproval(
+    request=None,
+    id_jlega=None
+):
 
-    total = qs.count()
+    qs = LegalitasKelompok.objects.all()
+
+    if id_jlega:
+        qs = qs.filter(
+            itemLegalitas__idJLega__iexact=id_jlega
+        )
+
+    if request: 
+        wilayah = getWilaya(request)
+
+        if wilayah:
+            qs = qs.filter(
+                    Q(
+                        kelompok__desa_id__in=wilayah["desa_ids"]
+                    ) |
+                    Q(
+                        kelompok__id__in=wilayah["kelompok_ids"]
+                    )
+                ).distinct()    
 
     return {
         'pengawal_true': qs.filter(
@@ -345,14 +758,35 @@ def chartApproval(id_jlega='BUMDES'):
     }
 
 
-def chartDokumen(id_jlega='BUMDES'):
+
+
+def chartDokumen(
+        request=None,
+        id_jlega=None
+    ):
+
+    qs = LegalitasKelompok.objects.all()
+
+    if id_jlega:
+        qs = qs.filter(
+            itemLegalitas__idJLega__iexact=id_jlega
+        )
+
+    if request:
+        wilayah = getWilaya(request)
+
+        if wilayah:
+            qs = qs.filter(
+                    Q(
+                        kelompok__desa_id__in=wilayah["desa_ids"]
+                    ) |
+                    Q(
+                        kelompok__id__in=wilayah["kelompok_ids"]
+                    )
+                ).distinct()    
 
     return (
-        LegalitasKelompok.objects
-        .filter(
-            itemLegalitas__idJLega=id_jlega
-        )
-        .values(
+        qs.values(
             'itemLegalitas__nmILega'
         )
         .annotate(
@@ -360,20 +794,63 @@ def chartDokumen(id_jlega='BUMDES'):
         )
         .order_by('-total')
     )
-def chartKelompokKurang(id_jlega='BUMDES'):
 
-    total_item = ItemLegalitas.objects.filter(
-        idJLega=id_jlega
-    ).count()
+
+def chartKelompokKurang(
+        request=None,
+        id_jlega=None
+    ):
+
+    qs = Kelompok.objects.all()
+
+    if request: 
+        wilayah = getWilaya(request)
+
+        if wilayah:
+            qs = qs.filter(
+                    Q(
+                        desa_id__in=wilayah["desa_ids"]
+                    ) |
+                    Q(
+                        id__in=wilayah["kelompok_ids"]
+                    )
+                ).distinct()    
+
+    if not id_jlega:
+
+        return (
+            qs.annotate(
+                total_legalitas=Count(
+                    'legalitaskelompok',
+                    distinct=True
+                )
+            )
+            .values(
+                'nmKelo',
+                'total_legalitas'
+            )
+            .order_by('total_legalitas')
+        )
+
+    total_item = (
+        ItemLegalitas.objects
+        .filter(
+            idJLega__iexact=id_jlega
+        )
+        .count()
+    )
 
     return (
-        Kelompok.objects
+        qs.filter(
+            jenisKelompok__iexact=id_jlega
+        )
         .annotate(
             total_legalitas=Count(
                 'legalitaskelompok',
                 filter=Q(
-                    legalitaskelompok__itemLegalitas__idJLega=id_jlega
-                )
+                    legalitaskelompok__itemLegalitas__idJLega__iexact=id_jlega
+                ),
+                distinct=True
             )
         )
         .filter(
@@ -383,8 +860,12 @@ def chartKelompokKurang(id_jlega='BUMDES'):
             'nmKelo',
             'total_legalitas'
         )
-        .order_by('total_legalitas')
+        .order_by(
+            'total_legalitas',
+            'nmKelo'
+        )
     )
+
 def tableLegalitas(id_jlega='BUMDES'):
 
     return (
@@ -401,19 +882,50 @@ def tableLegalitas(id_jlega='BUMDES'):
         )
     )
 
-def summaryApproval(id_jlega=None):
 
-    legalitas = LegalitasKelompok.objects.all()
 
-    pendapatan = Pendapatan.objects.all()
+def summaryApproval(
+    request=None,
+    id_jlega=None
+):
+
+    kelompok_qs = Kelompok.objects.all()
+
+    if request:
+
+        wilayah = getWilaya(request)
+
+        if wilayah:
+            kelompok_qs = kelompok_qs.filter(
+                Q(
+                    desa_id__in=wilayah["desa_ids"]
+                ) |
+                Q(
+                    id__in=wilayah["kelompok_ids"]
+                )
+            ).distinct()
+
+    kelompok_ids = kelompok_qs.values_list(
+        'id',
+        flat=True
+    )
+
+    legalitas = LegalitasKelompok.objects.filter(
+        kelompok_id__in=kelompok_ids
+    )
+
+    pendapatan = Pendapatan.objects.filter(
+        usaha__kelompok_id__in=kelompok_ids
+    )
 
     if id_jlega:
+
         legalitas = legalitas.filter(
-            itemLegalitas__idJLega=id_jlega
+            itemLegalitas__idJLega__iexact=id_jlega
         )
 
         pendapatan = pendapatan.filter(
-            usaha__kelompok__legalitaskelompok__itemLegalitas__idJLega=id_jlega
+            usaha__kelompok__jenisKelompok__iexact=id_jlega
         )
 
     total = (
@@ -422,8 +934,13 @@ def summaryApproval(id_jlega=None):
     )
 
     approve = (
-        legalitas.filter(aprovalKec=True).count() +
-        pendapatan.filter(aprovalKec=True).count()
+        legalitas.filter(
+            aprovalKec=True
+        ).count()
+        +
+        pendapatan.filter(
+            aprovalKec=True
+        ).count()
     )
 
     return {
@@ -435,38 +952,70 @@ def summaryApproval(id_jlega=None):
             1
         ) if total else 0
     }
-def chartApprovalModul(id_jlega=None):
 
-    legalitas = LegalitasKelompok.objects.all()
+
+
+def chartApprovalModul(
+    request=None,
+    id_jlega=None
+):
+
+    kelompok_qs = Kelompok.objects.all()
+
+    if request:
+
+        wilayah = getWilaya(request)
+
+        if wilayah:
+            kelompok_qs = kelompok_qs.filter(
+                Q(
+                    desa_id__in=wilayah["desa_ids"]
+                ) |
+                Q(
+                    id__in=wilayah["kelompok_ids"]
+                )
+            ).distinct()
+
+    kelompok_ids = kelompok_qs.values_list(
+        'id',
+        flat=True
+    )
+
+    legalitas = LegalitasKelompok.objects.filter(
+        kelompok_id__in=kelompok_ids
+    )
 
     umum = Pendapatan.objects.filter(
+        usaha__kelompok_id__in=kelompok_ids,
         jenis='UMUM'
     )
 
     pades = Pendapatan.objects.filter(
+        usaha__kelompok_id__in=kelompok_ids,
         jenis='PADES'
     )
 
     pajak = Pendapatan.objects.filter(
+        usaha__kelompok_id__in=kelompok_ids,
         jenis='PAJAK'
     )
 
     if id_jlega:
 
         legalitas = legalitas.filter(
-            itemLegalitas__idJLega=id_jlega
+            itemLegalitas__idJLega__iexact=id_jlega
         )
 
         umum = umum.filter(
-            usaha__kelompok__legalitaskelompok__itemLegalitas__idJLega=id_jlega
+            usaha__kelompok__jenisKelompok__iexact=id_jlega
         )
 
         pades = pades.filter(
-            usaha__kelompok__legalitaskelompok__itemLegalitas__idJLega=id_jlega
+            usaha__kelompok__jenisKelompok__iexact=id_jlega
         )
 
         pajak = pajak.filter(
-            usaha__kelompok__legalitaskelompok__itemLegalitas__idJLega=id_jlega
+            usaha__kelompok__jenisKelompok__iexact=id_jlega
         )
 
     return [
@@ -507,73 +1056,203 @@ def chartApprovalModul(id_jlega=None):
             ).count()
         }
     ]
-def chartApprovalLevel(id_jlega):
 
-    legalitas = LegalitasKelompok.objects.filter(
-        itemLegalitas__idJLega=id_jlega
-    )
 
-    pendapatan = Pendapatan.objects.filter(
-        usaha__kelompok__legalitaskelompok__itemLegalitas__idJLega=id_jlega
-    )
+def chartApprovalLevel(
+    request=None,
+    id_jlega=None
+):
+
+    legalitas = LegalitasKelompok.objects.all()
+    pendapatan = Pendapatan.objects.all()
+
+    if request:
+
+        wilayah = getWilaya(request)
+
+        if wilayah:
+
+            legalitas = legalitas.filter(
+                Q(
+                    kelompok__desa_id__in=wilayah["desa_ids"]
+                ) |
+                Q(
+                    kelompok_id__in=wilayah["kelompok_ids"]
+                )
+            ).distinct()
+
+            pendapatan = pendapatan.filter(
+                Q(
+                    usaha__kelompok__desa_id__in=wilayah["desa_ids"]
+                ) |
+                Q(
+                    usaha__kelompok_id__in=wilayah["kelompok_ids"]
+                )
+            ).distinct()
+
+    if id_jlega:
+
+        legalitas = legalitas.filter(
+            itemLegalitas__idJLega__iexact=id_jlega
+        )
+
+        pendapatan = pendapatan.filter(
+            usaha__kelompok__jenisKelompok__iexact=id_jlega
+        )
 
     return {
         'pengawal': (
-            legalitas.filter(aprovalPengawal=True).count()
+            legalitas.filter(
+                aprovalPengawal=True
+            ).count()
             +
-            pendapatan.filter(aprovalPengawal=True).count()
+            pendapatan.filter(
+                aprovalPengawal=True
+            ).count()
         ),
 
         'desa': (
-            legalitas.filter(aprovalDesa=True).count()
+            legalitas.filter(
+                aprovalDesa=True
+            ).count()
             +
-            pendapatan.filter(aprovalDesa=True).count()
+            pendapatan.filter(
+                aprovalDesa=True
+            ).count()
         ),
 
         'kecamatan': (
-            legalitas.filter(aprovalKec=True).count()
+            legalitas.filter(
+                aprovalKec=True
+            ).count()
             +
-            pendapatan.filter(aprovalKec=True).count()
+            pendapatan.filter(
+                aprovalKec=True
+            ).count()
         )
     }
-def chartPendingModul(id_jlega):
+
+
+def chartPendingModul(
+    request=None,
+    id_jlega=None
+):
+
+    legalitas = LegalitasKelompok.objects.filter(
+        aprovalKec=False
+    )
+
+    pendapatan = Pendapatan.objects.filter(
+        jenis='UMUM',
+        aprovalKec=False
+    )
+
+    pades = Pendapatan.objects.filter(
+        jenis='PADES',
+        aprovalKec=False
+    )
+
+    pajak = Pendapatan.objects.filter(
+        jenis='PAJAK',
+        aprovalKec=False
+    )
+
+    if request:
+
+        wilayah = getWilaya(request)
+
+        if wilayah:
+
+            legalitas = legalitas.filter(
+                Q(
+                    kelompok__desa_id__in=wilayah["desa_ids"]
+                ) |
+                Q(
+                    kelompok_id__in=wilayah["kelompok_ids"]
+                )
+            ).distinct()
+
+            pendapatan = pendapatan.filter(
+                Q(
+                    usaha__kelompok__desa_id__in=wilayah["desa_ids"]
+                ) |
+                Q(
+                    usaha__kelompok_id__in=wilayah["kelompok_ids"]
+                )
+            ).distinct()
+
+            pades = pades.filter(
+                Q(
+                    usaha__kelompok__desa_id__in=wilayah["desa_ids"]
+                ) |
+                Q(
+                    usaha__kelompok_id__in=wilayah["kelompok_ids"]
+                )
+            ).distinct()
+
+            pajak = pajak.filter(
+                Q(
+                    usaha__kelompok__desa_id__in=wilayah["desa_ids"]
+                ) |
+                Q(
+                    usaha__kelompok_id__in=wilayah["kelompok_ids"]
+                )
+            ).distinct()
+
+    if id_jlega:
+
+        legalitas = legalitas.filter(
+            itemLegalitas__idJLega__iexact=id_jlega
+        )
+
+        pendapatan = pendapatan.filter(
+            usaha__kelompok__jenisKelompok__iexact=id_jlega
+        )
+
+        pades = pades.filter(
+            usaha__kelompok__jenisKelompok__iexact=id_jlega
+        )
+
+        pajak = pajak.filter(
+            usaha__kelompok__jenisKelompok__iexact=id_jlega
+        )
 
     return {
-        'legalitas':
-            LegalitasKelompok.objects.filter(
-                itemLegalitas__idJLega=id_jlega,
-                aprovalKec=False
-            ).count(),
+        'legalitas': legalitas.count(),
+        'pendapatan': pendapatan.count(),
+        'pades': pades.count(),
+        'pajak': pajak.count(),
+    }
 
-        'pendapatan':
-            Pendapatan.objects.filter(
-                jenis='UMUM',
-                aprovalKec=False,
-                usaha__kelompok__legalitaskelompok__itemLegalitas__idJLega=id_jlega
-            ).count(),
 
-        'pades':
-            Pendapatan.objects.filter(
-                jenis='PADES',
-                aprovalKec=False,
-                usaha__kelompok__legalitaskelompok__itemLegalitas__idJLega=id_jlega
-            ).count(),
+def chartKelompokPending(
+    request=None,
+    id_jlega=None
+):
 
-        'pajak':
-            Pendapatan.objects.filter(
-                jenis='PAJAK',
-                aprovalKec=False,
-                usaha__kelompok__legalitaskelompok__itemLegalitas__idJLega=id_jlega
-            ).count()
-    } 
-def chartKelompokPending(id_jlega):
+    qs = Kelompok.objects.all()
+
+    if request:
+
+        wilayah = getWilaya(request)
+
+        if wilayah:
+            qs = qs.filter(
+                Q(
+                    desa_id__in=wilayah["desa_ids"]
+                ) |
+                Q(
+                    id__in=wilayah["kelompok_ids"]
+                )
+            ).distinct()
+
+    if id_jlega:
+        qs = qs.filter(
+            jenisKelompok__iexact=id_jlega
+        )
 
     return (
-        Kelompok.objects
-        .filter(
-            legalitaskelompok__itemLegalitas__idJLega=id_jlega
-        )
-        .annotate(
+        qs.annotate(
             pending_legalitas=Count(
                 'legalitaskelompok',
                 filter=Q(
@@ -581,65 +1260,179 @@ def chartKelompokPending(id_jlega):
                 )
             )
         )
+        .filter(
+            pending_legalitas__gt=0
+        )
         .values(
             'nmKelo',
             'pending_legalitas'
         )
-        .order_by('-pending_legalitas')[:10]
+        .order_by(
+            '-pending_legalitas',
+            'nmKelo'
+        )[:10]
     )
 
 
-def summaryDashboard():
+
+def summaryDashboard(request=None):
+    
+    kelompok_qss = Kelompok.objects.all()
+    dusaha = ListUsaha.objects.all()
+    danggota = AnggotaKelompok.objects.all()
+    daset = AsetKelompok.objects.all()
+
+    kelompok_qs =[]
+    if request: 
+        kelompok_qs = getWilaya(request) 
+        if(kelompok_qs):
+            kelompok_qss = kelompok_qss.filter(
+                Q(
+                    desa_id__in=kelompok_qs["desa_ids"]
+                ) |
+                Q(
+                    id__in=kelompok_qs["kelompok_ids"]
+                )
+            ).distinct()
+
+            dusaha = dusaha.filter(
+                Q(
+                    kelompok__desa_id__in=kelompok_qs["desa_ids"]
+                ) |
+                Q(
+                    kelompok_id__in=kelompok_qs["kelompok_ids"]
+                )
+            ).distinct()
+            danggota = danggota.filter(
+                Q(
+                    kelompok__desa_id__in=kelompok_qs["desa_ids"]
+                ) |
+                Q(
+                    kelompok_id__in=kelompok_qs["kelompok_ids"]
+                )
+            ).distinct()
+            daset = daset.filter(
+                Q(
+                    kelompok__desa_id__in=kelompok_qs["desa_ids"]
+                ) |
+                Q(
+                    kelompok_id__in=kelompok_qs["kelompok_ids"]
+                )
+            ).distinct()
+ 
 
     return {
         'kecamatan': Kecamatan.objects.count(),
 
-        'desa': Desa.objects.count(),
+        'desa': kelompok_qss.values(
+            'desa_id'
+        ).distinct().count(),
 
-        'kelompok': Kelompok.objects.count(),
+        'kelompok': kelompok_qss.count(),
 
-        'usaha': ListUsaha.objects.count(),
+        'usaha': dusaha.count(),
 
-        'anggota': AnggotaKelompok.objects.count(),
+        'anggota': danggota.count(),
 
-        'aset': AsetKelompok.objects.count(),
+        'aset': daset.count(),
     }
 
-def summaryAnggota():
-    return AnggotaKelompok.objects.count()
 
-def warningApproval():
 
+def summaryAnggota(request):
+
+    qs = AnggotaKelompok.objects.all()
+
+    if request: 
+        wilayah = getWilaya(request)
+
+        if wilayah:
+            qs = qs.filter(
+                    Q(
+                        kelompok__desa_id__in=wilayah["desa_ids"]
+                    ) |
+                    Q(
+                        kelompok__id__in=wilayah["kelompok_ids"]
+                    )
+                ).distinct()    
+    return qs.count()
+
+def warningApproval(request):
+    legalitas = LegalitasKelompok.objects.all()
+
+    pendapatan = Pendapatan.objects.all()
+    if request: 
+        wilayah = getWilaya(request)
+
+        if wilayah:
+            legalitas = legalitas.filter(
+                    Q(
+                        kelompok__desa_id__in=wilayah["desa_ids"]
+                    ) |
+                    Q(
+                        kelompok__id__in=wilayah["kelompok_ids"]
+                    )
+                ).distinct()    
+            pendapatan = pendapatan.filter(
+                    Q(
+                        usaha__kelompok__desa_id__in=wilayah["desa_ids"]
+                    ) |
+                    Q(
+                        usaha__kelompok__id__in=wilayah["kelompok_ids"]
+                    )
+                ).distinct()    
+     
     return {
-        'legalitas': LegalitasKelompok.objects.filter(
+        'legalitas': legalitas.filter(
             aprovalKec=False
         ).count(),
 
-        'pendapatan': Pendapatan.objects.filter(
+        'pendapatan': pendapatan.filter(
             jenis='UMUM',
             aprovalKec=False
         ).count(),
 
-        'pades': Pendapatan.objects.filter(
+        'pades': pendapatan.filter(
             jenis='PADES',
             aprovalKec=False
         ).count(),
 
-        'pajak': Pendapatan.objects.filter(
+        'pajak': pendapatan.filter(
             jenis='PAJAK',
             aprovalKec=False
         ).count()
     }
 
-def chartLembaga():
 
+
+
+
+def chartLembaga(request):
+
+    qs = Kelompok.objects.all()
+
+    if request: 
+        wilayah = getWilaya(request)
+
+        if wilayah:
+            qs = qs.filter(
+                    Q(
+                        desa_id__in=wilayah["desa_ids"]
+                    ) |
+                    Q(
+                        id__in=wilayah["kelompok_ids"]
+                    )
+                ).distinct()    
+ 
     return (
-        LegalitasKelompok.objects
-        .values(
-            'itemLegalitas__idJLega'
+        qs.values(
+            itemLegalitas__idJLega=F(
+                'jenisKelompok'
+            )
         )
         .annotate(
-            total=Count('kelompok', distinct=True)
+            total=Count('id')
         )
         .order_by('-total')
     )
+

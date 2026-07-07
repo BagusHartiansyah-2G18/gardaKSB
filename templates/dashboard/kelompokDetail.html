@@ -86,12 +86,21 @@
               <th class="px-6 py-3 text-left">Item</th>
               <th class="px-6 py-3 text-left">Value</th>
               
-              {% if isakses %}
-                <th class="px-6 py-3 text-left">Pengawas</th>
-              {% elif isakses is None %}
-                <th class="px-6 py-3 text-left">Kecamatan</th>
-              {% else %}
-                <th class="px-6 py-3 text-left">Desa</th>
+              {% if isakses == 'PENGAWAL' %}
+                  <th class="px-6 py-3 text-left">
+                      Pengawas
+                  </th>
+
+              {% elif isakses == 'DESA' %}
+                  <th class="px-6 py-3 text-left">
+                      Desa
+                  </th>
+
+              {% elif isakses == 'KECAMATAN' %}
+                  <th class="px-6 py-3 text-left">
+                      Kecamatan
+                  </th>
+
               {% endif %}
             </tr>
           </thead>
@@ -103,69 +112,88 @@
 
               <!-- ITEM -->
               <td class="px-6 py-4 font-medium">
-                {{ item.itemLegalitas.nmILega }}
+                {{ item.item.nmILega }}
               </td>
 
               <!-- VALUE -->
               <td class="px-6 py-4">
-                {{ item.value|default:"-" }}
+                {{ item.data.value |default:"-" }}
               </td>  
               
               <!-- APPROVAL DESA -->
+              
               <td class="px-6 py-4">
-                {% if isakses %}
-                  {% if not item.aprovalPengawal %}
-                    <span class="px-2 py-1 text-xs rounded
-                      {% if item.aprovalPengawal %}
-                        bg-green-100 text-green-700
+
+                  {% if not item.data %}
+
+                      <span class="px-2 py-1 text-xs rounded bg-gray-100 text-gray-500">
+                          Belum Diinput
+                      </span>
+
+                  {% elif isakses == 'PENGAWAL' %}
+
+                      {% if item.data.aprovalPengawal %}
+                          <span class="px-2 py-1 text-xs rounded bg-green-100 text-green-700">
+                              Approve
+                          </span>
+
+                      {% elif item.data.ketPengawal %}
+                          <span class="px-2 py-1 text-xs rounded bg-red-100 text-red-700">
+                              Ditolak
+                          </span>
+
                       {% else %}
-                        bg-gray-100 text-gray-500
+                          <button
+                              onclick="openModal('{{ item.data.id }}','aprovalPengawal')"
+                              class="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600">
+                              Approve
+                          </button>
                       {% endif %}
-                    ">
-                      {{ item.aprovalPengawal|yesno:"Approve,Ditolak" }}
-                    </span>
-                  {% else %}
-                    <button onclick="openModal({{ item.id }},'aprovalPengawal')"
-                      class="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600">
-                      Approve
-                    </button>
+
+                  {% elif isakses == 'DESA' %}
+
+                      {% if item.data.aprovalDesa %}
+                          <span class="px-2 py-1 text-xs rounded bg-green-100 text-green-700">
+                              Approve
+                          </span>
+
+                      {% elif item.data.ketDesa %}
+                          <span class="px-2 py-1 text-xs rounded bg-red-100 text-red-700">
+                              Ditolak
+                          </span>
+
+                      {% else %}
+                          <button
+                              onclick="openModal('{{ item.data.id }}','aprovalDesa')"
+                              class="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600">
+                              Approve
+                          </button>
+                      {% endif %}
+
+                  {% elif isakses == 'KECAMATAN' %}
+
+                      {% if item.data.aprovalKec %}
+                          <span class="px-2 py-1 text-xs rounded bg-green-100 text-green-700">
+                              Approve
+                          </span>
+
+                      {% elif item.data.ketKec %}
+                          <span class="px-2 py-1 text-xs rounded bg-red-100 text-red-700">
+                              Ditolak
+                          </span>
+
+                      {% else %}
+                          <button
+                              onclick="openModal('{{ item.data.id }}','aprovalKec')"
+                              class="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600">
+                              Approve
+                          </button>
+                      {% endif %}
+
                   {% endif %}
-                {% elif isakses is None %}
-                  {% if not item.aprovalKec %}
-                    <span class="px-2 py-1 text-xs rounded
-                      {% if item.aprovalKec %}
-                        bg-green-100 text-green-700
-                      {% else %}
-                        bg-gray-100 text-gray-500
-                      {% endif %}
-                    ">
-                      {{ item.aprovalKec|yesno:"Approve,Ditolak" }}
-                    </span>
-                  {% else %}
-                    <button onclick="openModal({{ item.id }},'aprovalKec')"
-                      class="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600">
-                      Approve
-                    </button>
-                  {% endif %} 
-                {% else %}
-                  {% if not item.aprovalKec %}
-                    <span class="px-2 py-1 text-xs rounded
-                      {% if item.aprovalDesa %}
-                        bg-green-100 text-green-700
-                      {% else %}
-                        bg-gray-100 text-gray-500
-                      {% endif %}
-                    ">
-                      {{ item.aprovalDesa|yesno:"Approve,Ditolak" }}
-                    </span>
-                  {% else %}
-                    <button onclick="openModal({{ item.id }},'aprovalDesa')"
-                      class="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600">
-                      Approve
-                    </button>
-                  {% endif %} 
-                {% endif %}
-              </td>   
+
+              </td>
+
             </tr>
             {% empty %}
             <tr>
@@ -195,21 +223,7 @@
 
       </div>
       
-      {% if messages %}
-        <div class="space-y-2 mb-4">
-          {% for message in messages %}
-            <div class="px-4 py-2 rounded text-sm
-              {% if message.tags == 'success' %}
-                bg-green-100 text-green-700
-              {% elif message.tags == 'error' %}
-                bg-red-100 text-red-700
-              {% endif %}
-            ">
-              {{ message }}
-            </div>
-          {% endfor %}
-        </div>
-      {% endif %}
+       
 
       <div class="overflow-x-auto">
         <table class="min-w-full">
@@ -450,6 +464,8 @@
 
 <script>
   function openModal(id,key) {
+      console.log("mdl-clk");
+      
       document.getElementById("modal-approve").classList.remove("hidden");
 
       // set id ke input hidden
