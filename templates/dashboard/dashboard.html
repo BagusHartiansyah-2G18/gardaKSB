@@ -144,12 +144,15 @@
                 <h3 class="mb-4 font-semibold">Tren Pendapatan Bulanan</h3>
                 <canvas id="chartBulanan"></canvas>
             </div>
-
+            <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow">
+                <h3 class="mb-4 font-semibold">Lembaga</h3>
+                <canvas id="lembagaChart"></canvas>
+            </div>
             <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow">
                 <h3 class="mb-4 font-semibold">Pendapatan per Jenis Usaha</h3>
                 <canvas id="chartJenisUsaha"></canvas>
             </div>
-
+            
             <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow">
                 <h3 class="mb-4 font-semibold">Status Keaktifan</h3>
                 <div class="relative h-64">
@@ -296,36 +299,36 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
     });
-    // new Chart(document.getElementById('lembagaChart'), {
+    new Chart(document.getElementById('lembagaChart'), {
 
-    //     type: 'pie',
+        type: 'pie',
 
-    //     data: {
-    //         labels: [
-    //             {% for i in chartLembaga %}
-    //                 "{{ i.itemLegalitas__idJLega }}",
-    //             {% endfor %}
-    //         ],
+        data: {
+            labels: [
+                {% for i in chartLembaga %}
+                    "{{ i.itemLegalitas__idJLega }}",
+                {% endfor %}
+            ],
 
-    //         datasets: [{
-    //             data: [
-    //                 {% for i in chartLembaga %}
-    //                     {{ i.total }},
-    //                 {% endfor %}
-    //             ],
+            datasets: [{
+                data: [
+                    {% for i in chartLembaga %}
+                        {{ i.total }},
+                    {% endfor %}
+                ],
 
-    //             backgroundColor: [
-    //                 '#3b82f6',
-    //                 '#22c55e',
-    //                 '#f59e0b',
-    //                 '#ef4444',
-    //                 '#8b5cf6',
-    //                 '#06b6d4'
-    //             ]
-    //         }]
-    //     }
+                backgroundColor: [
+                    '#3b82f6',
+                    '#22c55e',
+                    '#f59e0b',
+                    '#ef4444',
+                    '#8b5cf6',
+                    '#06b6d4'
+                ]
+            }]
+        }
 
-    // });
+    });
 
  
     
