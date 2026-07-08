@@ -11,6 +11,10 @@ from core.apps.usaha.models import ListUsaha
 
 from core.apps.keuangan.models import Pendapatan 
 from core.apps.legalitas.models import ItemLegalitas
+import requests
+import aiohttp
+from aiohttp import FormData
+
 
 def subMenu(request=None):
 
@@ -92,6 +96,40 @@ def get_wilayah_qs(request):
     ).distinct()
 
 
+
+
+def send(message: str, target: str) -> bool:
+    try:
+        payload = {
+            "target": target,
+            "message": message,
+            "countryCode": "62",
+        }
+
+        resp = requests.post(
+            "https://api.fonnte.com/send",
+            headers={
+                "Authorization": "rGkDFJZnxeprGTKcV78S"
+            },
+            data=payload,
+            timeout=30
+        )
+
+        try:
+            result = resp.json()
+        except Exception:
+            result = {}
+
+        print("[Fonnte]", resp.status_code, result)
+
+        if resp.status_code >= 400 or result.get("status") is False:
+            return False
+
+        return True
+
+    except Exception as e:
+        print(e)
+        return False
 
 def filterWilayahPendapatan(qs, request=None):
 

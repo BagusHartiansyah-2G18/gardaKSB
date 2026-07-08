@@ -17,11 +17,15 @@ from core.apps.kelompok.vkelompok import pkelompokDetail
 
 from django.http import JsonResponse
 
+from django.utils import timezone
 import pandas as pd
+
+import json
+
 
 
 from django.db.models import Q,Count
-from core.utils import summaryDashboard,summaryApproval,chartApprovalModul,chartPendAll,chartPendBulanan,summaryLegalitas,chartKelengkapan,summaryAset,chartKondisiAset,chartLembaga,chartKelompok,chartAsetKelompok,warningApproval,summaryAnggota,chartStatusKelompok,getWilaya,chartPendJUsaha
+from core.utils import summaryDashboard,summaryApproval,chartApprovalModul,chartPendAll,chartPendBulanan,summaryLegalitas,chartKelengkapan,summaryAset,chartKondisiAset,chartLembaga,chartKelompok,chartAsetKelompok,warningApproval,summaryAnggota,chartStatusKelompok,getWilaya,chartPendJUsaha,send
  
 def home(request):
     data =  [
@@ -162,6 +166,68 @@ def early(request):
         'warnings':earlyWarning(request)
     })
 
+
+
+CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS0dT6BcBcu9yOgM8lTARAt2BD9DSoHuzL-MfA3Ki6o0Xpevk4lMha_A38WsFdmKciSoEwOTaqRcZLf/pub?output=csv"
+
+@api_view(["GET"]) 
+def compareDataKelompok(request):
+    qs = Kelompok.objects.filter(
+        jenisKelompok__iexact="bumdes",
+        noHp__isnull=False,
+        statusOperasional__iexact="Aktif",
+        updated_at__isnull=True,
+    ).values(
+        "id",
+        "nmKelo",
+        "noHp"
+    )
+ 
+    kelompok_berhasil = []
+    kelompok_id = []
+    kelompok_gagal = []
+
+    for v in qs:
+        success = send(
+            message=f"""
+                Kepada Pengelola BUMDes {v['nmKelo']}
+
+                Batas akhir penyampaian Laporan Semester I Tahun 2026 adalah 31 Juli 2026.
+
+                Status saat ini: Belum Mengirim.
+
+                Mohon segera mengunggah laporan melalui tautan berikut:
+                https://docs.google.com/forms/d/e/1FAIpQLSfqP2D2nbWwaHoWEVwAIgsr2LYnunGRpu2X_c6LXgfyp9WEYQ/viewform?usp=dialog
+            """,
+            target=v["noHp"]
+        )
+
+        if success:  
+            kelompok_berhasil.append(v["nmKelo"]) 
+            kelompok_id.append(v['id'])
+        else:
+            kelompok_gagal.append(v["nmKelo"]) 
+
+    if(len(kelompok_berhasil)>0):
+        Kelompok.objects.filter(
+            id__in=kelompok_id
+        ).update(
+            updated_at=timezone.now()
+        )
+
+        
+        daftar_kelompok ="\n"+ "\n".join(kelompok_berhasil) if kelompok_berhasil else "Belum ada"
+
+        send(
+            message=f"""Informasi kelompok yang telah diinformasikan:{daftar_kelompok}""",
+            target="085339922062"
+        )
+        # target="085339922062"
+
+    return JsonResponse({
+        "success": len(kelompok_berhasil),
+        "failed": len(kelompok_gagal)
+    })
 
 
 from django.urls import reverse
