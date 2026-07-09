@@ -962,42 +962,50 @@ document.addEventListener("DOMContentLoaded", function () {
 
     });
     
-    new Chart(
-        document.getElementById('aktifChart'),
-        {
-            type: 'doughnut',
-
-            data: {
-                labels: [
-                    {% for i in aktif.labels %}
-                        "{{ i }}",
+    
+    new Chart(document.getElementById('aktifChart'), {
+        type: 'doughnut',
+        data: {
+            labels: [
+                {% for i in aktif.labels %}
+                    "{{ i }}",
+                {% endfor %}
+            ],
+            datasets: [{
+                data: [
+                    {% for i in aktif.values %}
+                        {{ i }},
                     {% endfor %}
                 ],
+                backgroundColor: [
+                    '#22c55e',
+                    '#ef4444'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let data = context.dataset.data;
+                            let total = data.reduce((a, b) => a + b, 0);
+                            let value = context.raw;
+                            let percentage = ((value / total) * 100).toFixed(1);
 
-                datasets: [{
-                    data: [
-                        {% for i in aktif.values %}
-                            {{ i }},
-                        {% endfor %}
-                    ],
-                    backgroundColor: [
-                        '#22c55e',
-                        '#ef4444'
-                    ]
-                }]
-            },
-
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom'
+                            return `${context.label}: ${value} (${percentage}%)`;
+                        }
                     }
                 }
             }
         }
-    );
+    });
+
 
 });
 </script>
