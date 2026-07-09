@@ -19,15 +19,16 @@ from django.http import JsonResponse
 
 from django.utils import timezone
 import pandas as pd
+from django.core.paginator import Paginator
 
 import json
 
 
 
 from django.db.models import Q,Count
-from core.utils import summaryDashboard,summaryApproval,chartApprovalModul,chartPendAll,chartPendBulanan,summaryLegalitas,chartKelengkapan,summaryAset,chartKondisiAset,chartLembaga,chartKelompok,chartAsetKelompok,warningApproval,summaryAnggota,chartStatusKelompok,getWilaya,chartPendJUsaha,send
+from core.utils import summaryDashboard,summaryApproval,chartApprovalModul,chartPendAll,chartPendBulanan,summaryLegalitas,chartKelengkapan,summaryAset,chartKondisiAset,chartLembaga,chartKelompok,chartAsetKelompok,warningApproval,summaryAnggota,chartStatusKelompok,getWilaya,chartPendJUsaha,send,subMenu
  
-def home(request):
+def home(request,idJLega="BUMDes"):
     data =  [
         {
             "nama": "Kelompok Nelayan",
@@ -56,6 +57,33 @@ def home(request):
         }
     ] 
 
+    qs = (
+        Kelompok.objects
+        .select_related(
+            'desa',
+            'desa__kecamatan'
+        )
+        .filter(
+            jenisKelompok__iexact=idJLega
+        )
+    )
+
+    search = request.GET.get('q')
+
+    if search:
+        qs = qs.filter(
+            Q(nmKelo__icontains=search) |
+            Q(desa__nmDesa__icontains=search)
+        )
+    
+    paginator = Paginator(qs.order_by('nmKelo'), 10)
+
+    page_number = request.GET.get('page')
+
+    page_obj = paginator.get_page(
+        page_number
+    )  
+
     return render(request, 'publik/home.html', {
         'features': data,
         'chartLembaga': chartLembaga(request),
@@ -67,6 +95,10 @@ def home(request):
 
         "aktif":chartStatusKelompok(request),
         'summaryLegalitas': summaryLegalitas(request),
+        'subMenu':subMenu(),
+        'currentJLega':idJLega,
+        'data': page_obj,
+        'search': search,
 
 
 

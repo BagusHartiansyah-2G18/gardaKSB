@@ -22,13 +22,15 @@ from core.apps.kelompok.vkelompok import pkelompok,pkelompokDetail,pkelompoAsetA
 from core.apps.usaha.vusaha import pusaha
 from core.apps.keuangan.vkeuangan import pkeuangan,pkeuanganAdd,pkeuanganEdit,pendapatanApprove
 
-from core.apps.monitor.vmonitor import pmonitor,pmonitorLegalitas,pmonitorAset,pmonitorAproval
+from core.apps.monitor.vmonitor import pmonitor,pmonitorLegalitas,pmonitorAset,pmonitorAproval,pmonitorLaporan
 
 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', home),
+    
+    
+
     path('login/', login),
     path('seed-sumbawa/', seed_sumbawa),
     path('dashboard/', dashboard, name="dashboard"),
@@ -82,6 +84,8 @@ urlpatterns = [
     path('monitor/legalitas/<str:idJLega>/', pmonitorLegalitas, name="pmonitorLegalitas"),
     path('monitor/aset/<str:idJLega>/', pmonitorAset, name="pmonitorAset"),
     path('monitor/aproval/<str:idJLega>/', pmonitorAproval, name="pmonitorAproval"),
+    path('monitor/laporan/<str:idJLega>/', pmonitorLaporan, name="laporan"),
 
-
+    path('', home, name='home_default'),
+    path('<str:idJLega>/', home, name='home'),
 ]

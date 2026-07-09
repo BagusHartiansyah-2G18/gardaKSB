@@ -66,7 +66,12 @@ def pmonitorAproval(request, idJLega):
         'currentJLega': idJLega
     })
 
-
+@login_required
+def pmonitorLaporan(request, idJLega):
+    
+    return render(request,'dashboard/monitorLaporan.html',{
+        'currentJLega': idJLega
+    })
 
 @login_required
 def pkelompoAsetAdd(request, id):
