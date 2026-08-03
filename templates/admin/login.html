@@ -1,0 +1,17 @@
+{% extends "admin/login.html" %}
+
+{% block content %}
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="messagelist">
+            <div class="{{ message.tags }}">
+                {{ message }}
+            </div>
+        </div>
+    {% endfor %}
+{% endif %}
+
+{{ block.super }}
+
+{% endblock %}

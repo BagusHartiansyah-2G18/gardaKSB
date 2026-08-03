@@ -1,0 +1,99 @@
+/* Fix input tidak tampil di Unfold */
+
+input[type="text"],
+input[type="email"],
+input[type="number"],
+input[type="password"],
+input[type="date"],
+input[type="datetime-local"],
+input[type="url"],
+textarea,
+select,
+.vTextField {
+    display: block !important;
+    width: 100% !important;
+    min-height: 40px !important;
+
+    background: #fff !important;
+    color: #000 !important;
+
+    border: 1px solid #d1d5db !important;
+    border-radius: 6px !important;
+
+    padding: 8px 12px !important;
+
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+.related-widget-wrapper {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    width: 100% !important;
+    justify-content: space-evenly;
+}
+
+.related-widget-wrapper select {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    width: auto !important;
+}
+
+.related-widget-wrapper-link {
+    flex: 0 0 auto !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+.related-widget-wrapper-link {
+display: none !important;
+}
+.related-widget-wrapper-link[title*="Add"] {
+display: inline-flex !important;
+}
+
+
+
+
+.app-accounts h2,
+.app-aktivitas h2,
+.app-auth h2,
+.app-informasi h2,
+.app-master h2,
+.app-organisasi h2,
+.app-pengaduan h2 {
+    cursor: pointer;
+    position: relative;
+}
+
+.app-accounts h2::after,
+.app-aktivitas h2::after,
+.app-auth h2::after,
+.app-informasi h2::after,
+.app-master h2::after,
+.app-organisasi h2::after,
+.app-pengaduan h2::after {
+    content: "▸";
+    float: right;
+    transition: 0.2s;
+}
+
+.app-open h2::after {
+    transform: rotate(90deg);
+}
+
+.app-accounts ol.flex,
+.app-aktivitas ol.flex,
+.app-auth ol.flex,
+.app-informasi ol.flex,
+.app-master ol.flex,
+.app-organisasi ol.flex,
+.app-pengaduan ol.flex {
+    display: none;
+}
+
+.app-open ol.flex {
+    display: flex !important;
+}
+

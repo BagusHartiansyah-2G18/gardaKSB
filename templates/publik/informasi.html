@@ -1,0 +1,400 @@
+{% extends './layout.html' %}
+{% load static %}
+
+{% block content %}
+<section class="section_hero" style="position: sticky !important;">
+    <div class="hero-gap home-pd">
+        <div class="w-layout-blockcontainer container-main relative w-container">
+
+            <div class="blog-content-block-v3">
+                <div class="blog-collection-block-v3 w-dyn-list" style="max-width: 40%; max-height: 500px;">
+                    <div class="blog-collection-list-v3 large w-dyn-items" role="list">
+                        {% for o in dberita|slice:":1" %}
+                        <div class="blog-collection-item-v3 w-dyn-item" role="listitem">
+                            <div class="blog-item-card-block-v3 large"><a aria-label="blog-item-image-block"
+                                    class="blog-item-image-block w-inline-block" style="width: 100%;"
+                                    href="{% url 'detailInformasi' o.slug %}"><img
+                                        alt="blog-item-image" class="blog-item-image-v3 featured-image" loading="lazy"
+                                        sizes="100vw" src="/media/{{o.cover_image}}"
+                                        srcset="/media/{{o.cover_image}} 500w, /media/{{o.cover_image}} 800w, /media/{{o.cover_image}} 1080w, /media/{{o.cover_image}} 1280w" />
+                                    <div class="blog-item-image-overlay-v3"></div>
+                                </a>
+                                <div class="blog-item-content-block-v3 large">
+                                    <div class="blog-item-info-block">
+                                        <div class="blog-item-category-block">
+                                            <div class="blog-item-category-dot"></div>
+                                            <p class="text-size-small text-weight-medium text-color-white">
+                                                {{o.deskripsi}}</p>
+                                        </div>
+                                    </div><a class="blog-item-title-block w-inline-block"
+                                        href="{% url 'detailInformasi' o.slug %}">
+                                        <div class="heading-style-5">{{o.judul}}
+                                        </div>
+                                    </a>
+                                    <div class="blog-item-button-block"><a class="link-button w-inline-block"
+                                            href="{% url 'detailInformasi' o.slug %}">
+                                            <div class="link-button-icon w-embed"
+                                                style="translate: none; rotate: none; scale: none; transform: translate(0px, 0px);">
+                                                <svg fill="none" height="18" viewbox="0 0 18 18" width="18"
+                                                    xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M16 12.083L12 15.833V8.33301L16 12.083Z"
+                                                        fill="currentColor"></path>
+                                                    <path d="M2 11.333H12V12.833H2V11.333Z" fill="currentColor"></path>
+                                                    <path d="M3.5 2.33301V12.333H2V2.33301H3.5Z" fill="currentColor">
+                                                    </path>
+                                                </svg>
+                                            </div>
+                                            <div class="link-button-text">Read More</div>
+                                        </a></div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="blog-collection-block-v3 w-dyn-list">
+                    <div class="blog-collection-list-v3 w-dyn-items" role="list">
+                        {% for o in dberita %}
+                        <div class="blog-collection-item w-dyn-item" role="listitem">
+                            <div class="blog-item-card-block-v3">
+                                <a aria-label="blog-item-image-block-v3" class="blog-item-image-block-v3 w-inline-block"  style="max-width: 250px; max-height: 200px;"
+                                    href="{% url 'detailInformasi' o.slug %}"><img alt="blog-item-image" class="blog-item-image-v3" loading="lazy"
+                                        src="/media/{{o.cover_image}}" /></a>
+                                <div class="blog-item-content-block-v3">
+                                    <div class="blog-item-info-block">
+                                        <div class="blog-item-category-block">
+                                            <div class="blog-item-category-dot"></div>
+                                            <p class="text-size-small text-weight-medium text-color-white">
+                                                {{o.deskripsi}}</p>
+                                        </div>
+                                    </div><a aria-label="blog-item-title-block"
+                                        class="blog-item-title-block w-inline-block"
+                                        href="{% url 'detailInformasi' o.slug %}">
+                                        <div class="heading-style-5 title-hover">{{o.judul}}
+                                        </div>
+                                    </a>
+                                    <div class="blog-item-button-block"><a class="link-button w-inline-block"
+                                            href="{% url 'detailInformasi' o.slug %}">
+                                            <div class="link-button-icon w-embed"
+                                                style="translate: none; rotate: none; scale: none; transform: translate(0px, 0px);">
+                                                <svg fill="none" height="18" viewbox="0 0 18 18" width="18"
+                                                    xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M16 12.083L12 15.833V8.33301L16 12.083Z"
+                                                        fill="currentColor"></path>
+                                                    <path d="M2 11.333H12V12.833H2V11.333Z" fill="currentColor"></path>
+                                                    <path d="M3.5 2.33301V12.333H2V2.33301H3.5Z" fill="currentColor">
+                                                    </path>
+                                                </svg>
+                                            </div>
+                                            <div class="link-button-text">Read More</div>
+                                        </a></div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+<div class="others-section home-v3" style="margin-top: 0px !important;">
+    <section class="section_about"
+        style="translate: none; rotate: none; scale: none; opacity: 1; transform: translate3d(0px, 0px, 0px);"
+        to-top-0="">
+        <div class="w-layout-blockcontainer container-fluid w-container">
+            <div class="about-wrapper">
+                <div class="section-heading-block align-left container-main">
+                    <div class="about-title-block max-width-54 left-algin">
+                        <h2 class="about-title-text text-align-left">
+                            LIST ITEM {{kategori}} <br />
+                        </h2>
+                        <div class="about-title-overlay-block">
+                            <div class="about-title-overlay is-1"
+                                style="translate: none; rotate: none; scale: none; transform: translate3d(0px, 0px, 0px) scale(0, 1);">
+                            </div>
+                            <div class="about-title-overlay is-2"
+                                style="translate: none; rotate: none; scale: none; transform: translate3d(0px, 0px, 0px) scale(0, 1);">
+                            </div>
+                            <div class="about-title-overlay is-3"
+                                style="translate: none; rotate: none; scale: none; transform: translate3d(0px, 0px, 0px) scale(0.1138, 1);">
+                            </div>
+                            <div class="about-title-overlay is-4"
+                                style="translate: none; rotate: none; scale: none; transform: translate3d(0px, 0px, 0px);">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="about-content-block-v3">
+                    <div class="about-content-right-block-v3" style="width: 100%;;">
+
+                        <div class="services-collection-list w-dyn-items" role="list">
+
+                            {% for o in dberitaAll %}
+                            <div class="services-collection-item w-dyn-item" role="listitem" style="position: unset;">
+                                <div class="services-item-card-block v3"><a
+                                        class="services-item-thumbnail-block v3 w-inline-block"
+                                        href="{% url 'detailInformasi' o.slug %}"><img alt="Service Image Overlay"
+                                            class="services-thumbnail-overlay" loading="lazy"
+                                            src="/media/{{o.cover_image}}"><img
+                                            alt="" class="services-item-thumbnail-v3" loading="lazy"
+                                            src="/media/{{o.cover_image}}"></a>
+                                    <div class="services-item-content-block-v3">
+                                        <div class="services-item-text-block"><a aria-label="services-item-title-blocka"
+                                                class="services-item-title-block w-inline-block"
+                                                href="{% url 'detailInformasi' o.slug %}">
+                                                <h3 class="services-item-title-v3">{{o.judul}}</h3>
+                                            </a>
+                                            <div class="services-item-summary-block">
+                                                <p class="text-size-regular text-color-white">{{o.deskripsi}}</p>
+                                            </div>
+                                        </div>
+                                        <div class="services-item-button-block"><a class="white-button w-inline-block"
+                                                data-wf--white-button--variant="main-size"
+                                                data-wf-component-id="7f51300f-9481-7764-372f-282224688a1e"
+                                                data-wf-variant-state="base" href="{% url 'detailInformasi' o.slug %}">
+                                                <div class="button-dot-block dark"
+                                                    style="translate: none; rotate: none; scale: none; transform: scale(0, 0);">
+                                                </div>
+                                                <div class="button-text-block"
+                                                    style="translate: none; rotate: none; scale: none; transform: translate(-8px, 0px);">
+                                                    <div class="button-text">Read More</div>
+                                                </div>
+                                            </a></div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            
+                            
+                        </div>
+
+
+                    </div>
+
+
+                </div>
+            </div>
+        </div>
+</div>
+</section>
+</div>
+<script>
+    const steps = document.querySelectorAll('.form-step');
+    const nextBtns = document.querySelectorAll('.next-btn');
+    const prevBtns = document.querySelectorAll('.prev-btn');
+    const stepIndicators = document.querySelectorAll('.step');
+
+    let currentStep = 0;
+
+    function showStep(index) {
+
+        steps.forEach(step =>
+            step.classList.remove('active')
+        );
+
+        steps[index].classList.add('active');
+
+        stepIndicators.forEach(step =>
+            step.classList.remove('active')
+        );
+
+        for (let i = 0; i <= index; i++) {
+            stepIndicators[i].classList.add('active');
+        }
+
+        currentStep = index;
+
+        if (index === 2) {
+            buildSummary();
+        }
+    }
+
+    nextBtns.forEach(btn => {
+
+        btn.addEventListener('click', () => {
+
+            if (currentStep < steps.length - 1) {
+                showStep(currentStep + 1);
+            }
+
+        });
+
+    });
+
+    prevBtns.forEach(btn => {
+
+        btn.addEventListener('click', () => {
+
+            if (currentStep > 0) {
+                showStep(currentStep - 1);
+            }
+
+        });
+
+    });
+
+    function buildSummary() {
+
+        document.getElementById('summary-content').innerHTML = `
+
+        <h3>Data Pengaduan</h3>
+
+        <p><b>Kategori:</b>
+        ${document.getElementById('kategori').value}</p>
+
+        <p><b>Lokasi:</b>
+        ${document.getElementById('lokasi').value}</p>
+
+        <p><b>Tanggal:</b>
+        ${document.getElementById('tanggal').value}</p>
+
+        <p><b>Waktu:</b>
+        ${document.getElementById('waktu').value}</p>
+
+        <p><b>Uraian:</b>
+        ${document.getElementById('uraian').value}</p>
+
+        <hr style="margin:15px 0">
+
+        <h3>Data Pelapor</h3>
+
+        <p><b>Nama:</b>
+        ${document.getElementById('nama').value}</p>
+
+        <p><b>No HP:</b>
+        ${document.getElementById('hp').value}</p>
+
+        <p><b>Email:</b>
+        ${document.getElementById('email').value}</p>
+
+    `;
+    }
+
+    document
+        .getElementById('complaintForm')
+        .addEventListener('submit', function (e) {
+
+            e.preventDefault();
+
+            const nomorTiket =
+                'GARDA-KSB-' +
+                new Date().getFullYear() +
+                '-' +
+                Math.floor(
+                    100000 + Math.random() * 900000
+                );
+
+            alert(
+                'Pengaduan berhasil dikirim.\n\nNomor Tiket:\n' +
+                nomorTiket
+            );
+
+        });
+
+    showStep(0);
+
+</script>
+
+<script>
+
+    const jenisKasusData = JSON.parse(
+        '{{ gjenisKasus|escapejs }}'
+    );
+
+    new Chart(
+        document.getElementById(
+            "chartJenisKasus"
+        ),
+        {
+            type: "doughnut",
+
+            data: {
+                labels: jenisKasusData.labels,
+
+                datasets: [{
+                    data: jenisKasusData.data,
+                    backgroundColor: jenisKasusData.colors,
+                    borderWidth: 1
+                }]
+            },
+
+            options: {
+                responsive: true,
+
+                plugins: {
+                    legend: {
+                        position: "bottom"
+                    }
+                }
+            }
+        }
+    );
+
+</script>
+
+<!-- map  -->
+<script>
+
+    const mapData = JSON.parse(
+        '{{ dmap|escapejs }}'
+    );
+
+    const map = L.map(
+        'map'
+    ).setView(
+        [-8.7485, 116.8287],
+        10
+    );
+
+    L.tileLayer(
+        'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+        {
+            maxZoom: 18
+        }
+    ).addTo(map);
+    L.Icon.Default.mergeOptions({
+        iconRetinaUrl: "{% static 'vendor/leaflet/images/marker-icon-2x.png' %}",
+        iconUrl: "{% static 'vendor/leaflet/images/marker-icon.png' %}",
+        shadowUrl: "{% static 'vendor/leaflet/images/marker-shadow.png' %}",
+    });
+    mapData.forEach(item => {
+
+        const icon = L.divIcon({
+            className: '',
+            html: `
+            <div style="
+                width:20px;
+                height:20px;
+                background:${item.jenis_kasus__warna};
+                border-radius:50% 50% 50% 0;
+                transform:rotate(-45deg);
+                border:2px solid white;
+            "></div>
+        `,
+            iconSize: [20, 20]
+        });
+
+        L.marker(
+            [
+                parseFloat(item.latitude),
+                parseFloat(item.longitude)
+            ],
+            {
+                icon: icon
+            }
+        )
+            .bindPopup(`
+        <b>${item.nomor_tiket}</b><br>
+        Jenis: ${item.jenis_kasus__nama}<br>
+        Desa: ${item.desa__nama}<br>
+        Status: ${item.status}<br>
+        Prioritas: ${item.prioritas}
+    `)
+            .addTo(map);
+
+    });
+
+</script>
+{% endblock %}

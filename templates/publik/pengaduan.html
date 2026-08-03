@@ -1,0 +1,1326 @@
+{% extends './layout.html' %}
+{% load static %}
+
+{% block content %}
+<section class="section_hero" style="position: sticky !important;">
+    <div class="hero-gap home-pd">
+        <div class="w-layout-blockcontainer container-main relative w-container">
+
+            <div class="wrapper" style="position: relative;">
+
+                <!-- HERO -->
+                <section class="hero">
+                    <div class="hero-content">
+
+                        <h3>
+                            Pengaduan Masyarakat
+                        </h3>
+                        <p>
+                            Sampaikan laporan terkait narkoba, konflik sosial,
+                            gangguan ketertiban maupun potensi ancaman yang terjadi
+                            di Kabupaten Sumbawa Barat.
+                        </p>
+                        <div class="hero-points">
+                            <div class="point">
+                                <span class="dot"></span>
+                                <div class="content">
+                                    <h4>Mudah dan Cepat</h4>
+                                    <p>Laporkan kejadian dalam beberapa langkah.</p>
+                                </div>
+                            </div>
+                            <div class="point">
+                                <span class="dot"></span>
+                                <div class="content">
+                                    <h4>Terintegrasi</h4>
+                                    <p>Langsung diteruskan ke bidang terkait.</p>
+                                </div>
+                            </div>
+
+                            <div class="point">
+                                <span class="dot"></span>
+                                <div class="content">
+                                    <h4>Tracking Tiket</h4>
+                                    <p>Pantau perkembangan laporan secara online.</p>
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+                <!-- FORM -->
+                <section class="form-section" style="z-index: 10;">
+
+                    <div class="form-card">
+                        <form id="complaintForm" method="post" action="{% url 'kirimPengaduan' %}" novalidate>
+                            {% csrf_token %}
+                            <div class="stepper">
+
+                                <div class="step active">
+                                    1. Pengaduan
+                                </div>
+
+                                <div class="step">
+                                    2. Pelapor
+                                </div>
+
+                                <div class="step">
+                                    3. Konfirmasi
+                                </div>
+
+                            </div>
+                            <hr />
+                            <div class="form-step active">
+                                <input type="text" id="judul" name="judul" placeholder="Judul Laporan">
+
+                                <div class="grid-2" style="margin-top: 10px;">
+                                    <select id="desa" name="desa">
+                                        <option value="">Pilih Desa</option>
+                                        {% for o in ddesa %}
+                                        <option value="{{o.id}}">{{o.nama}} ({{o.kecamatan__nama}})</option>
+                                        {% endfor %}
+                                    </select>
+                                    <input type="date" name="tanggal" id="tanggal">
+                                    <input type="hidden" name="waktu" id="waktu">
+                                </div>
+
+
+                                <input type="text" id="lokasi_kejadian" name="lokasi_kejadian"
+                                    placeholder="Lokasi Kejadian">
+
+                                <input type="hidden" id="latitude" name="latitude">
+                                <input type="hidden" id="longitude" name="longitude">
+                                <input type="hidden" id="pihak_terlibat" name="pihak_terlibat">
+                                <input type="hidden" id="dampak" name="dampak">
+
+
+                                <textarea id="uraian" placeholder="Uraian Pengaduan" name="uraian"></textarea>
+
+                                <input type="file" id="lampiran" name="lampiran">
+
+                                <div class="form-buttons">
+                                    <button type="button" class="btn-primary next-btn">
+                                        Selanjutnya
+                                    </button>
+                                </div>
+
+                            </div>
+
+                            <!-- STEP 2 -->
+                            <div class="form-step">
+
+                                <input type="text" id="nama" name="nama" placeholder="Nama Lengkap">
+
+                                <input type="text" id="hp" name="hp" placeholder="Nomor HP">
+
+                                <input type="email" id="email" name="email" placeholder="Email">
+
+                                <input type="hidden" id="alamat" name="alamat">
+                                <!-- <textarea id="alamat" placeholder="Alamat"></textarea> -->
+                                <label class="checkbox">
+                                    <input type="checkbox" id="benar" name="benar" required>
+                                    Saya menyatakan data yang saya kirim benar.
+                                </label>
+                                <div class="form-buttons">
+
+                                    <button type="button" class="btn-secondary prev-btn">
+                                        Sebelumnya
+                                    </button>
+
+                                    <button type="button" class="btn-primary next-btn">
+                                        Selanjutnya
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+                            <!-- STEP 3 -->
+                            <div class="form-step">
+                                <div class="summary">
+                                    <div id="summary-content"></div>
+                                </div>
+
+                                <div class="form-buttons">
+
+                                    <button type="button" class="btn-secondary prev-btn">
+                                        Sebelumnya
+                                    </button>
+
+                                    <button type="submit" class="btn-primary">
+                                        Kirim Pengaduan
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+                        </form>
+                    </div>
+                </section>
+
+            </div>
+
+
+        </div>
+    </div>
+</section>
+<div class="others-section home-v3" style="margin-top: 0px !important;">
+    <section class="section_about"
+        style="translate: none; rotate: none; scale: none; opacity: 1; transform: translate3d(0px, 0px, 0px);"
+        to-top-0="">
+        <div class="w-layout-blockcontainer container-fluid w-container">
+            <div class="about-wrapper">
+                <div class="section-heading-block align-left container-main">
+                    <div class="about-title-block max-width-54 left-algin">
+                        <h2 class="about-title-text text-align-left">
+                            Monitoring Laporan <br />
+                            <h5>PENERTIBAN,PENCEGAHAN,PENDAMPINGAN,PENGAWASAN dan TINDAK LANJUT</h5>
+                        </h2>
+                        <div class="about-title-overlay-block">
+                            <div class="about-title-overlay is-1"
+                                style="translate: none; rotate: none; scale: none; transform: translate3d(0px, 0px, 0px) scale(0, 1);">
+                            </div>
+                            <div class="about-title-overlay is-2"
+                                style="translate: none; rotate: none; scale: none; transform: translate3d(0px, 0px, 0px) scale(0, 1);">
+                            </div>
+                            <div class="about-title-overlay is-3"
+                                style="translate: none; rotate: none; scale: none; transform: translate3d(0px, 0px, 0px) scale(0.1138, 1);">
+                            </div>
+                            <div class="about-title-overlay is-4"
+                                style="translate: none; rotate: none; scale: none; transform: translate3d(0px, 0px, 0px);">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="about-content-block-v3">
+                    <div class="about-content-right-block-v3" style="width: 100%;;">
+                        <div class="about-cards-block-v3">
+                            <div class="about-lg-card-block-v3"
+                                style="translate: none; rotate: none; scale: none; opacity: 0; transform: translate(0px, 80px);height: 100%;"
+                                to-top-2="">
+
+                                <div class="about-lg-card-bottom-block-v3">
+                                    <div class="about-lg-card-stat-block-v3">
+                                        <canvas id="chartJenisKasus" style="max-height: 300px;"></canvas>
+                                    </div>
+                                    <div class="about-lg-card-text-block-v3">
+                                        <p class="text-size-regular">pengaduan yang terverifikasi, tersebar diberbagai
+                                            wilayah, termonitoring disetiap aktivitasnya
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                        <div class="about-cards-block-v3" style="width: 100%;">
+
+                            <div class="about-lg-card-block-v3"
+                                style="translate: none; rotate: none; scale: none; opacity: 0; transform: translate(0px, 80px);"
+                                to-top-6="">
+
+                                <div class="about-lg-card-bottom-block-v3">
+                                    <div class="about-lg-card-stat-block-v3">
+                                        <div id="map" style="height:600px;border-radius:12px;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section_about"
+        style="background: #263451; translate: none; rotate: none; scale: none; opacity: 1; transform: translate3d(0px, 0px, 0px);"
+        to-top-0="">
+        <div class="w-layout-blockcontainer container-fluid w-container">
+            <div class="about-wrapper">
+                <div class="section-heading-block align-left container-main">
+                    <div class="about-title-block max-width-54 left-algin">
+                        <div class="section-subtitle-block bottom-space"
+                            style="translate: none; rotate: none; scale: none; opacity: 1; transform: translate3d(0px, 0px, 0px);"
+                            to-top-0="">
+                            <div class="subtitle-dot"></div>
+                            <div class="subtitle-text">Riwayat Pengaduan </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="about-content-block-v3">
+                    <div class="about-content-right-block-v3" style="width: 100%;;">
+
+                        <div class="about-cards-block-v3" style="width: 100%;">
+
+                            <div class="about-lg-card-block-v3"
+                                style="translate: none; rotate: none; scale: none; opacity: 0; transform: translate(0px, 80px);"
+                                to-top-6="">
+
+                                <div class="about-lg-card-bottom-block-v3">
+                                    <div class="about-lg-card-stat-block-v3"
+                                        style="display: flex; justify-content: right;">
+                                        <div class="footer-newsletter-form-block w-form"
+                                            style="translate: none; rotate: none; scale: none; opacity: 1; transform: translate3d(0px, 0px, 0px); max-width:500px ;"
+                                            to-top-4="">
+                                            <div aria-label="Email Form" class="footer-newsletter-form-inner"
+                                                data-name="Email Form"
+                                                data-wf-element-id="68aa3d0e-11f8-53b7-7af2-f1ab8f33fa79"
+                                                data-wf-page-id="6a1fb4d5305eddf3aa06adc6" id="email-form" method="get"
+                                                name="email-form">
+                                                <div class="footer-newsletter-form-content">
+                                                    <input aria-label="newsletter"
+                                                        class="footer-newsletter-field w-input" style="color: white;" data-name="Email"
+                                                        id="nomor_tiket" maxlength="256" name="nomor_tiket"
+                                                        placeholder="Nomor Tiket" required="" type="text">
+                                                    <input class="footer-newsletter-button form-button w-button" onclick="trackTicket(document.getElementById('nomor_tiket').value)"
+                                                        data-wait="Please wait..." type="button" value="Lacak">
+                                                </div>
+                                            </div>
+                                            <div aria-label="Email Form success" class="success-message w-form-done"
+                                                role="region" tabindex="-1">
+                                                <div>Thank you! Your submission has been received!</div>
+                                            </div>
+                                            <div aria-label="Email Form failure" class="w-form-fail" role="region"
+                                                tabindex="-1">
+                                                <div>Oops! Something went wrong while submitting the form.</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="about-cards-block-v3" style="width: 100%;">
+                                <div class="about-lg-card-block-v3"
+                                    style="padding: 0px !important; margin: 0px !important; background: none; translate: none; rotate: none; scale: none; opacity: 0; transform: translate(0px, 80px);height: 100%;"
+                                    to-top-2="">
+                                    <div class="about-lg-card-stat-block-v3"
+                                        style="padding: 0px !important; margin: 0px !important;">
+                                        <table class="ticket-table">
+
+                                            <thead>
+                                                <tr>
+                                                    <th>No</th>
+                                                    <th>Nomor Tiket</th>
+                                                    <th>Tanggal</th>
+                                                    <th width="180">Aksi</th>
+                                                </tr>
+                                            </thead>
+
+                                            <tbody id="ticket-history-body">
+                                            </tbody>
+
+                                        </table>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+<script>
+
+    const steps = document.querySelectorAll('.form-step');
+    const nextBtns = document.querySelectorAll('.next-btn');
+    const prevBtns = document.querySelectorAll('.prev-btn');
+    const stepIndicators = document.querySelectorAll('.step');
+
+    const STORAGE_KEY = 'pengaduan_draft';
+    const STEP_KEY = 'pengaduan_current_step';
+
+    let currentStep = 0;
+
+    const fields = [
+        'judul',
+        'desa',
+        'tanggal',
+        'waktu',
+        'lokasi_kejadian',
+        'latitude',
+        'longitude',
+        'uraian',
+        'nama',
+        'hp',
+        'email'
+    ];
+
+    /* =========================
+    STEP
+    ========================= */
+
+    function showStep(index) {
+
+        steps.forEach(step =>
+            step.classList.remove('active')
+        );
+
+        stepIndicators.forEach(step =>
+            step.classList.remove('active')
+        );
+
+        steps[index].classList.add('active');
+
+        for (let i = 0; i <= index; i++) {
+            stepIndicators[i].classList.add('active');
+        }
+
+        currentStep = index;
+
+        localStorage.setItem(
+            STEP_KEY,
+            index
+        );
+
+        if (index === 2) {
+            buildSummary();
+        }
+
+    }
+
+    function loadCurrentStep() {
+
+        const savedStep = parseInt(
+            localStorage.getItem(STEP_KEY)
+        );
+
+        if (
+            !isNaN(savedStep) &&
+            savedStep >= 0 &&
+            savedStep < steps.length
+        ) {
+            showStep(savedStep);
+        } else {
+            showStep(0);
+        }
+
+    }
+
+    /* =========================
+    DRAFT
+    ========================= */
+
+    function saveDraft() {
+
+        const data = {};
+
+        fields.forEach(id => {
+
+            const el =
+                document.getElementById(id);
+
+            if (!el) return;
+
+            data[id] = el.value;
+
+        });
+
+        localStorage.setItem(
+            STORAGE_KEY,
+            JSON.stringify(data)
+        );
+
+    }
+
+    function loadDraft() {
+
+        const draft =
+            localStorage.getItem(
+                STORAGE_KEY
+            );
+
+        if (!draft) {
+            return;
+        }
+
+        const data =
+            JSON.parse(draft);
+
+        fields.forEach(id => {
+
+            const el =
+                document.getElementById(id);
+
+            if (!el) return;
+
+            if (
+                data[id] !== undefined &&
+                data[id] !== null
+            ) {
+                el.value = data[id];
+            }
+
+        });
+
+        if (
+            desaSelect &&
+            data.desa
+        ) {
+
+            desaSelect.setValue(
+                data.desa,
+                true
+            );
+
+        }
+
+    }
+
+    /* =========================
+    VALIDASI
+    ========================= */
+
+    function validateStep1() {
+
+        const required = [
+            'judul',
+            'desa',
+            'tanggal',
+            'lokasi_kejadian',
+            'uraian'
+        ];
+
+        for (const id of required) {
+
+            const el =
+                document.getElementById(id);
+
+            if (
+                !el ||
+                !el.value.trim()
+            ) {
+
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Data Belum Lengkap',
+                    text: 'Mohon lengkapi data pengaduan.'
+                });
+
+                el.focus();
+
+                return false;
+
+            }
+
+        }
+
+        return true;
+
+    }
+
+    function validateStep2() {
+
+        const required = [
+            'nama',
+            'hp'
+        ];
+
+        for (const id of required) {
+
+            const el =
+                document.getElementById(id);
+
+            if (
+                !el ||
+                !el.value.trim()
+            ) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Data Belum Lengkap',
+                    text: 'Nama dan Nomor HP wajib diisi.'
+                });
+
+                el.focus();
+
+                return false;
+
+            }
+
+        }
+
+        return true;
+
+    }
+
+    /* =========================
+    SUMMARY
+    ========================= */
+
+    function getSelectedText(id) {
+
+        const el =
+            document.getElementById(id);
+
+        if (
+            !el ||
+            !el.options
+        ) {
+            return '-';
+        }
+
+        return el.options[
+            el.selectedIndex
+        ]?.text || '-';
+
+    }
+
+    function buildSummary() {
+
+        document.getElementById(
+            'summary-content'
+        ).innerHTML = `
+
+            <h3>Data Pengaduan</h3>
+
+            <p>
+                <b>Judul:</b>
+                ${document.getElementById('judul').value}
+            </p>
+
+            <p>
+                <b>Desa:</b>
+                ${getSelectedText('desa')}
+            </p>
+
+            <p>
+                <b>Tanggal:</b>
+                ${document.getElementById('tanggal').value}
+            </p>
+
+            <p>
+                <b>Lokasi:</b>
+                ${document.getElementById('lokasi_kejadian').value}
+            </p>
+
+            <p>
+                <b>Uraian:</b><br>
+                ${document.getElementById('uraian').value}
+            </p>
+
+            <hr style="margin:20px 0">
+
+            <h3>Data Pelapor</h3>
+
+            <p>
+                <b>Nama:</b>
+                ${document.getElementById('nama').value}
+            </p>
+
+            <p>
+                <b>No HP:</b>
+                ${document.getElementById('hp').value}
+            </p>
+
+            <p>
+                <b>Email:</b>
+                ${document.getElementById('email').value
+            || '-'
+            }
+            </p>
+
+        `;
+
+    }
+
+    /* =========================
+    BUTTON NEXT
+    ========================= */
+
+    nextBtns.forEach(btn => {
+
+        btn.addEventListener(
+            'click',
+            () => {
+
+                if (
+                    currentStep === 0 &&
+                    !validateStep1()
+                ) {
+                    return;
+                }
+
+                if (
+                    currentStep === 1 &&
+                    !validateStep2()
+                ) {
+                    return;
+                }
+
+                if (
+                    currentStep <
+                    steps.length - 1
+                ) {
+
+                    showStep(
+                        currentStep + 1
+                    );
+
+                }
+
+            }
+        );
+
+    });
+
+    /* =========================
+    BUTTON PREV
+    ========================= */
+
+    prevBtns.forEach(btn => {
+
+        btn.addEventListener(
+            'click',
+            () => {
+
+                if (currentStep > 0) {
+
+                    showStep(
+                        currentStep - 1
+                    );
+
+                }
+
+            }
+        );
+
+    });
+
+    /* =========================
+    AUTO SAVE
+    ========================= */
+
+    fields.forEach(id => {
+
+        const el =
+            document.getElementById(id);
+
+        if (!el) return;
+
+        el.addEventListener(
+            'input',
+            saveDraft
+        );
+
+        el.addEventListener(
+            'change',
+            saveDraft
+        );
+
+    });
+
+    /* =========================
+    SUBMIT
+    ========================= */
+
+
+
+    /* =========================
+    INIT
+    ========================= */
+    let desaSelect;
+    document.addEventListener(
+        'DOMContentLoaded',
+        function () {
+            desaSelect = new TomSelect('#desa',
+                {
+                    create: false,
+                    placeholder: 'Cari Desa...'
+                }
+            );
+            loadDraft();
+            loadCurrentStep();
+
+        }
+    );
+
+    const jenisKasusData = JSON.parse(
+        '{{ gjenisKasus|escapejs }}'
+    );
+
+    new Chart(
+        document.getElementById(
+            "chartJenisKasus"
+        ),
+        {
+            type: "doughnut",
+
+            data: {
+                labels: jenisKasusData.labels,
+
+                datasets: [{
+                    data: jenisKasusData.data,
+                    backgroundColor: jenisKasusData.colors,
+                    borderWidth: 1
+                }]
+            },
+
+            options: {
+                responsive: true,
+
+                plugins: {
+                    legend: {
+                        position: "bottom"
+                    }
+                }
+            }
+        }
+    );
+
+</script>
+
+<!-- map  -->
+<script>
+
+    const mapData = JSON.parse(
+        '{{ dmap|escapejs }}'
+    );
+
+    const map = L.map(
+        'map'
+    ).setView(
+        [-8.7485, 116.8287],
+        10
+    );
+
+    L.tileLayer(
+        'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+        {
+            maxZoom: 18
+        }
+    ).addTo(map);
+    L.Icon.Default.mergeOptions({
+        iconRetinaUrl: "{% static 'vendor/leaflet/images/marker-icon-2x.png' %}",
+        iconUrl: "{% static 'vendor/leaflet/images/marker-icon.png' %}",
+        shadowUrl: "{% static 'vendor/leaflet/images/marker-shadow.png' %}",
+    });
+    mapData.forEach(item => {
+
+        const icon = L.divIcon({
+            className: '',
+            html: `
+            <div style="
+                width:20px;
+                height:20px;
+                background:${item.jenis_kasus__warna};
+                border-radius:50% 50% 50% 0;
+                transform:rotate(-45deg);
+                border:2px solid white;
+            "></div>
+        `,
+            iconSize: [20, 20]
+        });
+
+        L.marker(
+            [
+                parseFloat(item.latitude),
+                parseFloat(item.longitude)
+            ],
+            {
+                icon: icon
+            }
+        )
+            .bindPopup(`
+        <b>${item.nomor_tiket}</b><br>
+        Jenis: ${item.jenis_kasus__nama}<br>
+        Desa: ${item.desa__nama}<br>
+        Status: ${item.status}<br>
+        Prioritas: ${item.prioritas}
+    `)
+            .addTo(map);
+
+    });
+
+</script>
+<script>
+    const TICKET_KEY = 'pengaduan_tickets';
+
+    const forms =
+        document.getElementById(
+            'complaintForm'
+        );
+
+    if (forms) {
+
+        forms.addEventListener(
+            'submit',
+            async function (e) {
+
+                e.preventDefault();
+                console.log("Bagus H");
+
+                const submitButton =
+                    this.querySelector(
+                        'button[type="submit"]'
+                    );
+
+                const formData =
+                    new FormData(this);
+
+                submitButton.disabled = true;
+
+                try {
+
+                    const response = await fetch(
+                        this.action,
+                        {
+                            method: 'POST',
+                            body: formData,
+                            headers: {
+                                'X-Requested-With':
+                                    'XMLHttpRequest'
+                            }
+                        }
+                    );
+
+                    const result =
+                        await response.json();
+
+                    if (!response.ok) {
+
+                        throw new Error(
+                            result.message ||
+                            'Gagal mengirim pengaduan'
+                        );
+
+                    }
+
+                    /*
+                    * response contoh:
+                    * {
+                    *   success:true,
+                    *   nomor_tiket:"GARDA-2026-0001"
+                    * }
+                    */
+
+                    const nomorTiket =
+                        result.nomor_tiket;
+
+                    let tickets =
+                        JSON.parse(
+                            localStorage.getItem(
+                                TICKET_KEY
+                            ) || '[]'
+                        );
+
+                    tickets.unshift({
+                        nomor_tiket: nomorTiket,
+                        created_at:
+                            new Date().toISOString()
+                    });
+
+                    localStorage.setItem(
+                        TICKET_KEY,
+                        JSON.stringify(tickets)
+                    );
+
+                    localStorage.removeItem(
+                        STORAGE_KEY
+                    );
+
+                    localStorage.removeItem(
+                        STEP_KEY
+                    );
+
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Pengaduan Berhasil',
+                        html: `
+                            Nomor Tiket:<br>
+                            <b>${nomorTiket}</b>
+                        `
+                    });
+
+                    window.location.reload();
+
+                } catch (err) {
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal',
+                        text: err.message
+                    });
+
+                } finally {
+
+                    submitButton.disabled = false;
+
+                }
+
+            }
+        );
+
+    }
+
+</script>
+
+
+<script>
+
+    function renderTicketHistory() {
+
+        const tbody =
+            document.getElementById(
+                'ticket-history-body'
+            );
+
+        const tickets =
+            JSON.parse(
+                localStorage.getItem(
+                    'pengaduan_tickets'
+                ) || '[]'
+            );
+
+        if (!tickets.length) {
+
+            tbody.innerHTML = `
+<tr>
+<td colspan="4">
+Belum ada riwayat pengaduan.
+</td>
+</tr>
+`;
+
+            return;
+        }
+
+        tbody.innerHTML = '';
+
+        tickets.forEach(
+            (ticket, index) => {
+
+                const tanggal =
+                    new Date(
+                        ticket.created_at
+                    ).toLocaleString(
+                        'id-ID'
+                    );
+
+                tbody.innerHTML += `
+                    <tr>
+                    
+                    <td>
+                    ${index + 1}
+                    </td>
+                    
+                    <td>
+                    ${ticket.nomor_tiket}
+                    </td>
+                    
+                    <td>
+                    ${tanggal}
+                    </td>
+                    
+                    <td class="aksi ticket-actions">
+                    
+                    <button
+                    type="button"
+                    class="btn-ticket"
+                    onclick="trackTicket('${ticket.nomor_tiket}')"
+                    >
+                    Lacak
+                    </button>
+                    
+                    <button
+                    type="button"
+                    class="btn-delete"
+                    onclick="deleteTicket('${ticket.nomor_tiket}')"
+                    >
+                    Hapus
+                    </button>
+                    
+                    </td>
+                    
+                    </tr>
+                    `;
+            }
+        );
+
+    }
+
+    async function trackTicket(nomorTiket) {
+
+        try {
+
+            const response = await fetch(
+                `/tracking/${encodeURIComponent(nomorTiket)}/`,
+                {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                }
+            );
+
+            const result = await response.json();
+
+            if (!result.success) {
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Tidak Ditemukan',
+                    text: 'Data pengaduan tidak ditemukan.'
+                });
+
+                return;
+            }
+            
+
+
+            let historyHtml = '';
+
+            result.history.forEach(item => {
+
+                historyHtml += `
+                    <div style="
+                        border-left:3px solid #2563eb;
+                        padding-left:12px;
+                        margin-bottom:15px;
+                    ">
+                        <b>${item.judul}</b><br>
+                        ${item.deskripsi}<br>
+                        <small>${item.created_at}</small>
+                    </div>
+                `;
+            });
+
+            Swal.fire({
+
+                title: result.pengaduan.nomor_tiket,
+
+                html: `
+                    <div style="text-align:left">
+
+                        <p>
+                            <b>Status:</b>
+                            ${result.pengaduan.status}
+                        </p>
+
+                        <p>
+                            <b>Judul:</b>
+                            ${result.pengaduan.judul}
+                        </p>
+
+                        <hr>
+
+                        <h4>Riwayat</h4>
+
+                        ${historyHtml || 'Belum ada riwayat'}
+
+                    </div>
+                `,
+
+                width: 700
+
+            });
+
+        } catch (err) {
+
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal',
+                text: err.message
+            });
+
+        }
+
+    }
+
+    function deleteTicket(nomorTiket) {
+
+        Swal.fire({
+
+            icon: 'warning',
+            title: 'Hapus Tiket?',
+            text: nomorTiket,
+
+            showCancelButton: true,
+
+            confirmButtonText: 'Hapus',
+            cancelButtonText: 'Batal'
+
+        }).then((result) => {
+
+            if (!result.isConfirmed) {
+                return;
+            }
+
+            let tickets =
+                JSON.parse(
+                    localStorage.getItem(
+                        'pengaduan_tickets'
+                    ) || '[]'
+                );
+
+            tickets = tickets.filter(
+                item =>
+                    item.nomor_tiket !== nomorTiket
+            );
+
+            localStorage.setItem(
+                'pengaduan_tickets',
+                JSON.stringify(tickets)
+            );
+
+            renderTicketHistory();
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil',
+                text: 'Nomor tiket berhasil dihapus.'
+            });
+
+        });
+
+    }
+
+    document.addEventListener(
+        'DOMContentLoaded',
+        function () {
+
+            renderTicketHistory();
+
+        }
+    );
+
+</script>
+
+<style>
+    .ticket-history h3 {
+        margin-bottom: 16px;
+        font-size: 22px;
+        font-weight: 700;
+        color: #222;
+    }
+
+    .ticket-table {
+        width: 100%;
+        overflow: hidden;
+
+        background: #fff;
+
+        border-radius: 16px;
+        /* border: 1px solid #e8e8e8;  */
+
+        border-collapse: collapse;
+
+        box-shadow:
+            0 10px 30px rgba(0, 0, 0, .05);
+    }
+
+    .ticket-table thead {
+        background: #111827;
+    }
+
+    .ticket-table thead th {
+        color: #fff;
+        font-size: 14px;
+        font-weight: 600;
+
+        padding: 16px;
+        text-align: left;
+    }
+
+    .ticket-table tbody tr {
+        transition: .2s ease;
+    }
+
+    .ticket-table tbody tr:hover {
+        background: #f8fafc;
+    }
+
+    .ticket-table td {
+        padding: 16px;
+        border-bottom: 1px solid #f1f1f1;
+        vertical-align: middle;
+    }
+
+    .ticket-table tbody tr:last-child td {
+        border-bottom: 0;
+    }
+
+    .ticket-number {
+        font-weight: 700;
+        color: #2563eb;
+    }
+
+    .ticket-date {
+        color: #6b7280;
+        font-size: 14px;
+    }
+
+    .ticket-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .btn-ticket {
+        border: 0;
+        cursor: pointer;
+
+        padding: 10px;
+
+        border-radius: 10px;
+
+        font-size: 13px;
+        font-weight: 600;
+        background: green;
+        color: white;
+        transition: .2s ease;
+    }
+
+    .btn-ticket:hover {
+        transform: translateY(-2px);
+    }
+
+    .btn-track {
+        color: #fff;
+        background: #2563eb;
+    }
+
+    .btn-track:hover {
+        background: #1d4ed8;
+    }
+
+    .btn-delete {
+        color: #fff;
+        background: #dc2626;
+        padding: 10px;
+        border-radius: 10px;
+
+    }
+
+    .btn-delete:hover {
+        background: #b91c1c;
+    }
+
+    .no-ticket {
+        padding: 40px !important;
+        text-align: center;
+        color: #6b7280;
+    }
+
+    .aksi {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    /* Mobile */
+
+    @media (max-width: 768px) {
+
+        .ticket-table {
+            display: block;
+            overflow-x: auto;
+        }
+
+        .ticket-table th,
+        .ticket-table td {
+            white-space: nowrap;
+        }
+
+    }
+</style>
+{% endblock %}

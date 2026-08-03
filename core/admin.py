@@ -1,472 +1,480 @@
 from django.contrib import admin
+from unfold.admin import ModelAdmin 
 from django.urls import reverse
 from django.shortcuts import render,redirect
 from django.utils.html import format_html
+from django.contrib.auth.admin import UserAdmin
 
-from core.apps.wilayah.models import Kecamatan, Desa
-from core.apps.legalitas.models import ItemLegalitas 
-from core.apps.keuangan.models import Pendapatan 
-from core.apps.kelompok.models import Kelompok, LegalitasKelompok,AnggotaKelompok,AsetKelompok,WilayahPengawas
-from core.apps.usaha.models import JenisUsaha, ListUsaha
+from core.apps.accounts.models import UserProfile
+from core.apps.accounts.User.models import User
+
+from core.apps.aktivitas.models import AktivitasPegawai
+
+from core.apps.informasi.models import Notifikasi
+from core.apps.informasi.DeviceToken.models import DeviceToken
+from core.apps.informasi.MateriBerita.models import MateriBerita
+
+from core.apps.master.models import Kecamatan
+from core.apps.master.Bidang.models import Bidang
+from core.apps.master.Desa.models import Desa
+from core.apps.master.Dinas.models import Dinas
+
+from core.apps.organisasi.models import Organisasi
+from core.apps.organisasi.AnggotaOrganisasi.models import AnggotaOrganisasi
+from core.apps.organisasi.JenisOrganisasi.models import JenisOrganisasi
+from core.apps.organisasi.PersyaratanOrganisasi.models import PersyaratanOrganisasi
+from core.apps.organisasi.DokumenOrganisasi.models import DokumenOrganisasi
+
+
+from core.apps.pengaduan.models import Pengaduan
+from core.apps.pengaduan.JenisKasus.models import JenisKasus
+from core.apps.pengaduan.LampiranPengaduan.models import LampiranPengaduan
+from core.apps.pengaduan.PengaduanHistory.models import PengaduanHistory
+from core.apps.pengaduan.VerifikasiPengaduan.models import VerifikasiPengaduan
+
+
+
+
+# from core.apps.legalitas.models import ItemLegalitas 
+# from core.apps.keuangan.models import Pendapatan 
+# from core.apps.kelompok.models import Kelompok, LegalitasKelompok,AnggotaKelompok,AsetKelompok,WilayahPengawas
+# from core.apps.usaha.models import JenisUsaha, ListUsaha
 
 from itertools import groupby
 from django import forms
 
+@admin.register(User)
+class CustomUserAdmin(UserAdmin):
+    pass
 
-
-# admin.site.register(Kecamatan)
-# admin.site.register(Desa)
-# admin.site.register(ItemLegalitas)
-# admin.site.register(JenisUsaha)
-# admin.site.register(Kelompok)
-# admin.site.register(ListUsaha)
-# admin.site.register(LegalitasKelompok)
-# admin.site.register(Pendapatan)
-# admin.site.register(WilayahPengawas)
-# admin.site.register(User)
-
-
-# ✅ KECAMATAN
 @admin.register(Kecamatan)
-class KecamatanAdmin(admin.ModelAdmin):
-    list_display = ('id', 'nmKec','btnEdit')
-    search_fields = ('nmKec',)    
-    def btnEdit(self, obj):
-        url = reverse('admin:core_kecamatan_change', args=[obj.id])
-        return format_html(
-            '<a class="button" href="{}" style="background:#3b82f6;color:white;padding:4px 10px;border-radius:6px;">Edit</a>',
-            url
-        )
-    btnEdit.short_description = 'Aksi'
-
-   
+class KecamatanAdmin(ModelAdmin):
+    list_display = ("kode", "nama")
+    search_fields = ("kode", "nama")
 
 
-
-
-# ✅ DESA
 @admin.register(Desa)
-class DesaAdmin(admin.ModelAdmin):
-    
-    list_display = ('id', 'nmDesa', 'nama_kecamatan','btnEdit')
-    search_fields = ('nmDesa', 'kecamatan__nmKec')
-    list_filter = ('kecamatan__nmKec',)
-
-    def nama_kecamatan(self, obj):
-        return obj.kecamatan.nmKec
-    
-    nama_kecamatan.short_description = 'Kecamatan'
-
-    def btnEdit(self, obj):
-        url = reverse('admin:core_desa_change', args=[obj.id])
-        return format_html(
-            '<a class="button" href="{}" style="background:#3b82f6;color:white;padding:4px 10px;border-radius:6px;">Edit</a>',
-            url
-        )
-    btnEdit.short_description = 'Aksi'
-
-
-
-# ✅ ITEM LEGALITAS
-@admin.register(ItemLegalitas)
-class ItemLegalitasAdmin(admin.ModelAdmin):
-    list_display = ('id', 'nmILega','idJLega','btnEdit')
-    search_fields = ('nmILega',)
-    list_filter = ('idJLega',)
-    def btnEdit(self, obj):
-        url = reverse('admin:core_itemlegalitas_change', args=[obj.id])
-        return format_html(
-            '<a class="button" href="{}" style="background:#3b82f6;color:white;padding:4px 10px;border-radius:6px;">Edit</a>',
-            url
-        )
-    btnEdit.short_description = 'Aksi'
-
-
-# ✅ JENIS USAHA
-@admin.register(JenisUsaha)
-class JenisUsahaAdmin(admin.ModelAdmin):
-    list_display = ('id', 'nmJUsaha','btnEdit')
-    search_fields = ('nmJUsaha',)
-    def btnEdit(self, obj):
-        url = reverse('admin:core_jenisusaha_change', args=[obj.id])
-        return format_html(
-            '<a class="button" href="{}" style="background:#3b82f6;color:white;padding:4px 10px;border-radius:6px;">Edit</a>',
-            url
-        )
-    btnEdit.short_description = 'Aksi'
-
-
-# ✅ KELOMPOK
-@admin.register(Kelompok)
-
-class KelompokAdmin(admin.ModelAdmin):
-    list_display = ('id', 'nmKelo', 'nama_desa','ketua','btnEdit')
-    search_fields = ('nmKelo', 'ketua', 'desa__nmDesa', 'desa__kecamatan__nmKec')
-    list_filter = ('kelas','desa__nmDesa', 'desa__kecamatan__nmKec')
-    list_select_related = ('desa', 'desa__kecamatan')
-
-    def nama_desa(self, obj):
-        return obj.desa.nmDesa
-    nama_desa.short_description = 'Desa'
-
-    def nama_kecamatan(self, obj):
-        return obj.desa.kecamatan.nmKec
-    nama_kecamatan.short_description = 'Kecamatan'
-
-    def btnEdit(self, obj):
-        url = reverse('admin:core_kelompok_change', args=[obj.id])
-        return format_html(
-            '<a class="button" href="{}" style="background:#3b82f6;color:white;padding:4px 10px;border-radius:6px;">Edit</a>',
-            url
-        )
-    btnEdit.short_description = 'Aksi'
-
-
-
-# ✅ LIST USAHA
-@admin.register(ListUsaha)
-
-class ListUsahaAdmin(admin.ModelAdmin):
-    
-    autocomplete_fields = (
-        'kelompok',
-        'jenisUsaha',
+class DesaAdmin(ModelAdmin):
+    list_display = (
+        "kode",
+        "nama",
+        "kecamatan",
     )
 
+    list_filter = ("kecamatan",)
+
+    search_fields = (
+        "kode",
+        "nama",
+    )
+
+@admin.register(Dinas)
+class DinasAdmin(ModelAdmin):
     list_display = (
-        'id',
-        'nama_kelompok',
-        'nama_jenisUsaha',
+        "kode",
+        "nama", 
+        "telepon",
     )
 
     search_fields = (
-        'kelompok__nmKelo',
+        "kode",
+        "nama",
+    )
+
+
+@admin.register(Bidang)
+class BidangAdmin(ModelAdmin):
+    list_display = (
+        "kode",
+        "nama",
+        "dinas", 
     )
 
     list_filter = (
-        'jenisUsaha',
-    )
-
-    def nama_kelompok(self, obj):
-        return obj.kelompok.nmKelo
-
-    def nama_jenisUsaha(self, obj):
-        return obj.jenisUsaha.nmJUsaha
-
-    nama_kelompok.short_description = "Kelompok"
-    nama_jenisUsaha.short_description = "Jenis Usaha"
-
- 
-
-
-
-
-
-# class LegalitasKelompokForm(forms.ModelForm):
-
-#     class Meta:
-#         model = LegalitasKelompok
-#         fields = "__all__"
-
-#     def __init__(self, *args, **kwargs):
-#         super().__init__(*args, **kwargs)
-
-#         queryset = ItemLegalitas.objects.order_by(
-#             'idJLega',
-#             'nmILega'
-#         )
-
-#         kelompok = None
-
-#         # Edit mode
-#         if self.instance.pk and self.instance.kelompok:
-#             kelompok = self.instance.kelompok
-
-#         # Add mode
-#         kelompok_id = self.data.get('kelompok')
-
-#         if kelompok_id:
-#             try:
-#                 kelompok = Kelompok.objects.get(
-#                     pk=kelompok_id
-#                 )
-#             except Kelompok.DoesNotExist:
-#                 pass
-
-#         # Filter sesuai jenis kelompok
-#         if kelompok:
-#             queryset = queryset.filter(
-#                 idJLega__iexact=kelompok.jenisKelompok
-#             )
-
-#         # Tetap grouping
-#         choices = []
-
-#         for id_jlega, items in groupby(
-#             queryset,
-#             key=lambda x: x.idJLega
-#         ):
-#             choices.append(
-#                 (
-#                     id_jlega,
-#                     [
-#                         (
-#                             item.id,
-#                             item.nmILega
-#                         )
-#                         for item in items
-#                     ]
-#                 )
-#             )
-
-#         self.fields['itemLegalitas'].choices = choices
-
-#         self.fields['kelompok'].queryset = (
-#             Kelompok.objects
-#             .select_related('desa')
-#             .order_by(
-#                 'desa__nmDesa',
-#                 'nmKelo'
-#             )
-#         )
-
-
-class LegalitasKelompokForm(forms.ModelForm):
-
-    class Meta:
-        model = LegalitasKelompok
-        fields = "__all__"
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        queryset = ItemLegalitas.objects.order_by(
-            'idJLega',
-            'nmILega'
-        )
-
-        kelompok = None
-
-        if self.instance.pk and self.instance.kelompok:
-            kelompok = self.instance.kelompok
-
-        kelompok_id = self.data.get('kelompok')
-
-        if kelompok_id:
-            try:
-                kelompok = Kelompok.objects.get(
-                    pk=kelompok_id
-                )
-            except Kelompok.DoesNotExist:
-                pass
-
-        if kelompok:
-            queryset = queryset.filter(
-                idJLega__iexact=
-                kelompok.jenisKelompok
-            )
-
-        self.fields[
-            'itemLegalitas'
-        ].queryset = queryset
-
-        self.fields[
-            'kelompok'
-        ].queryset = (
-            Kelompok.objects
-            .select_related('desa')
-            .order_by(
-                'desa__nmDesa',
-                'nmKelo'
-            )
-        )
-
-    def clean(self):
-        cleaned = super().clean()
-
-        kelompok = cleaned.get(
-            'kelompok'
-        )
-
-        item = cleaned.get(
-            'itemLegalitas'
-        )
-
-        if kelompok and item:
-
-            if (
-                kelompok.jenisKelompok.upper()
-                !=
-                item.idJLega.upper()
-            ):
-                raise forms.ValidationError(
-                    'Item Legalitas tidak sesuai dengan jenis kelompok'
-                )
-
-        return cleaned
-
-
-
-# ✅ LEGALITAS KELOMPOK
-@admin.register(LegalitasKelompok)
-
-class LegalitasKelompokAdmin(admin.ModelAdmin):
-
-    form = LegalitasKelompokForm
-        
-    class Media:
-            js = (
-                'admin/js/legalitas_kelompok.js',
-            )
-
-    list_display = (
-        'id',
-        'nama_kelompok',
-        'jenis_legalitas',
-        'nama_itemLegalitas',
-        'value',
+        "dinas",
     )
 
     search_fields = (
-        'kelompok__nmKelo',
-        'kelompok__desa__nmDesa',
-        'value',
+        "kode",
+        "nama",
     )
 
-    list_filter = (
-        'itemLegalitas__idJLega',
-        'itemLegalitas__nmILega',
-        'aprovalPengawal',
-        'aprovalDesa',
-        'aprovalKec',
-    )
-
+@admin.register(UserProfile)
+class UserProfileAdmin(ModelAdmin):
     autocomplete_fields = (
-        'kelompok',
-    )
-
-    def get_form(self, request, obj=None, **kwargs):
-
-        form = super().get_form(
-            request,
-            obj,
-            **kwargs
-        )
-
-        return form
-
-    def nama_kelompok(self, obj):
-        return obj.kelompok.nmKelo
-
-    nama_kelompok.short_description = 'Kelompok'
-
-    def jenis_legalitas(self, obj):
-        return obj.itemLegalitas.idJLega
-
-    jenis_legalitas.short_description = 'Jenis'
-
-    def nama_itemLegalitas(self, obj):
-        return obj.itemLegalitas.nmILega
-
-    nama_itemLegalitas.short_description = 'Item Legalitas'
-
-
-# ✅ PENDAPATAN
-@admin.register(Pendapatan)
-class PendapatanAdmin(admin.ModelAdmin):
-    list_display = ('id', 'nama_usaha', 'nama_kelompok', 'pendapatan', 'pengeluaran')
-    search_fields = ('usaha__kelompok__nmKelo',)
-    list_filter = ('dateCreate', 'usaha__jenisUsaha__nmJUsaha')
-
-    def nama_kelompok(self, obj):
-        return obj.usaha.kelompok.nmKelo
-    def nama_usaha(self, obj):
-        return obj.usaha.jenisUsaha.nmJUsaha
-    def nama_komoditi(self, obj):
-        return obj.usaha.komoditi
-    
-
-
-# ✅ WILAYAH PENGAWAS
-# @admin.register(WilayahPengawas)
-# class WilayahPengawasAdmin(admin.ModelAdmin):
-#     list_display = ('id', 'user', 'desa')
-#     search_fields = ('user__username', 'desa__nmDesa')
-#     list_filter = ('desa',) 
-
-class WilayahPengawasForm(forms.ModelForm):
-    
-    
-
-    class Meta:
-        model = WilayahPengawas
-        fields = "__all__"
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self.fields["desa"].queryset = Desa.objects.filter(
-            kelompok__isnull=False
-        ).distinct()
-
-@admin.register(WilayahPengawas)
-class WilayahPengawasAdmin(admin.ModelAdmin):
-    form = WilayahPengawasForm
-    autocomplete_fields = (
-        'desa',
-        'kelompok',
-        'user',
+        "user",
+        "desa",
+        "bidang",
     )
     list_display = (
         "user",
+        "get_nik",
+        "get_no_hp",
         "desa",
-        "get_kelompok",
-    )   
-    
+        "bidang",
+        "is_verified",
+    )
+
     list_filter = (
-        "user", 
+        "is_verified",
+        "bidang",
+    )
+
+    search_fields = (
+        "user__username",
+        "user__first_name",
+        "user__nik",
+        "user__no_hp",
+    )
+    def has_add_permission(self, request):
+        print(
+            "SUPERUSER:",
+            request.user.is_superuser
+        )
+        return True
+    @admin.display(description="NIK")
+    def get_nik(self, obj):
+        return obj.user.nik
+
+    @admin.display(description="No HP")
+    def get_no_hp(self, obj):
+        return obj.user.no_hp
+ 
+@admin.register(PersyaratanOrganisasi)
+class PersyaratanOrganisasiAdmin(ModelAdmin):
+
+    list_display = (
+        "nama",
+        "jenis_organisasi",
+        "wajib", 
+    )
+
+    list_filter = (
+        "jenis_organisasi",
+        "wajib",  
+    )
+
+    search_fields = (
+        "nama",
+        "jenis_organisasi__nama",
+    )
+@admin.register(DeviceToken)
+class DeviceTokenAdmin(ModelAdmin):
+
+    list_display = (
+        "user",
+        "platform",
+        "is_active",
+        "last_used_at",
+        "created_at",
+    )
+
+    list_filter = (
+        "platform",
+        "is_active",
     )
 
     search_fields = (
         "user__username",
         "user__first_name",
         "user__last_name",
-        "desa__nmDesa",
-        "kelompok__nmKelo",
+        "token",
     )
 
-    
-    def get_kelompok(self, obj):
-        return obj.kelompok.nmKelo if obj.kelompok else "-"
+    autocomplete_fields = (
+        "user",
+    )
 
-    get_kelompok.short_description = "Kelompok"
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+    )
 
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+    ordering = (
+        "-created_at",
+    )
 
-        if db_field.name == "kelompok":
+@admin.register(DokumenOrganisasi)
+class DokumenOrganisasiAdmin(ModelAdmin):
 
-            desa_id = request.GET.get("desa")
+    list_display = (
+        "organisasi",
+        "persyaratan",
+        "status",
+        "verified_by",
+        "verified_at",
+    )
 
-            if desa_id:
-                kwargs["queryset"] = Kelompok.objects.filter(
-                    desa_id=desa_id
-                )
+    list_filter = (
+        "status",
+        "persyaratan",
+    )
 
-        return super().formfield_for_foreignkey(
-            db_field,
-            request,
-            **kwargs
+    search_fields = (
+        "organisasi__nama",
+        "persyaratan__nama",
+    )
+
+
+class JenisKasusForm(forms.ModelForm):
+    class Meta:
+        model = JenisKasus
+        fields = "__all__"
+        widgets = {
+            "warna": forms.TextInput(
+                attrs={
+                    "type": "color"
+                }
+            )
+        }
+ 
+@admin.register(JenisKasus)
+class JenisKasusAdmin(ModelAdmin):
+    form = JenisKasusForm
+    list_display = (
+        "kode",
+        "nama",
+        "warna_preview",
+    )
+
+    search_fields = (
+        "kode",
+        "nama",
+    )
+
+    ordering = (
+        "kode",
+    )
+
+    list_per_page = 20
+
+    readonly_fields = (
+        "warna_preview",
+    )
+
+    fields = (
+        "kode",
+        "nama",
+        "warna",
+        "warna_preview",
+    )
+
+    def warna_preview(self, obj):
+
+        if not obj.warna:
+            return "-"
+
+        return format_html(
+            '''
+            <div style="
+                width:40px;
+                height:40px;
+                border-radius:6px;
+                background:{};
+                border:1px solid #ddd;
+            "></div>
+            ''',
+            obj.warna
         )
 
-@admin.register(AnggotaKelompok)
-class AnggotaAdmin(admin.ModelAdmin):
-    list_display = ('nama', 'kelompok', 'jabatan')
-    search_fields = ('nama', 'kelompok__nmKelo')
-    list_filter = ('jabatan',)
+    warna_preview.short_description = "Preview"
 
 
-@admin.register(AsetKelompok)
-class AsetAdmin(admin.ModelAdmin):
-    list_display = ('namaAset', 'kelompok', 'jumlah', 'kondisi')
-    search_fields = ('namaAset',)
-    list_filter = ('kondisi',)
+@admin.register(JenisOrganisasi)
+class JenisOrganisasiAdmin(ModelAdmin):
+    list_display = (
+        "kode",
+        "nama",
+    )
+
+
+class LampiranPengaduanInline(admin.TabularInline):
+    model = LampiranPengaduan
+    extra = 0
+
+
+class PengaduanHistoryInline(admin.TabularInline):
+    model = PengaduanHistory
+    extra = 0
+
+
+@admin.register(Pengaduan)
+class PengaduanAdmin(ModelAdmin):
+
+    list_display = (
+        "nomor_tiket",
+        "jenis_kasus",
+        "pelapor",
+        "status",
+        "prioritas",
+        "verifikasi_admin",
+        "created_at",
+    )
+
+    list_filter = (
+        "status",
+        "prioritas",
+        "verifikasi_admin",
+        "jenis_kasus",
+    )
+
+    search_fields = (
+        "nomor_tiket",
+        "nama_pelapor",
+        "hp_pelapor",
+        "uraian",
+    )
+
+    readonly_fields = (
+        "ip_address",
+        "user_agent",
+        "created_at",
+        "updated_at",
+    )
+
+    inlines = [
+        LampiranPengaduanInline,
+        PengaduanHistoryInline,
+    ]
+
+@admin.register(PengaduanHistory)
+class PengaduanHistoryAdmin(ModelAdmin):
+
+    list_display = (
+        "pengaduan",
+        "user",
+        "judul",
+        "status_lama",
+        "status_baru",
+        "created_at",
+    )
+
+    list_filter = (
+        "status_baru",
+    )
+
+    search_fields = (
+        "judul",
+        "deskripsi",
+    )
+
+@admin.register(VerifikasiPengaduan)
+class VerifikasiPengaduanAdmin(ModelAdmin):
+
+    list_display = (
+        "pengaduan",
+        "user",
+        "peran",
+        "status_verifikasi",
+    )
+
+    list_filter = (
+        "peran",
+        "status_verifikasi",
+    )
+class AnggotaOrganisasiInline(admin.TabularInline):
+    model = AnggotaOrganisasi
+    extra = 0
+
+
+@admin.register(Organisasi)
+class OrganisasiAdmin(ModelAdmin):
+
+    list_display = (
+        "nama_organisasi",
+        "jenis_organisasi",
+        "ketua",
+        "desa",
+        "status_verifikasi",
+    )
+
+    list_filter = (
+        "jenis_organisasi",
+        "status_verifikasi",
+    )
+
+    search_fields = (
+        "nama_organisasi",
+    )
+
+    inlines = [
+        AnggotaOrganisasiInline
+    ]
+
+
+@admin.register(AnggotaOrganisasi)
+class AnggotaOrganisasiAdmin(ModelAdmin):
+
+    list_display = (
+        "nama",
+        "jabatan",
+        "organisasi",
+        "no_hp",
+    )
+
+    search_fields = (
+        "nama",
+        "nik",
+    )
+
+@admin.register(MateriBerita)
+class MateriBeritaAdmin(ModelAdmin):
+
+    list_display = (
+        "judul",
+        "kategori",
+        "user",
+        "is_public",
+        "status_publish",
+        "published_at",
+    )
+
+    list_filter = (
+        "kategori",
+        "is_public",
+        "status_publish",
+    )
+
+    search_fields = (
+        "judul",
+    )
+
+    prepopulated_fields = {
+        "slug": ("judul",)
+    }
+
+@admin.register(AktivitasPegawai)
+class AktivitasPegawaiAdmin(ModelAdmin):
+
+    list_display = (
+        "judul",
+        "user",
+        "tanggal_aktivitas",
+    )
+
+    list_filter = (
+        "tanggal_aktivitas",
+    )
+
+    search_fields = (
+        "judul",
+        "deskripsi",
+    )
+@admin.register(Notifikasi)
+class NotifikasiAdmin(ModelAdmin):
+
+    list_display = (
+        "judul",
+        "user",
+        "status_baca",
+        "created_at",
+    )
+
+    list_filter = (
+        "status_baca",
+    )
+
+    search_fields = (
+        "judul",
+        "pesan",
+    )
