@@ -13,6 +13,24 @@ html.lenis,html.lenis body{height:auto}.lenis.lenis-smooth [data-lenis-prevent]{
     box-sizing:border-box;
 }
 
+
+
+@media(max-width:700px){
+
+    .satuBaris700{
+        display: flex;
+        flex-direction: column;
+    }
+    .maxWidth80{
+        max-width: 80% !important;
+        min-width: 500px;
+    }
+    .batasMaxWidth{
+        max-width:unset !important;
+        max-height: unset !important;
+    }
+}
+
 :root{
     --primary:#0058d8;
     --primary-dark:#0046ac;
@@ -353,7 +371,7 @@ input[type=file]{
     .form-card h2{
         font-size:36px;
     }
-
+    
 }
 
 @media(max-width:992px){

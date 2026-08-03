@@ -7,7 +7,7 @@
         <div class="w-layout-blockcontainer container-main relative w-container">
 
             <div class="blog-content-block-v3">
-                <div class="blog-collection-block-v3 w-dyn-list" style="max-width: 40%; max-height: 500px;">
+                <div class="blog-collection-block-v3 w-dyn-list batasMaxWidth">
                     <div class="blog-collection-list-v3 large w-dyn-items" role="list">
                         {% for o in dberita|slice:":1" %}
                         <div class="blog-collection-item-v3 w-dyn-item" role="listitem">
@@ -127,13 +127,13 @@
                     </div>
                 </div>
                 <div class="about-content-block-v3">
-                    <div class="about-content-right-block-v3" style="width: 100%;;">
+                    <div class="about-content-right-block-v3 satuBaris700" style="width: 100%;;">
 
                         <div class="services-collection-list w-dyn-items" role="list">
 
                             {% for o in dberitaAll %}
                             <div class="services-collection-item w-dyn-item" role="listitem" style="position: unset;">
-                                <div class="services-item-card-block v3"><a
+                                <div class="services-item-card-block v3 maxWidth"><a
                                         class="services-item-thumbnail-block v3 w-inline-block"
                                         href="{% url 'detailInformasi' o.slug %}"><img alt="Service Image Overlay"
                                             class="services-thumbnail-overlay" loading="lazy"

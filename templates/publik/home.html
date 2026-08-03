@@ -163,7 +163,7 @@
                     </div>
                 </div>
                 <div class="about-content-block-v3" style="justify-content: center;">
-                    <div class="about-content-right-block-v3">
+                    <div class="about-content-right-block-v3 satuBaris700">
                         <div class="about-cards-block-v3">
                             <div class="about-lg-card-block-v3"
                                 style="translate: none; rotate: none; scale: none; opacity: 0; transform: translate(0px, 80px);"
@@ -289,9 +289,9 @@
                                         <div class="services-collection-list w-dyn-items maxWidth" role="list">
                                             {% for o in dberita %}
                                             <div class="services-collection-item w-dyn-item" role="listitem">
-                                                <div class="services-item-card-block v3"><a
+                                                <div class="services-item-card-block v3 maxWidth80"><a
                                                         class="services-item-thumbnail-block v3 w-inline-block"
-                                                        href="/services/personal-brand-consulting"><img
+                                                        href="{% url 'detailInformasi' o.slug %}"><img
                                                             alt="Service Image Overlay"
                                                             class="services-thumbnail-overlay" loading="lazy"
                                                             src="media/{{o.cover_image}}" /><img alt=""
@@ -301,7 +301,7 @@
                                                         <div class="services-item-text-block"><a
                                                                 aria-label="services-item-title-blocka"
                                                                 class="services-item-title-block w-inline-block"
-                                                                href="/services/personal-brand-consulting">
+                                                                href="{% url 'detailInformasi' o.slug %}">
                                                                 <h3 class="services-item-title-v3">{{o.judul}}</h3>
                                                             </a>
                                                             <div class="services-item-summary-block">
@@ -314,7 +314,7 @@
                                                                 data-wf--white-button--variant="main-size"
                                                                 data-wf-component-id="7f51300f-9481-7764-372f-282224688a1e"
                                                                 data-wf-variant-state="base"
-                                                                href="/services/personal-brand-consulting">
+                                                                href="{% url 'detailInformasi' o.slug %}">
                                                                 <div class="button-dot-block dark"
                                                                     style="translate: none; rotate: none; scale: none; transform: scale(0, 0);">
                                                                 </div>
