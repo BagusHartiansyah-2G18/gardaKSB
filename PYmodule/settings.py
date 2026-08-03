@@ -184,6 +184,6 @@ LOGIN_REDIRECT_URL = '/dashboard/'
 ALLOWED_HOSTS = [
     '127.0.0.1',
     'localhost',
-    'lpmd.kabsumbawabarat.com',
-    'www.lpmd.kabsumbawabarat.com',
+    'garda.kabsumbawabarat.com',
+    'www.garda.kabsumbawabarat.com',
 ]
