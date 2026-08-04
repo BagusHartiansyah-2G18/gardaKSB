@@ -13,6 +13,24 @@ html.lenis,html.lenis body{height:auto}.lenis.lenis-smooth [data-lenis-prevent]{
     box-sizing:border-box;
 }
 
+
+
+@media(max-width:700px){
+
+    .satuBaris700{
+        display: flex;
+        flex-direction: column;
+    }
+    .maxWidth80{
+        max-width: 80% !important;
+        min-width: 500px;
+    }
+    .batasMaxWidth{
+        max-width:unset !important;
+        max-height: unset !important;
+    }
+}
+
 :root{
     --primary:#0058d8;
     --primary-dark:#0046ac;
@@ -25,7 +43,10 @@ html.lenis,html.lenis body{height:auto}.lenis.lenis-smooth [data-lenis-prevent]{
     --radius:20px;
 }
 
- 
+ .maxWidth{
+    max-width: 80rem !important;
+    margin: auto !important
+}
 
 /* =========================
    LAYOUT
@@ -350,7 +371,7 @@ input[type=file]{
     .form-card h2{
         font-size:36px;
     }
-
+    
 }
 
 @media(max-width:992px){
@@ -533,4 +554,157 @@ input[type=file]{
     font-size: 13px;
     line-height: 1.7;
     color: rgba(255,255,255,.75);
+}
+
+
+/* =========================
+   SERVICES GRID LAYOUT
+========================= */
+
+.services-collection-list {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+    width: 100%;
+}
+
+.services-collection-item {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+/* =========================
+   CARD
+========================= */
+
+.services-item-card-block.v3 {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+
+    background: #141414;
+    border-radius: 20px;
+
+    transition: all .3s ease;
+}
+
+.services-item-card-block.v3:hover {
+    transform: translateY(-6px);
+}
+
+/* =========================
+   IMAGE
+========================= */
+
+.services-item-thumbnail-block.v3 {
+    display: block;
+    overflow: hidden;
+}
+
+.services-item-thumbnail-v3 {
+    width: 100%;
+    height: 240px;
+    object-fit: cover;
+    display: block;
+
+    transition: transform .4s ease;
+}
+
+.services-item-card-block.v3:hover
+.services-item-thumbnail-v3 {
+    transform: scale(1.05);
+}
+
+.services-thumbnail-overlay {
+    display: none;
+}
+
+/* =========================
+   CONTENT
+========================= */
+
+.services-item-content-block-v3 {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+    flex: 1;
+    padding: 24px;
+}
+
+.services-item-text-block {
+    flex: 1;
+}
+
+.services-item-title-v3 {
+    margin: 0 0 12px;
+
+    font-size: 22px;
+    line-height: 1.3;
+    min-height: 58px;
+}
+
+.services-item-summary-block p {
+    margin: 0;
+
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+
+    overflow: hidden;
+}
+
+/* =========================
+   BUTTON
+========================= */
+
+.services-item-button-block {
+    margin-top: 20px;
+}
+
+/* =========================
+   TABLET
+========================= */
+
+@media (max-width: 991px) {
+
+    .services-collection-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .services-item-thumbnail-v3 {
+        height: 220px;
+    }
+
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 767px) {
+
+    .services-collection-list {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .services-item-thumbnail-v3 {
+        height: 200px;
+    }
+
+    .services-item-content-block-v3 {
+        padding: 20px;
+    }
+
+    .services-item-title-v3 {
+        font-size: 20px;
+        min-height: auto;
+    }
+
+}
+
+.w-webflow-badge{
+    display: none !important;
 }
