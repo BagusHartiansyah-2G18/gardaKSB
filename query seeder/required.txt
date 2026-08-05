@@ -1,0 +1,11 @@
+1.public
+    [ok] home
+    [ok] pengaduan
+        notifikasi
+        disposisi
+        
+    [ok] berita & materi
+        view 
+        like
+    [ok] 
+2.

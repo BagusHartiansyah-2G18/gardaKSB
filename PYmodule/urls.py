@@ -17,7 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path,include
 from django.contrib.auth import views as auth_views
-from core.views import home,pengaduan,informasi,kirimPengaduan,trackingPengaduan,detailInformasi,materiBidang
+from core.views import home,pengaduan,informasi,kirimPengaduan,trackingPengaduan,detailInformasi,materiBidang,addViewBerita
 from django.conf import settings
 from django.conf.urls.static import static
 
@@ -34,7 +34,8 @@ urlpatterns = [
     path('informasi/materi/<slug:slug>/', materiBidang,name="materiBidang"),
     path('informasi/materi/<slug:slug>/<str:id>/', materiBidang,name="materiBidangs"),
    
-    # path('seed-sumbawa/', seed_sumbawa),
+    # path('addViewBerita/<str:id>/', addViewBerita, name='addViewBerita'),
+    path('addViewBerita/<str:id>/<str:aktivitas>/', addViewBerita, name='addLikeBerita'),
     # path('dashboard/', dashboard, name="dashboard"),
     # path('kelompok/<str:jenis>/', pkelompok, name="pkelompok"),
     # path('kelompok/detail/<int:id>/',pkelompokDetail, name='kelompok_detail'),

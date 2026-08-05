@@ -4,17 +4,7 @@ from django.contrib.auth import authenticate, login as auth_login
 
 from django.contrib import messages
 from rest_framework.decorators import api_view
-from rest_framework.response import Response
-
-# from core.apps.wilayah.models import Kecamatan, Desa
-# from core.apps.usaha.models import JenisUsaha,ListUsaha
-# from core.apps.legalitas.models import ItemLegalitas
-
-# from core.apps.kelompok.models import Kelompok,AsetKelompok,LegalitasKelompok,WilayahPengawas
-# from core.apps.keuangan.models import Pendapatan
-
-# from core.apps.keuangan.vkeuangan import pkeuangan
-# from core.apps.kelompok.vkelompok import pkelompokDetail
+from rest_framework.response import Response 
 
 from django.http import JsonResponse
 
@@ -27,17 +17,25 @@ import json
 
 
 from django.db.models import Q,Count
-# from core.utils import summaryDashboard,summaryApproval,chartApprovalModul,chartPendAll,chartPendBulanan,summaryLegalitas,chartKelengkapan,summaryAset,chartKondisiAset,chartLembaga,chartKelompok,chartAsetKelompok,warningApproval,summaryAnggota,chartStatusKelompok,getWilaya,chartPendJUsaha,send,subMenu
-from core.apps.informasi.MateriBerita.service import getRandom_berita,getBeritaPerBulan,getMateriPerBidang,getPartisipasiMateri,getBeritaON,getDetailBerita,getFileMateriPerBidang
+from core.apps.informasi.MateriBerita.service import getRandom_berita,getBeritaPerBulan,getMateriPerBidang,getPartisipasiMateri,getBeritaON,getDetailBerita,getFileMateriPerBidang,toggle_like
 from core.apps.pengaduan.service import getMapKasus,getGrafikJenisKasus,generateNomorTiket
 from core.apps.master.Desa.service import getDesa
 from core.utilsData import PARTNERS
 
 
 from core.apps.pengaduan.models import Pengaduan
+from core.apps.informasi.MateriBerita.models import MateriBerita
+
+from core.apps.informasi.MateriBeritaActivity.models import MateriBeritaActivity
+from core.apps.informasi.MateriBeritaActivity.service import getUserLike
+
+from core.apps.accounts.service import addDataPegawai
+
+
 from core.apps.pengaduan.PengaduanHistory.models import PengaduanHistory
 
 def home(request): 
+    # addDataPegawai()
     return render(request, 'publik/home.html', {
         'dberita': getRandom_berita(kategori="BERITA"),
         'dmateri': getRandom_berita(),
@@ -214,7 +212,8 @@ def detailInformasi(request,slug):
     return render(
         request,'publik/informasiDetail.html',{
             'berita': berita,
-            'dterkait':getRandom_berita(kategori=berita.kategori)
+            'dterkait':getRandom_berita(kategori=berita.kategori),
+            'isLike':getUserLike(request,berita.id)
         }
     )
 
@@ -231,8 +230,7 @@ def materiBidang(request, slug, id=None):
         data = getFileMateriPerBidang(
             bidang_id=slug,
             id=id
-        )
-        print(data)
+        ) 
         if data:
             dmateriOn = data[0]
 
@@ -249,3 +247,36 @@ def materiBidang(request, slug, id=None):
             "bidang":slug,
         }
     )
+
+def addViewBerita(request, id,aktivitas="VIEW"):
+
+    if request.method == "POST":
+        userAktif = request.user if request.user.is_authenticated else None
+        if aktivitas == "LIKE":
+            if userAktif !=None:
+                likeResp = toggle_like(userAktif,id)
+                return JsonResponse({
+                    "status": True,
+                    "like":likeResp
+                })
+            else:
+                return JsonResponse({
+                    "status": False,
+                })
+        materi = MateriBerita.objects.get(
+            id=id
+        )
+
+        MateriBeritaActivity.objects.create(
+            materi=materi,
+            aktivitas=aktivitas,
+            user=userAktif
+        )
+
+        return JsonResponse({
+            "status": True
+        })
+
+    return JsonResponse({
+        "status": False
+    })

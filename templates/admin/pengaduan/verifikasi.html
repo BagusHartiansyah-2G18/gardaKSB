@@ -1,0 +1,100 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+
+<div class="max-w-4xl">
+
+    <div class="mb-6">
+        <h1 style="font-size:28px;font-weight:700;">
+            Verifikasi Pengaduan
+        </h1>
+        <p style="opacity:.7;">
+            Tentukan petugas yang akan mengawal penanganan pengaduan.
+        </p>
+    </div>
+
+    <div style="
+        border:1px solid #334155;
+        border-radius:12px;
+        padding:20px;
+        margin-bottom:24px;
+    ">
+        <h3 style="margin-bottom:12px;">
+            Informasi Pengaduan
+        </h3>
+
+        <table style="width:100%;">
+            <tr>
+                <td width="180"><b>No Tiket</b></td>
+                <td>{{ pengaduan.nomor_tiket }}</td>
+            </tr>
+
+            <tr>
+                <td><b>Pelapor</b></td>
+                <td>{{ pengaduan.nama_pelapor }}</td>
+            </tr>
+
+            <tr>
+                <td><b>Judul</b></td>
+                <td>{{ pengaduan.judul }}</td>
+            </tr>
+
+            <tr>
+                <td><b>Status</b></td>
+                <td>{{ pengaduan.status }}</td>
+            </tr>
+
+            <tr>
+                <td><b>Prioritas</b></td>
+                <td>
+                    <span style="
+                        background:#dc2626;
+                        color:white;
+                        padding:4px 10px;
+                        border-radius:20px;
+                    ">
+                        {{ pengaduan.prioritas }}
+                    </span>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <div style="
+            border:1px solid #334155;
+            border-radius:12px;
+            padding:20px;
+        ">
+
+            <h3 style="margin-bottom:16px;">
+                Penugasan Petugas
+            </h3>
+
+            {{ form.as_p }}
+
+            <div style="
+                display:flex;
+                gap:10px;
+                margin-top:20px;
+            ">
+                <button
+                    type="submit"
+                    class="button default"
+                >
+                    ✅ Verifikasi Pengaduan
+                </button>
+
+                <a href="/admin/pengaduan/pengaduan/">
+                    Kembali
+                </a>
+            </div>
+
+        </div>
+    </form>
+
+</div>
+
+{% endblock %}

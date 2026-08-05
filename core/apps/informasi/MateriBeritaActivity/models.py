@@ -33,11 +33,6 @@ class MateriBeritaActivity(models.Model):
         auto_now_add=True
     )
 
-    def clean(self):
-        if self.kategori == "MATERI" and not self.file_pdf:
-            raise ValidationError(
-                "File PDF wajib untuk kategori MATERI."
-            )
     def save(self, *args, **kwargs):
         self.full_clean()
         super().save(*args, **kwargs)

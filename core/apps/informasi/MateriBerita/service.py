@@ -51,9 +51,23 @@ def getBeritaON(
         )
         .order_by("?")
     )
+
 def getDetailBerita(slug):
     return get_object_or_404(
-        MateriBerita,
+        MateriBerita.objects.annotate(
+            total_like=Count(
+                "activities",
+                filter=Q(
+                    activities__aktivitas="LIKE"
+                )
+            ),
+            total_view=Count(
+                "activities",
+                filter=Q(
+                    activities__aktivitas="VIEW"
+                )
+            ),
+        ),
         slug=slug
     )
 def getRandom_berita(

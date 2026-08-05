@@ -82,16 +82,12 @@ class Pengaduan(models.Model):
 
     lokasi_kejadian = models.TextField()
 
-    latitude = models.DecimalField(
-        max_digits=10,
-        decimal_places=8,
+    latitude = models.FloatField(
         null=True,
         blank=True
     )
 
-    longitude = models.DecimalField(
-        max_digits=11,
-        decimal_places=8,
+    longitude = models.FloatField(
         null=True,
         blank=True
     )

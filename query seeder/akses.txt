@@ -17,3 +17,7 @@ ln -s staticfiles static
         </a> 
 
 pip freeze > requirements.txt
+
+
+pbkdf2_sha256$1000000$TOvRajVWg5nq044cCcwXi2$hyCbO6fzurqbwOR6cfKvapSudxx+rU8vMi2Ry6TmpRw=
+kesbangFol

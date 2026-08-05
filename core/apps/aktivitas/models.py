@@ -14,15 +14,15 @@ class AktivitasPegawai(models.Model):
     deskripsi = models.TextField()
 
     latitude = models.DecimalField(
-        max_digits=10,
-        decimal_places=8,
+        max_digits=20,
+        decimal_places=20,
         null=True,
         blank=True
     )
 
     longitude = models.DecimalField(
-        max_digits=11,
-        decimal_places=8,
+        max_digits=20,
+        decimal_places=20,
         null=True,
         blank=True
     )

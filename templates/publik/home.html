@@ -39,7 +39,7 @@
                                                                 data-wf--white-button--variant="main-size"
                                                                 data-wf-component-id="7f51300f-9481-7764-372f-282224688a1e"
                                                                 data-wf-variant-state="base"
-                                                                href="/case-studies/meridian-recovering-1-8m-through-leadership-redesign">
+                                                                href="{% url 'detailInformasi' berita.slug %}">
                                                                 <div class="button-dot-block dark"
                                                                     style="translate: none; rotate: none; scale: none; transform: translate3d(0px, 0px, 0px) scale(0, 0);">
                                                                 </div>
@@ -53,14 +53,14 @@
                                                         <div class="case-study-single-stat-block">
                                                             <div
                                                                 class="heading-style-4 text-color-primary-900 _wf-counter">
-                                                                {{ berita.total_like }} X</div>
+                                                                {{ berita.total_view }} X</div>
                                                             <p class="text-size-regular text-color-gray-600">views</p>
                                                         </div>
                                                         <div class="case-study-stat-divider v2"></div>
                                                         <div class="case-study-single-stat-block">
                                                             <div
                                                                 class="heading-style-4 text-color-primary-900 _wf-counter">
-                                                                {{ berita.total_view }} X</div>
+                                                                {{ berita.total_like }} X</div>
                                                             <p class="text-size-regular text-color-gray-600">like</p>
                                                         </div>
                                                     </div>
