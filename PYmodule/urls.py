@@ -20,6 +20,8 @@ from django.contrib.auth import views as auth_views
 from core.views import home,pengaduan,informasi,kirimPengaduan,trackingPengaduan,detailInformasi,materiBidang,addViewBerita
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.generic import TemplateView
+
 
 urlpatterns = [
     # publik 
@@ -36,6 +38,15 @@ urlpatterns = [
    
     # path('addViewBerita/<str:id>/', addViewBerita, name='addViewBerita'),
     path('addViewBerita/<str:id>/<str:aktivitas>/', addViewBerita, name='addLikeBerita'),
+    
+    path(
+        "firebase-messaging-sw.js",
+        TemplateView.as_view(
+            template_name="firebase-messaging-sw.js",
+            content_type="application/javascript",
+        ),
+        name="firebase-sw",
+    ),
     # path('dashboard/', dashboard, name="dashboard"),
     # path('kelompok/<str:jenis>/', pkelompok, name="pkelompok"),
     # path('kelompok/detail/<int:id>/',pkelompokDetail, name='kelompok_detail'),

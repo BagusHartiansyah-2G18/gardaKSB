@@ -1,7 +1,26 @@
 {% extends "admin/base_site.html" %}
+{% load static %}
 
 {% block content %}
+<style>
+    #id_petugas, textarea{
+        border: white 1px solid;
+        > option{
+            color: black;
+        }
 
+    }
+    table td {
+        padding: 8px 12px;
+    }
+    div p{
+        padding: 8px 12px;
+    }
+</style>
+<link rel="stylesheet"
+    href="{% static 'admin/css/autocomplete.css'%}"/>
+<link rel="stylesheet"
+    href="{% static '/vendor/tom-select/tom-select.css'%}"/>
 <div class="max-w-4xl">
 
     <div class="mb-6">
@@ -82,12 +101,12 @@
             ">
                 <button
                     type="submit"
-                    class="button default"
+                    class="bg-green-600 flex h-[38px] p-2 items-center justify-center rounded-default shrink-0 text-white text-xs"
                 >
                     ✅ Verifikasi Pengaduan
                 </button>
 
-                <a href="/admin/pengaduan/pengaduan/">
+                <a href="/admin/pengaduan/pengaduan/" class="bg-sky-500 flex h-[38px] p-2 items-center justify-center rounded-default shrink-0 text-white text-xs">
                     Kembali
                 </a>
             </div>

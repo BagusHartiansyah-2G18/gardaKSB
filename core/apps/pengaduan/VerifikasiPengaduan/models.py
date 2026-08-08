@@ -6,7 +6,7 @@ class VerifikasiPengaduan(models.Model):
 
     ROLE = (
         ("PJ","Penanggung Jawab"),
-        ("TIM","Tim"),
+        ("TIM","Tim / Anggota"),
     )
 
     pengaduan = models.ForeignKey(

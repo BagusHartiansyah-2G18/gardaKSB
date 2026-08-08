@@ -40,8 +40,9 @@ from core.apps.pengaduan.VerifikasiPengaduan.models import VerifikasiPengaduan
 from itertools import groupby
 from django import forms
 from core.utils import filterByGroup,aksesMenuAdmin,filterData,setKeyGroup
-from core.apps.accounts.service import getAllID
+from core.apps.accounts.service import getAllID,getUserByID
 
+from django.utils.text import Truncator
 from core.viewForm import VerifikasiPengaduanForm
 
 @admin.register(User)
@@ -503,7 +504,7 @@ class PengaduanHistoryInline(admin.TabularInline):
 class PengaduanAdmin(ModelAdmin):
 
     list_display = (
-        "nomor_tiket",
+        "uraian_singkat",
         "nama_pelapor",
         "status",
         "prioritas",
@@ -527,8 +528,11 @@ class PengaduanAdmin(ModelAdmin):
 
     ordering = (
         "-created_at",
-    )
+    ) 
 
+    @admin.display(description="Uraian")
+    def uraian_singkat(self, obj):
+        return Truncator(obj.uraian).chars(30) 
     def get_urls(self):
 
         urls = super().get_urls()
@@ -547,16 +551,21 @@ class PengaduanAdmin(ModelAdmin):
 
     def aksi(self, obj):
         request = self.request
-        detail_url = reverse(
-            "admin:pengaduan_pengaduan_change",
-            args=[obj.id]
-        )
 
         verifikasi_url = reverse(
             "admin:verifikasi_pengaduan",
             args=[obj.id]
         )
-
+        history_url = (
+            reverse(
+                "admin:pengaduan_pengaduanhistory_changelist"
+            )
+            + f"?e={obj.id}"
+        )
+        
+        pageVerifikasi_url = reverse(
+            "admin:pengaduan_verifikasipengaduan_changelist"
+        )+ f"?e={obj.id}"
         buttons = []  
         groupUser = request.user.groups.first()
         if (
@@ -567,18 +576,29 @@ class PengaduanAdmin(ModelAdmin):
                 groupUser.name  in ["KABID", "KABAN","ADMIN"]
             )
         ):
-            buttons.append(
-                f'<a href="{verifikasi_url}" class="bg-green-600 flex h-[38px] items-center justify-center rounded-default shrink-0 text-white text-xs">Verifikasi</a>'
-            )
+            if not obj.verifikasi_admin:
+                buttons.append(
+                    f'<a href="{verifikasi_url}" class="bg-green-600 flex h-[38px] items-center justify-center rounded-default shrink-0 text-white text-xs p-2">Verifikasi</a>'
+                )
+            else:
+                buttons.append(
+                    f'<a href="{pageVerifikasi_url}" class="bg-green-600 flex h-[38px] items-center justify-center rounded-default shrink-0 text-white text-xs p-2">tim Verifikasi</a>'
+                )
 
-        # buttons.append( 
-        #     f'<a href="{detail_url}" class="bg-primary-600 flex h-[38px] items-center justify-center rounded-default shrink-0 text-white text-xs ">Detail</a>'
-        # )
-        print(buttons)
 
-        return format_html(
-            "".join(buttons)
+        # if(len(buttons)==0):
+        buttons.append( 
+            f'<a href="{history_url}" class="bg-blue-400 flex h-[38px] items-center justify-center rounded-default shrink-0 text-black text-xs p-2">riwayat</a>'
         )
+        # print(buttons)
+        return format_html(
+            '''
+            <div class="flex items-center gap-2">
+                {}
+            </div>
+            ''',
+            format_html("".join(buttons))
+        ) 
     
 
     aksi.short_description = "Aksi"
@@ -605,7 +625,13 @@ class PengaduanAdmin(ModelAdmin):
                 pengaduan.petugas = form.cleaned_data[
                     "petugas"
                 ]
+                pengaduan.disposisi_oleh = (request.user)
 
+                pengaduan.tindak_lanjut = form.cleaned_data[
+                    "catatan"
+                ]
+                
+                
                 pengaduan.verifikator = (
                     request.user
                 )
@@ -628,7 +654,12 @@ class PengaduanAdmin(ModelAdmin):
 
         else:
 
-            form = VerifikasiPengaduanForm()
+            form = VerifikasiPengaduanForm(
+                initial={
+                    "petugas": pengaduan.petugas,
+                    "catatan": getattr(pengaduan, "tindak_lanjut", "")
+                }
+            )
 
         context = {
             **self.admin_site.each_context(
@@ -698,14 +729,117 @@ class PengaduanHistoryAdmin(ModelAdmin):
         "created_at",
     )
 
-    list_filter = (
-        "status_baru",
+    change_list_template = (
+        "admin/pengaduan/pageHistory.html"
     )
+    def get_changeform_initial_data(self, request):
+        initial = super().get_changeform_initial_data(request)
 
-    search_fields = (
-        "judul",
-        "deskripsi",
+        id_pengaduan = request.GET.get("e")
+        initial["user"] = request.user.pk
+        duser =  getUserByID(request.user.pk) 
+        initial["bidang"] = duser.bidang.id if duser.bidang.id else None
+        if id_pengaduan:
+            initial["pengaduan"] = id_pengaduan
+
+        return initial
+    exclude = (
+        # "user",
+        "bidang",
+        "status_lama",
+        "status_baru",
+        
     )
+    # def has_add_permission(self, request):
+    #     return False
+    def save_model(self, request, obj, form, change):
+        if not change:
+            # obj.user = request.user
+            duser =  getUserByID(obj.user.pk) 
+            obj.bidang = duser.bidang if duser.bidang else None
+
+            id_pengaduan = request.GET.get("e")
+            if id_pengaduan:
+                obj.pengaduan_id = id_pengaduan
+
+        super().save_model(request, obj, form, change)
+    def changelist_view(
+        self,
+        request,
+        extra_context=None
+    ):
+
+        id_pengaduan = request.GET.get(
+            "e"
+        )
+
+        pengaduan = None
+        if not id_pengaduan:
+            return redirect("/admin/pengaduan/pengaduan/")
+        if id_pengaduan:
+            pengaduan = (
+                Pengaduan.objects
+                .select_related(
+                    "petugas",
+                    "verifikator",
+                    "pelapor"
+                )
+                .filter(
+                    pk=id_pengaduan
+                )
+                .first()
+            )
+
+        extra_context = (
+            extra_context or {}
+        )
+
+        extra_context.update({
+            "pengaduan": pengaduan
+        })
+
+        return super().changelist_view(
+            request,
+            extra_context=extra_context
+        )
+    def response_add(
+        self,
+        request,
+        obj,
+        post_url_continue=None
+    ):
+
+        e = request.GET.get("e")
+
+        if e:
+            return redirect(
+                f"/admin/pengaduan/pengaduanhistory/?e={e}"
+            )
+
+        return super().response_add(
+            request,
+            obj,
+            post_url_continue
+        )
+    def get_queryset(
+        self,
+        request
+    ):
+
+        qs = super().get_queryset(
+            request
+        )
+
+        id_pengaduan = request.GET.get(
+            "e"
+        )
+
+        if id_pengaduan:
+            qs = qs.filter(
+                pengaduan_id=id_pengaduan
+            )
+
+        return qs
 
 @admin.register(VerifikasiPengaduan)
 class VerifikasiPengaduanAdmin(ModelAdmin):
@@ -721,6 +855,92 @@ class VerifikasiPengaduanAdmin(ModelAdmin):
         "peran",
         "status_verifikasi",
     )
+    change_list_template = (
+        "admin/pengaduan/pageVerifikasi.html"
+    )
+    exclude = (
+        # "user",
+        "status_verifikasi",
+        "catatan",
+        "tanggal_verifikasi",
+        
+    )
+    # def has_add_permission(self, request):
+    #     return False
+    def get_changeform_initial_data(self, request):
+        initial = super().get_changeform_initial_data(request)
+
+        id_pengaduan = request.GET.get("e")
+        initial["peran"] = "TIM"
+        # duser =  getUserByID(request.user.pk) 
+        # initial["bidang"] = duser.bidang.id if duser.bidang.id else None
+        if id_pengaduan:
+            initial["pengaduan"] = id_pengaduan
+
+        return initial
+    def response_add(
+        self,
+        request,
+        obj,
+        post_url_continue=None
+    ):
+
+        e = request.GET.get("e")
+
+        if e:
+            return redirect(
+                f"/admin/pengaduan/verifikasipengaduan/?e={e}"
+            )
+
+        return super().response_add(
+            request,
+            obj,
+            post_url_continue
+        )
+    def changelist_view(
+        self,
+        request,
+        extra_context=None
+    ):
+
+        id_pengaduan = request.GET.get(
+            "e"
+        )
+    
+        pengaduan = None
+        if not id_pengaduan:
+            return redirect("/admin/pengaduan/pengaduan/")
+        if id_pengaduan:
+            pengaduan = (
+                Pengaduan.objects
+                .select_related(
+                    "petugas",
+                    "verifikator",
+                    "pelapor"
+                )
+                .filter(
+                    pk=id_pengaduan
+                )
+                .first()
+            )
+
+        extra_context = (
+            extra_context or {}
+        )
+
+        extra_context.update({
+            "pengaduan": pengaduan,
+            # "show_save_and_continue": False,
+            # "show_save_and_add_another": False,
+            # "show_save": False,
+        })
+
+        return super().changelist_view(
+            request,
+            # object_id,form_url,
+            extra_context=extra_context
+        )
+
 class AnggotaOrganisasiInline(admin.TabularInline):
     model = AnggotaOrganisasi
     extra = 0

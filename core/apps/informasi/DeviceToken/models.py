@@ -21,14 +21,19 @@ class DeviceToken(models.Model):
         unique=True
     )
 
+    is_active = models.BooleanField(
+        default=True,
+        db_index=True
+    )
+
     platform = models.CharField(
         max_length=20,
         choices=PLATFORM_CHOICES
     )
 
-    is_active = models.BooleanField(
-        default=True
-    )
+    # is_active = models.BooleanField(
+    #     default=True
+    # )
 
     last_used_at = models.DateTimeField(
         null=True,
@@ -42,6 +47,7 @@ class DeviceToken(models.Model):
     updated_at = models.DateTimeField(
         auto_now=True
     )
+    
 
     class Meta:
         verbose_name = "Device Token"

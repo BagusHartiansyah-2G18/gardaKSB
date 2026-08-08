@@ -21,3 +21,10 @@ pip freeze > requirements.txt
 
 pbkdf2_sha256$1000000$TOvRajVWg5nq044cCcwXi2$hyCbO6fzurqbwOR6cfKvapSudxx+rU8vMi2Ry6TmpRw=
 kesbangFol
+
+
+py -m venv .venv
+py -3.11 -m venv .venv
+.\.venv\Scripts\Activate.ps1py
+python -m pip install --upgrade pip
+pip install -r requirements.txt

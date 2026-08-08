@@ -1,0 +1,64 @@
+{% extends "admin/change_list.html" %} 
+{% load static %}
+{% block object-tools-items %}
+    {% if pengaduan %}
+         <a href="{% url 'admin:pengaduan_pengaduanhistory_add' %}?e={{ pengaduan.id }}" class="addlink bg-primary-600 flex items-center h-[38px] justify-center -my-1 rounded-full w-[38px] hover:bg-primary-600/80" title="Add History pengaduan">
+            <span class="material-symbols-outlined text-white">add</span>
+        </a> 
+    {% endif %}
+{% endblock %}
+{% block content %}
+
+{% if pengaduan %}
+<style>
+    #id_petugas, textarea{
+        border: white 1px solid;
+        > option{
+            color: black;
+        }
+
+    }
+    table td {
+        padding: 8px 12px;
+    }
+    div p{
+        padding: 8px 12px;
+    }
+</style>
+<div style="
+    border:1px solid #334155;
+    padding:20px;
+    border-radius:10px;
+    margin-bottom:20px;
+">
+
+    <h2>Informasi Pengaduan</h2>
+
+    <table>
+        <tr>
+            <td><b>No Tiket</b></td>
+            <td>{{ pengaduan.nomor_tiket }}</td>
+        </tr>
+
+        <tr>
+            <td><b>Pelapor</b></td>
+            <td>{{ pengaduan.nama_pelapor }}</td>
+        </tr>
+
+        <tr>
+            <td><b>Judul</b></td>
+            <td>{{ pengaduan.judul }}</td>
+        </tr>
+
+        <tr>
+            <td><b>Status</b></td>
+            <td>{{ pengaduan.status }}</td>
+        </tr>
+    </table>
+
+</div>
+{% endif %}
+
+{{ block.super }}
+
+{% endblock %}
