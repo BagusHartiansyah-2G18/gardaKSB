@@ -13,11 +13,21 @@ import pandas as pd
 from django.core.paginator import Paginator
 
 import json
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework import status
 
 
 
 from django.db.models import Q,Count
-from core.apps.informasi.MateriBerita.service import getRandom_berita,getBeritaPerBulan,getMateriPerBidang,getPartisipasiMateri,getBeritaON,getDetailBerita,getFileMateriPerBidang,toggle_like
+from core.apps.informasi.DeviceToken.models import DeviceToken
+from core.apps.informasi.models import Notifikasi
+
+from core.apps.informasi.MateriBerita.service import (
+    getRandom_berita,getBeritaPerBulan,getMateriPerBidang,
+    getPartisipasiMateri,getBeritaON,getDetailBerita,
+    getFileMateriPerBidang,toggle_like
+)
 from core.apps.pengaduan.service import getMapKasus,getGrafikJenisKasus,generateNomorTiket
 from core.apps.master.Desa.service import getDesa
 from core.utilsData import PARTNERS
@@ -31,6 +41,9 @@ from core.apps.informasi.MateriBeritaActivity.service import getUserLike
 
 from core.apps.accounts.service import addDataPegawai
 
+
+from django.views.decorators.csrf import csrf_exempt
+from core.services.firebase import send_push_notification
 
 from core.apps.pengaduan.PengaduanHistory.models import PengaduanHistory
 
@@ -280,3 +293,117 @@ def addViewBerita(request, id,aktivitas="VIEW"):
     return JsonResponse({
         "status": False
     })
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def save_device_token(request):
+    token = request.data.get("token")
+    platform = request.data.get("platform", "WEB")
+
+    if not token:
+        return Response(
+            {"success": False, "message": "Token wajib diisi."},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    device_token, created = DeviceToken.objects.update_or_create(
+        token=token,
+        defaults={
+            "user": request.user,
+            "platform": platform,
+            "is_active": True,
+            "last_used_at": timezone.now(),
+        }
+    )
+
+    return Response({
+        "success": True,
+        "message": "Device token berhasil disimpan.",
+        "created": created,
+    })
+
+ 
+@csrf_exempt
+def send_pending_notifications(request):
+
+    notifications = Notifikasi.objects.filter(
+        status_kirim=False
+    ).select_related("user")
+
+    total = notifications.count()
+    berhasil = 0
+    gagal = 0
+
+    for notification in notifications:
+
+        devices = DeviceToken.objects.filter(
+            user=notification.user,
+            is_active=True,
+            platform="WEB"
+        )
+
+        if not devices.exists():
+            print("================================")
+            print("FCM SKIPPED")
+            print("User:", notification.user)
+            print("Alasan: Tidak ada device token aktif")
+            print("================================")
+
+            gagal += 1
+            continue
+
+        notification_sent = False
+
+        for device in devices:
+
+            try:
+                print("================================")
+                print("SENDING FCM")
+                print("User:", notification.user)
+                print("Device:", device.id)
+                print("Platform:", device.platform)
+                print("Title:", notification.judul)
+                print("Body:", notification.pesan)
+                print("================================")
+
+                response = send_push_notification(
+                    token=device.token,
+                    title=notification.judul,
+                    body=notification.pesan,
+                    url=notification.url,
+                    jenis=notification.jenis,
+                )
+
+                print("================================")
+                print("FCM SEND SUCCESS")
+                print("Firebase Message ID:", response)
+                print("================================")
+
+                notification_sent = True
+
+            except Exception as e:
+
+                print("================================")
+                print("FCM SEND FAILED")
+                print("Device:", device.id)
+                print("Error:", repr(e))
+                print("================================")
+
+        if notification_sent:
+
+            notification.status_kirim = True
+
+            notification.save(
+                update_fields=["status_kirim"]
+            )
+
+            berhasil += 1
+
+        else:
+            gagal += 1
+
+    return JsonResponse({
+        "success": True,
+        "total": total,
+        "berhasil": berhasil,
+        "gagal": gagal,
+    }) 

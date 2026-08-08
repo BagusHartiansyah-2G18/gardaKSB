@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 import mimetypes
@@ -187,3 +188,11 @@ ALLOWED_HOSTS = [
     'garda.kabsumbawabarat.com',
     'www.garda.kabsumbawabarat.com',
 ]
+
+
+FIREBASE_SERVICE_ACCOUNT = os.path.join(
+    BASE_DIR,
+    "core",
+    "services",
+    "garda-a8eb9-firebase-adminsdk-fbsvc-0937560186.json"
+)

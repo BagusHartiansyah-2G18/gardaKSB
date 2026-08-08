@@ -3,3 +3,4 @@
 .venv
 passenger_wsgi.py
 media
+core/services/*.json

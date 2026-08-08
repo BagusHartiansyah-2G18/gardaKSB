@@ -17,13 +17,18 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path,include
 from django.contrib.auth import views as auth_views
-from core.views import home,pengaduan,informasi,kirimPengaduan,trackingPengaduan,detailInformasi,materiBidang,addViewBerita
+from core.views import (
+    home,pengaduan,informasi,kirimPengaduan,
+    trackingPengaduan,detailInformasi,materiBidang,
+    addViewBerita
+)
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import TemplateView
 
 
 urlpatterns = [
+    path( "api/", include("core.urlAPI") ),
     # publik 
     path('', home, name='home_default'),
     path('pengaduan/', pengaduan, name='pengaduan'),
@@ -36,7 +41,6 @@ urlpatterns = [
     path('informasi/materi/<slug:slug>/', materiBidang,name="materiBidang"),
     path('informasi/materi/<slug:slug>/<str:id>/', materiBidang,name="materiBidangs"),
    
-    # path('addViewBerita/<str:id>/', addViewBerita, name='addViewBerita'),
     path('addViewBerita/<str:id>/<str:aktivitas>/', addViewBerita, name='addLikeBerita'),
     
     path(

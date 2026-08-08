@@ -36,6 +36,10 @@ class Notifikasi(models.Model):
     status_baca = models.BooleanField(
         default=False
     )
+    status_kirim = models.BooleanField(
+        default=False,
+        db_index=True
+    )
 
     created_at = models.DateTimeField(
         auto_now_add=True
