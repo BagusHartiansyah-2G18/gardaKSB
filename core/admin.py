@@ -525,14 +525,46 @@ class PengaduanAdmin(ModelAdmin):
         "judul",
         "uraian",
     )
-
+    
     ordering = (
         "-created_at",
     ) 
-
+    
     @admin.display(description="Uraian")
     def uraian_singkat(self, obj):
         return Truncator(obj.uraian).chars(30) 
+     
+    def get_exclude(self, request, obj=None):
+
+        # Form Add
+        if obj is None:
+            return (
+                "nomor_tiket",
+                "source",
+                "ip_address",
+                "user_agent",
+                "created_at",
+                "updated_at",
+                "status",
+                "prioritas",
+                "bidang_disposisi",
+                "verifikator",
+                "verified_at",
+                "disposisi_oleh",
+                "disposisi_at",
+                "petugas",
+                "verifikasi_admin",
+                "tindak_lanjut",
+                "kesimpulan",
+                "nama_pelapor",
+                "hp_pelapor",
+                "email_pelapor",
+                "alamat_pelapor",
+                "anonim",
+            )
+
+        # Form Edit
+        return ()
     def get_urls(self):
 
         urls = super().get_urls()
