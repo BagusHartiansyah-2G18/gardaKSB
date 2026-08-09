@@ -1,0 +1,172 @@
+
+from django.urls import path, include
+
+from rest_framework.routers import DefaultRouter
+
+from .views import (
+    LoginAPIView,
+    LogoutAPIView,
+    RefreshAPIView,
+    MeAPIView,
+    ProfileAPIView,
+    ChangePasswordAPIView,
+    DashboardAPIView,
+    AktivitasViewSet,
+    PengaduanViewSet,
+    OrganisasiViewSet,
+    NotifikasiViewSet,
+    DeviceTokenAPIView,
+    BeritaViewSet,
+    KecamatanViewSet,
+    DesaViewSet,
+    DinasViewSet,
+    BidangViewSet,
+    JenisOrganisasiViewSet,
+    JenisKasusViewSet,
+)
+
+
+router = DefaultRouter()
+
+router.register(
+    "aktivitas",
+    AktivitasViewSet,
+    basename="aktivitas"
+)
+
+router.register(
+    "pengaduan",
+    PengaduanViewSet,
+    basename="pengaduan"
+)
+
+router.register(
+    "organisasi",
+    OrganisasiViewSet,
+    basename="organisasi"
+)
+
+router.register(
+    "notifikasi",
+    NotifikasiViewSet,
+    basename="notifikasi"
+)
+
+router.register(
+    "berita",
+    BeritaViewSet,
+    basename="berita"
+)
+
+router.register(
+    "master/kecamatan",
+    KecamatanViewSet,
+    basename="kecamatan"
+)
+
+router.register(
+    "master/desa",
+    DesaViewSet,
+    basename="desa"
+)
+
+router.register(
+    "master/dinas",
+    DinasViewSet,
+    basename="dinas"
+)
+
+router.register(
+    "master/bidang",
+    BidangViewSet,
+    basename="bidang"
+)
+
+router.register(
+    "master/jenis-organisasi",
+    JenisOrganisasiViewSet,
+    basename="jenis-organisasi"
+)
+
+router.register(
+    "master/jenis-kasus",
+    JenisKasusViewSet,
+    basename="jenis-kasus"
+)
+
+
+urlpatterns = [
+
+    # ==========================
+    # AUTHENTICATION
+    # ==========================
+
+    path(
+        "auth/login/",
+        LoginAPIView.as_view(),
+        name="login"
+    ),
+
+    path(
+        "auth/logout/",
+        LogoutAPIView.as_view(),
+        name="logout"
+    ),
+
+    path(
+        "auth/refresh/",
+        RefreshAPIView.as_view(),
+        name="refresh"
+    ),
+
+    path(
+        "auth/me/",
+        MeAPIView.as_view(),
+        name="me"
+    ),
+
+    path(
+        "auth/change-password/",
+        ChangePasswordAPIView.as_view(),
+        name="change-password"
+    ),
+
+    # ==========================
+    # PROFILE
+    # ==========================
+
+    path(
+        "profile/",
+        ProfileAPIView.as_view(),
+        name="profile"
+    ),
+
+    # ==========================
+    # DASHBOARD
+    # ==========================
+
+    path(
+        "dashboard/",
+        DashboardAPIView.as_view(),
+        name="dashboard"
+    ),
+
+    # ==========================
+    # DEVICE TOKEN
+    # ==========================
+
+    path(
+        "device-token/",
+        DeviceTokenAPIView.as_view(),
+        name="device-token"
+    ),
+
+    # ==========================
+    # ROUTER
+    # ==========================
+
+    path(
+        "",
+        include(router.urls)
+    ),
+]
