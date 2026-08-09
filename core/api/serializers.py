@@ -2,6 +2,9 @@
 from rest_framework import serializers
 
 from core.apps.accounts.User.models import User
+from core.apps.pengaduan.models import Pengaduan
+
+
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -133,3 +136,32 @@ class PengaduanProcessSerializer(serializers.Serializer):
         required=False,
         allow_null=True
     ) 
+
+class ProfileUpdateSerializer(serializers.Serializer):
+    first_name = serializers.CharField(required=False)
+    last_name = serializers.CharField(required=False)
+    email = serializers.EmailField(required=False)
+    nik = serializers.CharField(required=False)
+    no_hp = serializers.CharField(required=False)
+
+class PengaduanSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Pengaduan
+        fields = "__all__"
+        read_only_fields = [
+            "id",
+            "pelapor",
+            "created_at",
+            "updated_at",
+        ]
+class PengaduanProcessSerializer(
+    serializers.Serializer
+):
+    status = serializers.CharField(
+        required=False
+    )
+
+    petugas = serializers.IntegerField(
+        required=False
+    )

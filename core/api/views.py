@@ -38,6 +38,9 @@ from core.apps.pengaduan.PengaduanHistory.models import PengaduanHistory
 from core.apps.pengaduan.VerifikasiPengaduan.models import VerifikasiPengaduan
 
 
+from drf_spectacular.utils import extend_schema
+from .serializers import *
+
 # ============================================================
 # RESPONSE HELPER
 # ============================================================
@@ -146,28 +149,35 @@ def serialize_model(instance):
 # AUTH - LOGIN
 # ============================================================
 
+
 class LoginAPIView(APIView):
 
     permission_classes = [AllowAny]
 
     @extend_schema(
-        tags=["Authentication"]
+        tags=["Authentication"],
+        request=LoginSerializer,
+        responses={
+            200: LoginResponseSerializer,
+        }
     )
     def post(self, request):
 
-        username = request.data.get(
+        serializer = LoginSerializer(
+            data=request.data
+        )
+
+        serializer.is_valid(
+            raise_exception=True
+        )
+
+        username = serializer.validated_data.get(
             "username"
         )
 
-        password = request.data.get(
+        password = serializer.validated_data.get(
             "password"
         )
-
-        if not username or not password:
-
-            return error_response(
-                "Username dan password wajib diisi."
-            )
 
         user = authenticate(
             request=request,
@@ -216,19 +226,23 @@ class RefreshAPIView(APIView):
     permission_classes = [AllowAny]
 
     @extend_schema(
-        tags=["Authentication"]
+        tags=["Authentication"],
+        request=RefreshTokenSerializer,
+        responses=RefreshTokenResponseSerializer,
     )
     def post(self, request):
 
-        refresh_token = request.data.get(
-            "refresh_token"
+        serializer = RefreshTokenSerializer(
+            data=request.data
         )
 
-        if not refresh_token:
+        serializer.is_valid(
+            raise_exception=True
+        )
 
-            return error_response(
-                "Refresh token wajib diisi."
-            )
+        refresh_token = serializer.validated_data.get(
+            "refresh_token"
+        )
 
         try:
 
@@ -252,7 +266,6 @@ class RefreshAPIView(APIView):
                 status_code=status.HTTP_401_UNAUTHORIZED
             )
 
-
 # ============================================================
 # AUTH - LOGOUT
 # ============================================================
@@ -264,11 +277,20 @@ class LogoutAPIView(APIView):
     ]
 
     @extend_schema(
-        tags=["Authentication"]
+        tags=["Authentication"],
+        request=LogoutSerializer,
     )
     def post(self, request):
 
-        refresh_token = request.data.get(
+        serializer = LogoutSerializer(
+            data=request.data
+        )
+
+        serializer.is_valid(
+            raise_exception=True
+        )
+
+        refresh_token = serializer.validated_data.get(
             "refresh_token"
         )
 
@@ -289,7 +311,6 @@ class LogoutAPIView(APIView):
             message="Logout berhasil."
         )
 
-
 # ============================================================
 # AUTH - ME
 # ============================================================
@@ -301,7 +322,8 @@ class MeAPIView(APIView):
     ]
 
     @extend_schema(
-        tags=["Authentication"]
+        tags=["Authentication"],
+        responses=UserSerializer,
     )
     def get(self, request):
 
@@ -310,7 +332,6 @@ class MeAPIView(APIView):
                 request.user
             )
         )
-
 
 # ============================================================
 # PROFILE
@@ -323,7 +344,8 @@ class ProfileAPIView(APIView):
     ]
 
     @extend_schema(
-        tags=["Profile"]
+        tags=["Profile"],
+        responses=UserSerializer,
     )
     def get(self, request):
 
@@ -350,7 +372,13 @@ class ProfileAPIView(APIView):
         )
 
     @extend_schema(
-        tags=["Profile"]
+        tags=["Profile"],
+        request=ProfileUpdateSerializer,
+        responses=UserSerializer,
+    )
+    @extend_schema(
+        tags=["Profile"],
+        request=ProfileUpdateSerializer,
     )
     def put(self, request):
 
@@ -674,17 +702,15 @@ class AktivitasViewSet(
 # PENGADUAN
 # ============================================================
 
-class PengaduanViewSet(
-    viewsets.ModelViewSet
-):
+class PengaduanViewSet(viewsets.ModelViewSet):
 
     permission_classes = [
         IsAuthenticated
     ]
 
-    queryset = (
-        Pengaduan.objects.all()
-    )
+    serializer_class = PengaduanSerializer
+
+    queryset = Pengaduan.objects.all()
 
     def get_queryset(self):
 
@@ -708,6 +734,10 @@ class PengaduanViewSet(
             pelapor=user
         )
 
+    @extend_schema(
+        tags=["Pengaduan"],
+        responses=PengaduanSerializer(many=True)
+    )
     def list(self, request):
 
         queryset = self.get_queryset()
@@ -715,11 +745,16 @@ class PengaduanViewSet(
         return success_response(
             data=[
                 serialize_model(item)
-                for item in queryset
-                .order_by("-created_at")
+                for item in queryset.order_by(
+                    "-created_at"
+                )
             ]
         )
 
+    @extend_schema(
+        tags=["Pengaduan"],
+        responses=PengaduanSerializer
+    )
     def retrieve(
         self,
         request,
@@ -732,29 +767,15 @@ class PengaduanViewSet(
             data=serialize_model(obj)
         )
 
+    @extend_schema(
+        tags=["Pengaduan"],
+        request=PengaduanSerializer,
+        responses=PengaduanSerializer
+    )
     def create(
         self,
         request
     ):
-
-        from rest_framework import serializers
-
-        class PengaduanSerializer(
-            serializers.ModelSerializer
-        ):
-
-            class Meta:
-
-                model = Pengaduan
-
-                fields = "__all__"
-
-                read_only_fields = [
-                    "id",
-                    "pelapor",
-                    "created_at",
-                    "updated_at",
-                ]
 
         serializer = PengaduanSerializer(
             data=request.data
@@ -797,7 +818,9 @@ class PengaduanViewSet(
             .filter(
                 pengaduan=pengaduan
             )
-            .order_by("-created_at")
+            .order_by(
+                "-created_at"
+            )
         )
 
         return success_response(
@@ -856,7 +879,9 @@ class PengaduanViewSet(
             .filter(
                 pengaduan=pengaduan
             )
-            .order_by("-tanggal_verifikasi")
+            .order_by(
+                "-tanggal_verifikasi"
+            )
         )
 
         return success_response(
@@ -867,7 +892,8 @@ class PengaduanViewSet(
         )
 
     @extend_schema(
-        tags=["Pengaduan"]
+        tags=["Pengaduan"],
+        request=PengaduanProcessSerializer
     )
     @action(
         detail=True,
@@ -954,7 +980,6 @@ class PengaduanViewSet(
             ),
             message="Pengaduan berhasil diproses."
         )
-
 
 # ============================================================
 # ORGANISASI
@@ -1168,16 +1193,15 @@ class NotifikasiViewSet(
 # DEVICE TOKEN / FCM
 # ============================================================
 
-class DeviceTokenAPIView(
-    APIView
-):
+class DeviceTokenAPIView(APIView):
 
     permission_classes = [
         IsAuthenticated
     ]
 
     @extend_schema(
-        tags=["Device Token / FCM"]
+        tags=["Device Token / FCM"],
+        request=DeviceTokenSerializer,
     )
     def post(self, request):
 
@@ -1237,6 +1261,10 @@ class DeviceTokenAPIView(
             message="Device token berhasil disimpan."
         )
 
+    @extend_schema(
+        tags=["Device Token / FCM"],
+        request=DeviceTokenDeleteSerializer,
+    )
     def delete(
         self,
         request
@@ -1263,7 +1291,6 @@ class DeviceTokenAPIView(
         return success_response(
             message="Device token dinonaktifkan."
         )
-
 
 # ============================================================
 # BERITA
