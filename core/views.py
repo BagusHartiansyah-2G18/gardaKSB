@@ -295,7 +295,6 @@ def addViewBerita(request, id,aktivitas="VIEW"):
         "status": False
     })
 @api_view(["POST"])
-@permission_classes([IsAuthenticated])
 def save_device_token(request):
     token = request.data.get("token")
     platform = request.data.get("platform", "WEB")
