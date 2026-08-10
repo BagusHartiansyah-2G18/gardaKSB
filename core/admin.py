@@ -29,6 +29,7 @@ from core.apps.organisasi.JenisOrganisasi.models import JenisOrganisasi
 from core.apps.organisasi.PersyaratanOrganisasi.models import PersyaratanOrganisasi
 from core.apps.organisasi.DokumenOrganisasi.models import DokumenOrganisasi
 
+from core.apps.pengaduan.service import generateNomorTiket
 
 from core.apps.pengaduan.models import Pengaduan
 from core.apps.pengaduan.JenisKasus.models import JenisKasus
@@ -529,7 +530,16 @@ class PengaduanAdmin(ModelAdmin):
     ordering = (
         "-created_at",
     ) 
-    
+    def save_model(self, request, obj, form, change):
+        if not change and not obj.nomor_tiket:
+            obj.nomor_tiket = generateNomorTiket()
+
+        super().save_model(
+            request,
+            obj,
+            form,
+            change
+        )
     @admin.display(description="Uraian")
     def uraian_singkat(self, obj):
         return Truncator(obj.uraian).chars(30) 
