@@ -3,13 +3,13 @@
 
 {% block content %}
 <style>
-    #id_petugas, textarea{
+    /* #id_petugas, textarea{
         border: white 1px solid;
         > option{
             color: black;
         }
 
-    }
+    } */
     table td {
         padding: 8px 12px;
     }
@@ -91,7 +91,6 @@
             <h3 style="margin-bottom:16px;">
                 Penugasan Petugas
             </h3>
-
             {{ form.as_p }}
 
             <div style="
@@ -106,7 +105,7 @@
                     ✅ Verifikasi Pengaduan
                 </button>
 
-                <a href="/admin/pengaduan/pengaduan/" class="bg-sky-500 flex h-[38px] p-2 items-center justify-center rounded-default shrink-0 text-white text-xs">
+                <a href="/admin/pengaduan/pengaduan/" class="bg-blue-100 flex h-[38px] p-2 items-center justify-center rounded-default shrink-0 text-black text-xs">
                     Kembali
                 </a>
             </div>
