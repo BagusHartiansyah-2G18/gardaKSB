@@ -2,7 +2,189 @@
 
 {% block extrahead %}
 {{ block.super }} 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
 <script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-messaging.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyBYrN3awQ6KwAL4Ox6A0rc7O0AnGclMXHg",
+    authDomain: "garda-a8eb9.firebaseapp.com",
+    projectId: "garda-a8eb9",
+    storageBucket: "garda-a8eb9.firebasestorage.app",
+    messagingSenderId: "615899913660",
+    appId: "1:615899913660:web:593bb216ae08d3503a5fb9",
+    measurementId: "G-GFW2E7D6FL"
+};
+
+const app = initializeApp(firebaseConfig);
+const messaging = getMessaging(app);
+
+function logoutUser() {
+
+    const form = document.createElement("form");
+
+    form.method = "POST";
+    form.action = "/admin/logout/";
+
+    form.innerHTML = `
+        <input
+            type="hidden"
+            name="csrfmiddlewaretoken"
+            value="{{ csrf_token }}"
+        >
+    `;
+
+    document.body.appendChild(form);
+    form.submit();
+}
+
+async function ensureNotificationPermission() {
+
+    if (Notification.permission === "granted") {
+        return true;
+    }
+
+    if (Notification.permission === "denied") {
+
+        await Swal.fire({
+            icon: "warning",
+            title: "Notifikasi Diblokir",
+            html: `
+                <p>
+                    Notifikasi browser sedang diblokir.
+                </p>
+
+                <br>
+
+                <p>
+                    Klik ikon 🔒 pada address bar,
+                    lalu ubah <b>Notifications</b>
+                    menjadi <b>Allow</b>.
+                </p>
+            `,
+            confirmButtonText: "Logout",
+            allowOutsideClick: false,
+            allowEscapeKey: false
+        });
+
+        logoutUser();
+        return false;
+    }
+
+    const result = await Swal.fire({
+        icon: "info",
+        title: "Aktifkan Notifikasi",
+        html: `
+            <ul style="text-align:left">
+                <li>Pengaduan baru</li>
+                <li>Disposisi pimpinan</li>
+                <li>Informasi sistem</li>
+            </ul>
+        `,
+        confirmButtonText: "Aktifkan Notifikasi",
+        cancelButtonText: "Logout",
+        showCancelButton: true,
+        reverseButtons: true,
+        allowOutsideClick: false,
+        allowEscapeKey: false
+    });
+
+    if (!result.isConfirmed) {
+        logoutUser();
+        return false;
+    }
+
+    const permission = await Notification.requestPermission();
+
+    if (permission !== "granted") {
+
+        await Swal.fire({
+            icon: "warning",
+            title: "Notifikasi Wajib Diaktifkan",
+            text: "Silakan aktifkan notifikasi untuk menggunakan aplikasi.",
+            confirmButtonText: "Logout",
+            allowOutsideClick: false,
+            allowEscapeKey: false
+        });
+
+        logoutUser();
+        return false;
+    }
+
+    return true;
+}
+
+async function initFCM() {
+
+    try {
+
+        const allowed = await ensureNotificationPermission();
+
+        if (!allowed) {
+            return;
+        }
+
+        const registration = await navigator.serviceWorker.register(
+            "/firebase-messaging-sw.js"
+        );
+
+        const token = await getToken(messaging, {
+            vapidKey: "BKD3hvTVBxvDo4mUed82b1xad-FX379_-SI0jpu7XReOzs1EQmDBIUNnZb9mQRQkEfUiz4PNAtoVyM0ltmBiCZ4",
+            serviceWorkerRegistration: registration
+        });
+
+        if (!token) {
+
+            await Swal.fire({
+                icon: "error",
+                title: "FCM Token Gagal",
+                text: "Token notifikasi tidak berhasil dibuat.",
+                confirmButtonText: "Logout"
+            });
+
+            logoutUser();
+            return;
+        }
+
+        await fetch("/api/device-token/", {
+            method: "POST",
+            credentials: "same-origin",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": "{{ csrf_token }}"
+            },
+            body: JSON.stringify({
+                token: token,
+                platform: "WEB"
+            })
+        });
+
+        console.log("FCM READY");
+
+    } catch (error) {
+
+        console.error("FCM ERROR:", error);
+
+        await Swal.fire({
+            icon: "error",
+            title: "Gagal Menginisialisasi Notifikasi",
+            text: "Silakan login kembali.",
+            confirmButtonText: "Logout"
+        });
+
+        logoutUser();
+    }
+}
+
+document.addEventListener(
+    "DOMContentLoaded",
+    initFCM
+);
+
+</script>
+<!-- <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-messaging.js";
@@ -99,7 +281,7 @@ document.addEventListener("DOMContentLoaded", () => {
 //     el.style.width = "180px";
 // });
 
-</script>
+</script> -->
 
 
 <style>
@@ -109,6 +291,9 @@ document.addEventListener("DOMContentLoaded", () => {
     border-radius: 6px;
     padding: 8px 10px;
     width: 100%;
+}
+.swal2-textarea {
+    display: none !important;
 }
 
 /* Textarea alamat */
