@@ -155,11 +155,7 @@ urlpatterns = [
     # DEVICE TOKEN
     # ==========================
 
-    path(
-        "device-token/",
-        DeviceTokenAPIView.as_view(),
-        name="device-token"
-    ),
+     
 
     # ==========================
     # ROUTER

@@ -12,11 +12,13 @@ from django.utils import timezone
 import pandas as pd
 from django.core.paginator import Paginator
 
-import json
-from rest_framework.decorators import api_view, permission_classes
+import json 
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
-
+from rest_framework.permissions import AllowAny 
+from rest_framework.decorators import (
+     api_view, permission_classes ,authentication_classes
+)
 
 
 from django.db.models import Q,Count
@@ -294,13 +296,17 @@ def addViewBerita(request, id,aktivitas="VIEW"):
     return JsonResponse({
         "status": False
     })
-@api_view(["POST"])
-def save_device_token(request):
-    token = request.data.get("token")
-    platform = request.data.get("platform", "WEB")
 
+
+# @api_view(["POST"]) 
+# @authentication_classes([])
+# @permission_classes([AllowAny])
+def save_device_token(request):
+    data = json.loads(request.body)
+    token = data.get("token")
+    platform = data.get("platform", "WEB") 
     if not token:
-        return Response(
+        return JsonResponse(
             {"success": False, "message": "Token wajib diisi."},
             status=status.HTTP_400_BAD_REQUEST
         )
@@ -315,7 +321,7 @@ def save_device_token(request):
         }
     )
 
-    return Response({
+    return JsonResponse({
         "success": True,
         "message": "Device token berhasil disimpan.",
         "created": created,
