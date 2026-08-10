@@ -6,7 +6,7 @@
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-messaging.js";
+import { getMessaging, getToken,onMessage } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-messaging.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBYrN3awQ6KwAL4Ox6A0rc7O0AnGclMXHg",
@@ -20,17 +20,27 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const messaging = getMessaging(app);
-onMessage(messaging, async (payload) => {
+onMessage(messaging, (payload) => {
 
-    await Swal.fire({
+    const url = payload.data?.url || "/";
+
+    Swal.fire({
         toast: true,
         position: "top-end",
         icon: "info",
-        title: payload.notification?.title || "GardaKSB",
-        text: payload.notification?.body || "",
+        title: payload.data?.title || "GardaKSB",
+        text: payload.data?.body || "",
         showConfirmButton: false,
-        timer: 5000,
-        timerProgressBar: true
+        timer: 10000,
+        timerProgressBar: true,
+
+        didOpen: (toast) => {
+            toast.style.cursor = "pointer";
+
+            toast.addEventListener("click", () => {
+                window.location.href = url;
+            });
+        }
     });
 
 });
@@ -176,10 +186,26 @@ async function initFCM() {
     } 
 }
 
-// document.addEventListener(
-//     "DOMContentLoaded",
-//     initFCM
-// );
+document.addEventListener(
+    "DOMContentLoaded",
+    ()=>{
+        initFCM();
+        document.querySelectorAll(
+            "input, textarea, select"
+        ).forEach(el => {
+
+            const style = getComputedStyle(el);
+
+            if (
+                style.borderStyle === "none" ||
+                style.borderWidth === "0px"
+            ) {
+                el.style.border = "1px solid #d1d5db";
+            }
+
+        });
+    }
+);
 
 async function refreshOrLogout(
     title,
@@ -213,17 +239,7 @@ async function refreshOrLogout(
         logoutUser();
     }
 } 
-document.querySelectorAll(
-    'input, textarea, select'
-).forEach(el => {
 
-    const border = getComputedStyle(el).borderStyle;
-
-    if (border === "none") {
-        el.style.border = "1px solid #d1d5db";
-    }
-
-});
 </script>
 <style>
 /* Semua input anggota organisasi */
@@ -233,7 +249,11 @@ document.querySelectorAll(
     padding: 8px 10px;
     width: 100%;
 }
-.swal2-textarea .swal2-select .swal2-checkbox .swal2-range .swal2-input{
+.swal2-textarea,
+.swal2-select,
+.swal2-checkbox,
+.swal2-range,
+.swal2-input {
     display: none !important;
 }
 
