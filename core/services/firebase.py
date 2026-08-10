@@ -19,7 +19,7 @@ def send_push_notification(
     url="",
     jenis="SISTEM",
 ):
-    print(f"Sending push notification to token: {token}")
+    # print(f"Sending push notification to token: {token}")
     message = messaging.Message(
         notification=messaging.Notification(
             title=title,

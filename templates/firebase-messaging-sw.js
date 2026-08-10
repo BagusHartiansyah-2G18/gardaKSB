@@ -20,23 +20,51 @@ console.log("🔥 FIREBASE SERVICE WORKER LOADED");
 const messaging = firebase.messaging();
 
 console.log("🔥 Firebase Messaging initialized");
-
 messaging.onBackgroundMessage((payload) => {
+
     console.log(
         "🔥 FCM BACKGROUND MESSAGE:",
         payload
     );
 
     const title =
-        payload.notification?.title || "GardaKSB";
+        payload.data?.title ||
+        payload.notification?.title ||
+        "GardaKSB";
 
     const options = {
-        body: payload.notification?.body || "",
-        data: payload.data || {}
+        body:
+            payload.data?.body ||
+            payload.notification?.body ||
+            "",
+
+        data: {
+            url: payload.data?.url || "",
+            jenis: payload.data?.jenis || "SISTEM"
+        },
+
+        tag: payload.data?.jenis || "SISTEM",
+        requireInteraction: true,
+        icon: "/static/logo/logoKSB.png",
+        badge: "/static/logo/logoKSB.png"
     };
 
     self.registration.showNotification(
         title,
         options
+    );
+    self.addEventListener(
+        "notificationclick",
+        (event) => {
+
+            event.notification.close();
+
+            const url =
+                event.notification.data?.url || "/";
+
+            event.waitUntil(
+                clients.openWindow(url)
+            );
+        }
     );
 });

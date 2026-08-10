@@ -20,7 +20,20 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const messaging = getMessaging(app);
+onMessage(messaging, async (payload) => {
 
+    await Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "info",
+        title: payload.notification?.title || "GardaKSB",
+        text: payload.notification?.body || "",
+        showConfirmButton: false,
+        timer: 5000,
+        timerProgressBar: true
+    });
+
+});
 function logoutUser() {
 
     const form = document.createElement("form");
@@ -163,10 +176,11 @@ async function initFCM() {
     } 
 }
 
-document.addEventListener(
-    "DOMContentLoaded",
-    initFCM
-);
+// document.addEventListener(
+//     "DOMContentLoaded",
+//     initFCM
+// );
+
 async function refreshOrLogout(
     title,
     content,
@@ -199,6 +213,17 @@ async function refreshOrLogout(
         logoutUser();
     }
 } 
+document.querySelectorAll(
+    'input, textarea, select'
+).forEach(el => {
+
+    const border = getComputedStyle(el).borderStyle;
+
+    if (border === "none") {
+        el.style.border = "1px solid #d1d5db";
+    }
+
+});
 </script>
 <style>
 /* Semua input anggota organisasi */
@@ -229,4 +254,5 @@ async function refreshOrLogout(
     box-shadow: 0 0 0 2px rgba(37,99,235,.2);
 }
 </style>
+
 {% endblock %}

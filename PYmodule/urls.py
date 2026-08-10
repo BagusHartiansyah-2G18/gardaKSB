@@ -48,7 +48,8 @@ urlpatterns = [
         name='swagger-ui'
     ),
 
-    path( "api/", include("core.urlAPI") ),
+    # path( "api/", include("core.urlAPI") ),
+    path("", include("core.urlAPI")),
     # publik 
     path('', home, name='home_default'),
     path('pengaduan/', pengaduan, name='pengaduan'),
