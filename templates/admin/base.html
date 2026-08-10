@@ -47,32 +47,18 @@ async function ensureNotificationPermission() {
     }
 
     if (Notification.permission === "denied") {
-
-        await Swal.fire({
-            icon: "warning",
-            title: "Notifikasi Diblokir",
-            html: `
+        await refreshOrLogout(
+            "Notifikasi Diblokir",
+            `
                 <p>
-                    Notifikasi browser sedang diblokir.
-                </p>
-
-                <br>
-
-                <p>
-                    Klik ikon 🔒 pada address bar,
-                    lalu ubah <b>Notifications</b>
-                    menjadi <b>Allow</b>.
+                    Aktifkan <b>Notifications → Allow</b>
+                    dari pengaturan browser.
                 </p>
             `,
-            confirmButtonText: "Logout",
-            allowOutsideClick: false,
-            allowEscapeKey: false
-        });
-
-        logoutUser();
+            "warning"
+        );
         return false;
-    }
-
+    } 
     const result = await Swal.fire({
         icon: "info",
         title: "Aktifkan Notifikasi",
@@ -100,22 +86,29 @@ async function ensureNotificationPermission() {
 
     if (permission !== "granted") {
 
-        await Swal.fire({
+        const retry = await Swal.fire({
             icon: "warning",
             title: "Notifikasi Wajib Diaktifkan",
             text: "Silakan aktifkan notifikasi untuk menggunakan aplikasi.",
-            confirmButtonText: "Logout",
+            confirmButtonText: "Refresh",
+            cancelButtonText: "Logout",
+            showCancelButton: true,
+            reverseButtons: true,
             allowOutsideClick: false,
             allowEscapeKey: false
         });
 
-        logoutUser();
+        if (retry.isConfirmed) {
+            window.location.reload();
+        } else {
+            logoutUser();
+        }
+
         return false;
     }
 
     return true;
 }
-
 async function initFCM() {
 
     try {
@@ -137,14 +130,12 @@ async function initFCM() {
 
         if (!token) {
 
-            await Swal.fire({
-                icon: "error",
-                title: "FCM Token Gagal",
-                text: "Token notifikasi tidak berhasil dibuat.",
-                confirmButtonText: "Logout"
-            });
+            await refreshOrLogout(
+                "FCM Token Gagal",
+                "Token notifikasi tidak berhasil dibuat.",
+                "error"
+            );
 
-            logoutUser();
             return;
         }
 
@@ -163,26 +154,39 @@ async function initFCM() {
 
         console.log("FCM READY");
 
-    } catch (error) {
-
-        console.error("FCM ERROR:", error);
-
-        await Swal.fire({
-            icon: "error",
-            title: "Gagal Menginisialisasi Notifikasi",
-            text: "Silakan login kembali.",
-            confirmButtonText: "Logout"
-        });
-
-        logoutUser();
-    }
+    } catch (error) { 
+        await refreshOrLogout(
+            "Gagal Menginisialisasi Notifikasi",
+            "Terjadi kesalahan saat mengaktifkan notifikasi.",
+            "error"
+        );
+    } 
 }
 
 document.addEventListener(
     "DOMContentLoaded",
     initFCM
 );
+async function refreshOrLogout(title, text, icon = "warning") {
 
+    const result = await Swal.fire({
+        icon,
+        title,
+        text,
+        confirmButtonText: "Refresh",
+        cancelButtonText: "Logout",
+        showCancelButton: true,
+        reverseButtons: true,
+        allowOutsideClick: false,
+        allowEscapeKey: false
+    });
+
+    if (result.isConfirmed) {
+        window.location.reload();
+    } else {
+        logoutUser();
+    }
+} 
 </script>
 <!-- <script type="module">
 
