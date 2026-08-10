@@ -24,5 +24,9 @@ def buat_notifikasi_pengaduan(sender, instance, created, **kwargs):
                 judul=instance.judul,
                 pesan=instance.uraian,
                 url=f"/pengaduan/{instance.id}/"
-            )
+            ) 
+
+@receiver(post_save, sender=Notifikasi)
+def kirim_notifikasi_otomatis(sender, instance, created, **kwargs):
+    if created:
         process_pending_notifications()

@@ -679,7 +679,12 @@ class PengaduanAdmin(ModelAdmin):
                 )
 
                 pengaduan.save()
-
+                Notifikasi.objects.create(
+                    user=pengaduan.petugas,
+                    judul=pengaduan.judul,
+                    pesan=pengaduan.tindak_lanjut,
+                    url=f"/pengaduan/{pengaduan.id}/"
+                )
                 return redirect(
                     "/admin/pengaduan/pengaduan/"
                 )
@@ -692,7 +697,8 @@ class PengaduanAdmin(ModelAdmin):
                     "catatan": getattr(pengaduan, "tindak_lanjut", "")
                 }
             )
-
+        
+       
         context = {
             **self.admin_site.each_context(
                 request
