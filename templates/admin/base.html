@@ -167,19 +167,31 @@ document.addEventListener(
     "DOMContentLoaded",
     initFCM
 );
-async function refreshOrLogout(title, text, icon = "warning") {
+async function refreshOrLogout(
+    title,
+    content,
+    icon = "warning",
+    isHtml = true
+) {
 
-    const result = await Swal.fire({
+    const config = {
         icon,
         title,
-        text,
         confirmButtonText: "Refresh",
         cancelButtonText: "Logout",
         showCancelButton: true,
         reverseButtons: true,
         allowOutsideClick: false,
         allowEscapeKey: false
-    });
+    };
+
+    if (isHtml) {
+        config.html = content;
+    } else {
+        config.text = content;
+    }
+
+    const result = await Swal.fire(config);
 
     if (result.isConfirmed) {
         window.location.reload();
@@ -188,106 +200,6 @@ async function refreshOrLogout(title, text, icon = "warning") {
     }
 } 
 </script>
-<!-- <script type="module">
-
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-messaging.js";
-
-const firebaseConfig = {
-    apiKey: "AIzaSyBYrN3awQ6KwAL4Ox6A0rc7O0AnGclMXHg",
-    authDomain: "garda-a8eb9.firebaseapp.com",
-    projectId: "garda-a8eb9",
-    storageBucket: "garda-a8eb9.firebasestorage.app",
-    messagingSenderId: "615899913660",
-    appId: "1:615899913660:web:593bb216ae08d3503a5fb9",
-    measurementId: "G-GFW2E7D6FL"
-};
-
-const app = initializeApp(firebaseConfig);
-const messaging = getMessaging(app);
-
-async function initFCM() {
-
-    try {
-
-        console.log("Request Permission");
-
-        const permission = await Notification.requestPermission();
-
-        console.log("Permission:", permission);
-
-        if (permission !== "granted") {
-            return;
-        } 
-        const registration = await navigator.serviceWorker.register(
-            "/firebase-messaging-sw.js"
-        );
-        console.log(registration);
-        const token = await getToken(messaging, {
-            vapidKey: "BKD3hvTVBxvDo4mUed82b1xad-FX379_-SI0jpu7XReOzs1EQmDBIUNnZb9mQRQkEfUiz4PNAtoVyM0ltmBiCZ4",
-            serviceWorkerRegistration: registration
-        });
-
-        console.log("FCM TOKEN:", token);
-
-        await fetch("/api/device-token/", {
-            method: "POST",
-            credentials: "same-origin",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRFToken": "{{ csrf_token }}"
-            },
-            body: JSON.stringify({
-                token: token,
-                platform: "WEB"
-            })
-        });
-
-        console.log("Token Saved");
-
-    } catch (error) {
-
-        console.error("FCM ERROR:", error);
-
-    }
-
-}
-
-document.addEventListener("DOMContentLoaded", function() {
-    initFCM();
-});
-
-
-document.addEventListener("DOMContentLoaded", () => {
-
-    const paths = [
-        "/pengaduan/verifikasipengaduan/add/",
-        "/pengaduan/pengaduanhistory/add/",
-    ];
-
-    if (
-        paths.some(path =>
-            window.location.pathname.includes(path)
-        )
-    ) {
-        document
-            .querySelectorAll(".addlink")
-            .forEach(el => el.remove());
-    }
-
-});
-
-// document
-// .querySelectorAll(
-//     ".field-nama input,.field-nik input,.field-jabatan input,.field-no_hp input"
-// )
-// .forEach(el => {
-//     el.style.width = "180px";
-// });
-
-</script> -->
-
-
 <style>
 /* Semua input anggota organisasi */
 #anggotaorganisasi_set-group input[type="text"]{
@@ -296,7 +208,7 @@ document.addEventListener("DOMContentLoaded", () => {
     padding: 8px 10px;
     width: 100%;
 }
-.swal2-textarea {
+.swal2-textarea .swal2-select .swal2-checkbox .swal2-range .swal2-input{
     display: none !important;
 }
 
