@@ -1673,7 +1673,9 @@ class NotifikasiViewSet(
 # DEVICE TOKEN / FCM
 # ============================================================
 
-class DeviceTokenAPIView(APIView):
+class DeviceTokenViewSet(
+    viewsets.ViewSet
+):
 
     permission_classes = [
         IsAuthenticated
@@ -1683,93 +1685,65 @@ class DeviceTokenAPIView(APIView):
         tags=["Device Token / FCM"],
         request=DeviceTokenSerializer,
     )
-    def post(self, request):
-
-        token = request.data.get(
-            "token"
-        )
-
-        platform = request.data.get(
-            "platform",
-            "android"
-        )
-
-        if not token:
-
-            return error_response(
-                "Token perangkat wajib diisi."
-            )
-
-        device = (
-            DeviceToken.objects
-            .filter(
-                token=token
-            )
-            .first()
-        )
-
-        if device:
-
-            device.user = request.user
-            device.platform = platform
-            device.is_active = True
-
-            if hasattr(
-                device,
-                "last_used_at"
-            ):
-
-                device.last_used_at = (
-                    timezone.now()
-                )
-
-            device.save()
-
-        else:
-
-            device = DeviceToken.objects.create(
-                user=request.user,
-                token=token,
-                platform=platform,
-                is_active=True
-            )
-
-        return success_response(
-            data=serialize_model(
-                device
-            ),
-            message="Device token berhasil disimpan."
-        )
-
-    @extend_schema(
-        tags=["Device Token / FCM"],
-        request=DeviceTokenDeleteSerializer,
-    )
-    def delete(
+    def create(
         self,
         request
     ):
 
-        token = request.data.get(
-            "token"
+        serializer = DeviceTokenSerializer(
+            data=request.data
         )
 
-        queryset = DeviceToken.objects.filter(
-            user=request.user
-        )
+        if not serializer.is_valid():
 
-        if token:
-
-            queryset = queryset.filter(
-                token=token
+            return error_response(
+                "Data tidak valid.",
+                serializer.errors
             )
 
-        queryset.update(
-            is_active=False
+        device_token, created = (
+            DeviceToken.objects.update_or_create(
+                token=serializer.validated_data[
+                    "token"
+                ],
+                defaults={
+                    "user": request.user,
+                    "platform": serializer.validated_data.get(
+                        "platform",
+                        "ANDROID"
+                    ),
+                    "is_active": True,
+                    "last_used_at": timezone.now(),
+                }
+            )
         )
 
         return success_response(
-            message="Device token dinonaktifkan."
+            data={
+                "created": created,
+                "device": serialize_model(
+                    device_token
+                )
+            },
+            message="Device token berhasil disimpan."
+        )
+
+    @extend_schema(
+        tags=["Device Token / FCM"]
+    )
+    def list(
+        self,
+        request
+    ):
+
+        return success_response(
+            data=[
+                serialize_model(item)
+                for item in DeviceToken.objects.filter(
+                    user=request.user,
+                    is_active=True
+                )
+            ]
         )
 
 # ============================================================

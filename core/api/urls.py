@@ -15,7 +15,7 @@ from .views import (
     PengaduanViewSet,
     OrganisasiViewSet,
     NotifikasiViewSet,
-    DeviceTokenAPIView,
+    DeviceTokenViewSet,
     BeritaViewSet,
     KecamatanViewSet,
     DesaViewSet,
@@ -29,11 +29,12 @@ from .views import (
 
 router = DefaultRouter()
 
-path(
-    "device-token/",
-    DeviceTokenAPIView.as_view(),
-    name="device-token"
-),
+
+router.register(
+    "device-token",
+    DeviceTokenViewSet,
+    basename="device-token"
+)
 router.register(
     "aktivitas",
     AktivitasViewSet,
