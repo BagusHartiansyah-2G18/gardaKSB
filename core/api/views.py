@@ -1708,10 +1708,7 @@ class DeviceTokenViewSet(
                 ],
                 defaults={
                     "user": request.user,
-                    "platform": serializer.validated_data.get(
-                        "platform",
-                        "ANDROID"
-                    ),
+                    "platform": "ANDROID",
                     "is_active": True,
                     "last_used_at": timezone.now(),
                 }
