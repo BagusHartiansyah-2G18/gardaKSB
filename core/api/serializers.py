@@ -5,7 +5,7 @@ from core.apps.accounts.User.models import User
 from core.apps.pengaduan.models import Pengaduan
 from core.apps.master.Desa.models import Desa
 
-
+ 
 class PengaduanStatusSerializer(
     serializers.Serializer
 ):

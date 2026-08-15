@@ -29,6 +29,11 @@ from .views import (
 
 router = DefaultRouter()
 
+path(
+    "device-token/",
+    DeviceTokenAPIView.as_view(),
+    name="device-token"
+),
 router.register(
     "aktivitas",
     AktivitasViewSet,
