@@ -11,6 +11,9 @@ from core.apps.informasi.DeviceToken.models import (
 from .firebase import (
     send_push_notification
 )
+from firebase_admin._messaging_utils import (
+    UnregisteredError
+)
 
 logger = logging.getLogger(__name__)
 
@@ -73,6 +76,15 @@ def process_pending_notifications():
                     )
 
                     notification_sent = True
+
+                except UnregisteredError:
+
+                    logger.warning(
+                        "Token tidak valid, hapus: %s",
+                        device.token
+                    )
+
+                    device.delete()
 
                 except Exception:
 
