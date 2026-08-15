@@ -11,7 +11,7 @@ def setKeyGroup(
         sekban=None,
         kabid=None,
         anggota=None,
-        publik=None,
+        masyarakat=None,
     ):
     data = {
         "ADMIN": admin,
@@ -19,7 +19,7 @@ def setKeyGroup(
         "SEKBAN": sekban,
         "KABID": kabid,
         "ANGGOTA": anggota,
-        "PUBLIK": publik,
+        "MASYARAKAT": masyarakat,
     }
 
     return {

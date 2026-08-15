@@ -18,7 +18,7 @@ import mimetypes
 BASE_DIR = Path(__file__).resolve().parent.parent
 from django.templatetags.static import static
 from pathlib import Path
-
+from datetime import timedelta 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
@@ -49,12 +49,18 @@ INSTALLED_APPS = [
     'core.apps.organisasi.apps.OrganisasiConfig',
     'core.apps.pengaduan.apps.PengaduanConfig',
 
+    'corsheaders',
+
     'django_browser_reload',
     'rest_framework',
     "smart_selects",  
     'drf_spectacular',
     'rest_framework_simplejwt.token_blacklist',
 ]
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+}
 UNFOLD = {
     "SITE_TITLE": "GARDA KSB",
     "SITE_HEADER": "GARDA KSB",
@@ -67,6 +73,7 @@ UNFOLD = {
     ],
 }
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -116,6 +123,9 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
+        "OPTIONS": {
+            "timeout": 60,
+        },
     }
 }
 
@@ -205,3 +215,6 @@ SPECTACULAR_SETTINGS = {
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
 }
+
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True

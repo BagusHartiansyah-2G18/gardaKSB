@@ -60,12 +60,12 @@ class CustomUserAdmin(UserAdmin):
             dataKey = setKeyGroup(
                 anggota=idUser,
                 kabid=allID.idBidang,
-                publik=idUser
+                masyarakat=idUser
             ) 
             groupKey = setKeyGroup(
                 anggota="id",
                 kabid="userprofile__bidang_id",
-                publik="id"
+                masyarakat="id"
             )
             groupKeys= groupKey.get(groupUser.name)
             qs = filterData(request,qs,groupKey=groupKeys,groupData=dataKey)
@@ -93,7 +93,7 @@ class KecamatanAdmin(ModelAdmin):
             dataKey = setKeyGroup(
                 anggota=allID.idKecamatan,
                 kabid=allID.idKecamatan,
-                publik=allID.idKecamatan
+                masyarakat=allID.idKecamatan
             )
             qs = filterData(request,qs,groupKey="id",groupData=dataKey)
         else:
@@ -125,7 +125,7 @@ class DesaAdmin(ModelAdmin):
             dataKey = setKeyGroup(
                 anggota=allID.idDesa,
                 kabid=allID.idDesa,
-                publik=allID.idDesa
+                masyarakat=allID.idDesa
             )
             qs = filterData(request,qs,groupKey="id",groupData=dataKey)
         else:
@@ -155,7 +155,7 @@ class DinasAdmin(ModelAdmin):
             dataKey = setKeyGroup(
                 anggota=allID.idDinas,
                 kabid=allID.idDinas,
-                publik=allID.idDinas
+                masyarakat=allID.idDinas
             )
             qs = filterData(request,qs,groupKey="id",groupData=dataKey)
         else:
@@ -190,7 +190,7 @@ class BidangAdmin(ModelAdmin):
             dataKey = setKeyGroup(
                 anggota=allID.idBidang,
                 kabid=allID.idBidang,
-                publik=allID.idBidang
+                masyarakat=allID.idBidang
             )
             qs = filterData(request,qs,groupKey="id",groupData=dataKey)
         else:
@@ -243,12 +243,12 @@ class UserProfileAdmin(ModelAdmin):
             dataKey = setKeyGroup(
                 anggota=idUser,
                 kabid=allID.idBidang,
-                publik=idUser
+                masyarakat=idUser
             ) 
             groupKey = setKeyGroup(
                 anggota="user_id",
                 kabid="bidang_id",
-                publik="user_id"
+                masyarakat="user_id"
             )
             groupKeys= groupKey.get(groupUser.name)
             qs = filterData(request,qs,groupKey=groupKeys,groupData=dataKey)
@@ -283,10 +283,10 @@ class PersyaratanOrganisasiAdmin(ModelAdmin):
 
     #     qs = super().get_queryset(request)
     #     dataKey = setKeyGroup( 
-    #         publik=idUser
+    #         masyarakat=idUser
     #     ) 
     #     groupKey = setKeyGroup( 
-    #         publik="organisasi__ketua_id",
+    #         masyarakat="organisasi__ketua_id",
     #     )
     #     groupKeys= groupKey.get(groupUser.name)
     #     qs = filterData(request,qs,groupKey=groupKeys,groupData=dataKey)
@@ -359,10 +359,10 @@ class DokumenOrganisasiAdmin(ModelAdmin):
         qs = super().get_queryset(request)
         if allID != None: 
             dataKey = setKeyGroup( 
-                publik=idUser
+                masyarakat=idUser
             ) 
             groupKey = setKeyGroup( 
-                publik="organisasi__ketua_id",
+                masyarakat="organisasi__ketua_id",
             )
             groupKeys= groupKey.get(groupUser.name)
             qs = filterData(request,qs,groupKey=groupKeys,groupData=dataKey)
@@ -458,13 +458,13 @@ class LampiranPengaduanInline(admin.TabularInline):
             dataKey = setKeyGroup(
                 anggota=allID.idBidang,
                 kabid=allID.idBidang,
-                publik=idUser
+                masyarakat=idUser
             )  
 
             groupKey = setKeyGroup( 
                 anggota="pengaduan__bidang_disposisi_id",
                 kabid="pengaduan__bidang_disposisi_id",
-                publik="user_id",
+                masyarakat="user_id",
             )
             groupKeys= groupKey.get(groupUser.name)
             qs = filterData(request,qs,groupKey=groupKeys,groupData=dataKey)
@@ -486,13 +486,13 @@ class PengaduanHistoryInline(admin.TabularInline):
             dataKey = setKeyGroup(
                 anggota=allID.idBidang,
                 kabid=allID.idBidang,
-                publik=idUser
+                masyarakat=idUser
             )  
 
             groupKey = setKeyGroup( 
                 anggota="bidang_id",
                 kabid="bidang_id",
-                publik="user_id",
+                masyarakat="user_id",
             )
             groupKeys= groupKey.get(groupUser.name)
             qs = filterData(request,qs,groupKey=groupKeys,groupData=dataKey)
@@ -530,9 +530,54 @@ class PengaduanAdmin(ModelAdmin):
     ordering = (
         "-created_at",
     ) 
-    def save_model(self, request, obj, form, change):
-        if not change and not obj.nomor_tiket:
-            obj.nomor_tiket = generateNomorTiket()
+    def save_model(
+        self,
+        request,
+        obj,
+        form,
+        change
+    ):
+
+        is_new = not change
+
+        if is_new:
+
+            if not obj.nomor_tiket:
+                obj.nomor_tiket = (
+                    generateNomorTiket()
+                )
+
+            if not (
+                request.user.is_superuser
+                or request.user.groups.filter(
+                    name="ADMIN"
+                ).exists()
+            ):
+
+                obj.pelapor = request.user
+
+                profile = getattr(
+                    request.user,
+                    "profile",
+                    None
+                )
+
+                if profile:
+
+                    obj.desa = profile.desa
+
+                obj.nama_pelapor = (
+                    request.user.get_full_name()
+                    or request.user.username
+                )
+
+                obj.hp_pelapor = (
+                    request.user.no_hp
+                )
+
+                obj.email_pelapor = (
+                    request.user.email
+                )
 
         super().save_model(
             request,
@@ -540,38 +585,74 @@ class PengaduanAdmin(ModelAdmin):
             form,
             change
         )
+
+        if is_new:
+
+            PengaduanHistory.objects.create(
+                pengaduan=obj,
+                user=request.user,
+                judul="Pengaduan Dibuat",
+                deskripsi="Pengaduan berhasil dibuat.",
+                status_lama="",
+                status_baru="BARU",
+                latitude=obj.latitude,
+                longitude=obj.longitude,
+            )
     @admin.display(description="Uraian")
     def uraian_singkat(self, obj):
         return Truncator(obj.uraian).chars(30) 
      
     def get_exclude(self, request, obj=None):
+        exclude = [
+            "nomor_tiket",
+            "source",
+            "ip_address",
+            "user_agent",
+            "created_at",
+            "updated_at",
+            "status",
+            "prioritas",
+            "bidang_disposisi",
+            "verifikator",
+            "verified_at",
+            "disposisi_oleh",
+            "disposisi_at",
+            "petugas",
+            "verifikasi_admin",
+            "tindak_lanjut",
+            "kesimpulan",
+        ]
 
-        # Form Add
         if obj is None:
-            return (
-                "nomor_tiket",
-                "source",
-                "ip_address",
-                "user_agent",
-                "created_at",
-                "updated_at",
-                "status",
-                "prioritas",
-                "bidang_disposisi",
-                "verifikator",
-                "verified_at",
-                "disposisi_oleh",
-                "disposisi_at",
-                "petugas",
-                "verifikasi_admin",
-                "tindak_lanjut",
-                "kesimpulan",
-                "nama_pelapor",
-                "hp_pelapor",
-                "email_pelapor",
-                "alamat_pelapor",
-                "anonim",
-            )
+
+            if (
+                request.user.is_superuser
+                or request.user.groups.filter(
+                    name="ADMIN"
+                ).exists()
+            ):
+
+                exclude += [
+                    "nama_pelapor",
+                    "hp_pelapor",
+                    "email_pelapor",
+                    "alamat_pelapor",
+                    "anonim",
+                ]
+
+            else:
+
+                exclude += [
+                    "pelapor",
+                    "desa",
+                    "nama_pelapor",
+                    "hp_pelapor",
+                    "email_pelapor",
+                    "alamat_pelapor",
+                    "anonim",
+                ]
+
+        return tuple(exclude)
 
         # Form Edit
         return ()
@@ -688,17 +769,20 @@ class PengaduanAdmin(ModelAdmin):
                     timezone.now()
                 )
 
-                pengaduan.save()
-                Notifikasi.objects.create(
+                pengaduan.save() 
+                PengaduanHistory.objects.create(
+                    pengaduan=pengaduan,
                     user=pengaduan.petugas,
-                    judul=pengaduan.judul,
-                    pesan=pengaduan.tindak_lanjut,
-                    url=f"/pengaduan/{pengaduan.id}/"
+                    judul="Pengaduan Diverifikasi",
+                    deskripsi="pengaduan telah dialuhkan ke bidang terkait untuk ditindaklanjuti",
+                    status_lama="",
+                    status_baru="Diverifikasi",
+                    latitude=pengaduan.latitude,
+                    longitude=pengaduan.longitude
                 )
                 return redirect(
                     "/admin/pengaduan/pengaduan/"
                 )
-
         else:
 
             form = VerifikasiPengaduanForm(
@@ -746,15 +830,14 @@ class PengaduanAdmin(ModelAdmin):
         data_key = setKeyGroup(
             anggota=all_id.idBidang,
             kabid=all_id.idBidang,
-            publik=request.user.id,
+            masyarakat=request.user.id,
         )
 
         group_key = setKeyGroup(
             anggota="bidang_disposisi_id",
             kabid="bidang_disposisi_id",
-            publik="pelapor_id",
-        )
-
+            masyarakat="pelapor_id",
+        ) 
         return filterData(
             request,
             qs,
@@ -1042,10 +1125,10 @@ class AnggotaOrganisasiAdmin(ModelAdmin):
         qs = super().get_queryset(request)
         if allID != None: 
             dataKey = setKeyGroup( 
-                publik=idUser
+                masyarakat=idUser
             ) 
             groupKey = setKeyGroup( 
-                publik="organisasi__ketua_id",
+                masyarakat="organisasi__ketua_id",
             )
             groupKeys= groupKey.get(groupUser.name)
             qs = filterData(request,qs,groupKey=groupKeys,groupData=dataKey)
@@ -1089,7 +1172,7 @@ class MateriBeritaAdmin(ModelAdmin):
             dataKey = setKeyGroup(
                 anggota=idUser,
                 kabid=allID.idBidang,
-                publik=idUser
+                masyarakat=idUser
             ) 
             groupKey = setKeyGroup(
                 anggota="user_id",
@@ -1135,7 +1218,7 @@ class AktivitasPegawaiAdmin(ModelAdmin):
             dataKey = setKeyGroup(
                 anggota=idUser,
                 kabid=allID.idBidang,
-                publik=idUser
+                masyarakat=idUser
             ) 
             groupKey = setKeyGroup(
                 anggota="user_id",
@@ -1176,7 +1259,7 @@ class NotifikasiAdmin(ModelAdmin):
             dataKey = setKeyGroup(
                 anggota=idUser,
                 kabid=allID.idBidang,
-                publik=idUser
+                masyarakat=idUser
             ) 
             groupKey = setKeyGroup(
                 anggota="user_id",

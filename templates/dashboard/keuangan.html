@@ -1,0 +1,248 @@
+{% extends './layout.html' %}
+{% block content %}
+
+<div class="p-6" >
+  <div class="max-w-7xl mx-auto">
+    <div class="py-6">
+        <div class="flex justify-between items-center">
+          <div> 
+            <h1 class="text-2xl/8 font-semibold text-zinc-950 sm:text-xl/8 dark:text-white">
+                {% if jenis == 'PADES' %}
+                    PADes Kelompok
+                {% elif jenis == 'PAJAK' %}
+                    Pajak Kelompok
+                {% else %}
+                    Pendapatan Kelompok
+                {% endif %}
+            </h1> 
+          </div>
+          <button onclick="window.history.back()"
+            class="px-4 py-2 text-sm border rounded-lg hover:bg-zinc-100">
+            ← Kembali
+          </button>
+        </div>
+          <hr role="presentation"
+            class="my-4 mt-6 w-full border-t border-zinc-950/10 dark:border-white/10">
+    </div> 
+    <!-- HEADER -->
+    <div class="flex items-center justify-between mb-6">
+        
+        <div>
+            <h1 class="text-xl font-semibold text-zinc-900 dark:text-white">
+              {{ kelompok.nmKelo }}
+            </h1>
+            <p class="text-sm text-zinc-500">
+              {{ kelompok.desa.nmDesa }} • {{ kelompok.desa.kecamatan.nmKec }}
+            </p>  
+        </div>
+
+        <div class="flex gap-2"> 
+            
+            {% if usaha %}
+            <form method="get" class="flex gap-2">
+              <input name="q" value="{{ search }}"
+                placeholder="Cari kelompok..."
+                class="px-3 py-2 text-sm border rounded-lg">
+            </form>
+             {% if not isakses %}
+              <a href="{% url 'pkeuanganAdd' kelompok.id jenis %}"
+                  class="inline-flex items-center px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-lg shadow hover:bg-blue-600 transition">
+                  + Tambah
+              </a>
+              {% endif %}
+            {% else %}
+            <span class="text-sm text-zinc-500 italic">
+                Belum ada usaha yang terdaftar
+            </span>
+            {% endif %}
+
+
+        </div>
+
+        </div>
+
+    <!-- TABLE -->
+    <div class="bg-white dark:bg-zinc-900 rounded-2xl shadow border border-zinc-200 dark:border-zinc-800">
+
+      <div class="overflow-x-auto">
+        <table class="min-w-full">
+
+          <!-- HEAD -->
+          <thead>
+            <tr class="text-xs uppercase text-zinc-500 border-b border-zinc-200 dark:border-zinc-800">
+              <th class="px-6 py-4">Tanggal</th>
+                {% if jenis == 'UMUM' %}
+                    <th class="px-6 py-4">Kelompok</th>
+                    <th class="px-6 py-4">Usaha</th>
+                    <th class="px-6 py-4">Pendapatan</th>
+                {% endif %} 
+              <th class="px-6 py-4">Pengeluaran</th>
+              
+              {% if jenis == 'UMUM' %}
+                <th class="px-6 py-4">Laba</th>
+                <th class="px-6 py-4">Kas</th>
+              {% endif %} 
+              <th class="px-6 py-4">aksi</th>
+            </tr>
+          </thead>
+
+          <!-- BODY -->
+          <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800 text-center">
+            
+            {% for item in data %}
+            <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800 transition">
+
+              <!-- DATE -->
+              <td class="px-6 py-4 text-sm">
+                {{ item.dateCreate }}
+              </td>
+              {% if jenis == 'UMUM' %}
+                  <td class="px-6 py-4">
+                    <div class="font-medium">
+                      {{ item.usaha.kelompok.nmKelo }}
+                    </div>
+                    <div class="text-xs text-zinc-500">
+                      {{ item.usaha.kelompok.desa.nmDesa }}
+                    </div>
+                  </td> 
+                  <td class="px-6 py-4 text-sm">
+                    {{ item.usaha.jenisUsaha.nmJUsaha }}
+                  </td> 
+                  <td class="px-6 py-4 text-green-600 font-medium">
+                    Rp {{ item.pendapatan|floatformat:0 }}
+                  </td>
+              {% endif %}  
+
+              <!-- PENGELUARAN -->
+              <td class="px-6 py-4 text-red-500">
+                Rp {{ item.pengeluaran|floatformat:0 }}
+              </td>
+              
+              {% if jenis == 'UMUM' %}
+                <td class="px-6 py-4 font-semibold
+                    {% if item.laba > 0 %}
+                      text-blue-600
+                    {% else %}
+                      text-red-600
+                    {% endif %}
+                  ">
+                    Rp {{ item.laba|floatformat:0 }}
+                </td>
+                <td class="px-6 py-4 text-sm">
+                  Rp {{ item.kas|floatformat:0 }}
+                </td>
+              {% endif %}  
+              <td class="px-6 py-4">  
+                {% if not isakses and isakses != None %}
+                    <a href="{% url 'pkeuanganEdit' item.id jenis %}"
+                        class="inline-flex items-center px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-lg shadow hover:bg-blue-600 transition">
+                        Edit
+                    </a>
+                {# TRUE = PENGAWAL #}
+                {% elif isakses %}
+
+                    {% if item.aprovalPengawal %}
+                        <span class="px-2 py-1 text-xs rounded
+                            {% if item.aprovalPengawal %}
+                                bg-green-100 text-green-700
+                            {% else %}
+                                bg-red-100 text-red-700
+                            {% endif %}
+                        ">
+                            {{ item.aprovalPengawal|yesno:"Approve,Ditolak" }}
+                        </span>
+                    {% else %}
+                        <button onclick="openModal({{ item.id }},'pengawal')"
+                            class="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600">
+                            Approve
+                        </button>
+                    {% endif %}
+
+                {# NONE = ADMIN #}
+                {% else %}
+
+                    {% if item.aprovalKec %}
+                        <span class="px-2 py-1 text-xs rounded
+                            {% if item.aprovalKec %}
+                                bg-green-100 text-green-700
+                            {% else %}
+                                bg-red-100 text-red-700
+                            {% endif %}
+                        ">
+                            {{ item.aprovalKec|yesno:"Approve,Ditolak" }}
+                        </span>
+                    {% else %}
+                        <button onclick="openModal({{ item.id }},'kec')"
+                            class="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600">
+                            Approve
+                        </button>
+                    {% endif %}
+
+                {% endif %}
+
+            </td> 
+
+            </tr>
+            {% endfor %}
+
+          </tbody>
+        </table>
+      </div>
+
+      <!-- PAGINATION -->
+      <div class="flex justify-between px-6 py-4 text-sm border-t">
+
+        <div>
+          Halaman {{ data.number }} / {{ data.paginator.num_pages }}
+        </div>
+
+        <div class="flex gap-1">
+
+          {% if data.has_previous %}
+          ?page={{ data.previous_page_number }}{% if search %}&q={{ search }}{% endif %}
+            ←
+          </a>
+          {% endif %}
+
+          {% for num in data.paginator.page_range %}
+            {% if num == data.number %}
+              <span class="px-3 py-1 bg-blue-500 text-white rounded">
+                {{ num }}
+              </span>
+            {% elif num <= data.number|add:2 and num >= data.number|add:-2 %}
+              ?page={{ num }}{% if search %}&q={{ search }}{% endif %}
+                {{ num }}
+              </a>
+            {% endif %}
+          {% endfor %}
+
+          {% if data.has_next %}
+          ?page={{ data.next_page_number }}{% if search %}&q={{ search }}{% endif %}
+            →
+          </a>
+          {% endif %}
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+</div>
+<script>
+  function openModal(id, jenis) {
+      document.getElementById("modal-approve").classList.remove("hidden");
+
+      // set id ke input hidden
+      document.getElementById("approve-id").value = id;
+
+      // set action dynamic
+      document.getElementById("form-approve").action = "/pendapatan/approve/" + id + "/"+jenis + "/";
+  }
+
+  function closeModal() {
+      document.getElementById("modal-approve").classList.add("hidden");
+  }
+</script>
+{% endblock %}

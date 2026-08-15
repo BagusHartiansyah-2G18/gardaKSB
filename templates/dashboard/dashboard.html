@@ -1,0 +1,600 @@
+{% extends './layout.html' %}
+{% block content %}
+
+<div
+    class="grow p-6 lg:rounded-lg lg:bg-white lg:p-10 lg:shadow-xs lg:ring-1 lg:ring-zinc-950/5 dark:lg:bg-zinc-900 dark:lg:ring-white/10">
+
+    <div class="mx-auto max-w-6xl">
+
+        <h1 class="text-2xl/8 font-semibold text-zinc-950 sm:text-xl/8 dark:text-white">
+            Dashboard Monitoring
+        </h1>
+
+        <hr class="my-10 mt-6 border-zinc-950/10 dark:border-white/10">
+
+        <!-- SUMMARY -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+
+            <div class="bg-blue-500 text-white p-4 rounded-xl">
+                Kecamatan
+                <div class="text-2xl font-bold">
+                    {{ summary.kecamatan }}
+                </div>
+            </div>
+
+            <div class="bg-green-500 text-white p-4 rounded-xl">
+                Desa
+                <div class="text-2xl font-bold">
+                    {{ summary.desa }}
+                </div>
+            </div>
+
+            <div class="bg-yellow-500 text-white p-4 rounded-xl">
+                Kelompok
+                <div class="text-2xl font-bold">
+                    {{ summary.kelompok }}
+                </div>
+            </div>
+
+            <div class="bg-red-500 text-white p-4 rounded-xl">
+                Usaha
+                <div class="text-2xl font-bold">
+                    {{ summary.usaha }}
+                </div>
+            </div>
+
+            <div class="bg-indigo-500 text-white p-4 rounded-xl">
+                Anggota
+                <div class="text-2xl font-bold">
+                    {{ summary.anggota }}
+                </div>
+            </div>
+
+            <div class="bg-orange-500 text-white p-4 rounded-xl">
+                Aset
+                <div class="text-2xl font-bold">
+                    {{ summary.aset }}
+                </div>
+            </div>
+
+            <div class="bg-emerald-600 text-white p-4 rounded-xl">
+                Legalitas
+                <div class="text-2xl font-bold">
+                    {{ summaryLegalitas.lengkap|floatformat:0 }}
+                </div>
+            </div>
+
+            <div class="bg-purple-500 text-white p-4 rounded-xl">
+                Nilai Aset
+                <div class="text-lg font-bold">
+                    Rp {{ summaryAset.nilai_aset|floatformat:0 }}
+                </div>
+            </div>
+
+        </div>
+        <!-- EARLY WARNING -->
+        <div class="mb-8">
+
+            <div class="bg-white dark:bg-zinc-900 rounded-xl shadow">
+
+                <div class="p-4 border-b">
+                    <h3 class="font-semibold text-red-600">
+                        ⚠ Early Warning System
+                    </h3>
+                </div>
+
+                <div class="divide-y">
+
+                    {% for item in warnings %}
+
+                    <a href="{{ item.url }}"
+                    class="block p-4 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition">
+
+                        <div class="flex items-start justify-between">
+
+                            <div class="flex items-start gap-3">
+
+                                {% if item.level == 'danger' %}
+                                    <div class="text-red-500">🔴</div>
+                                {% elif item.level == 'warning' %}
+                                    <div class="text-yellow-500">🟡</div>
+                                {% else %}
+                                    <div class="text-green-500">🟢</div>
+                                {% endif %}
+
+                                <div>
+                                    <div class="font-medium">
+                                        {{ item.judul }}
+                                    </div>
+
+                                    <div class="text-sm text-zinc-500">
+                                        {{ item.pesan }}
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <div class="text-blue-500 text-sm">
+                                Lihat →
+                            </div>
+
+                        </div>
+
+                    </a>
+
+                    {% empty %}
+
+                    <div class="p-6 text-center text-zinc-500">
+                        ✅ Tidak ada warning
+                    </div>
+
+                    {% endfor %}
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- ROW 1 -->
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+            <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow">
+                <h3 class="mb-4 font-semibold">Tren Pendapatan Bulanan</h3>
+                <canvas id="chartBulanan"></canvas>
+            </div>
+            <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow">
+                <h3 class="mb-4 font-semibold">Lembaga</h3>
+                <canvas id="lembagaChart"></canvas>
+            </div>
+            <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow">
+                <h3 class="mb-4 font-semibold">Pendapatan per Jenis Usaha</h3>
+                <canvas id="chartJenisUsaha"></canvas>
+            </div>
+            
+            <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow">
+                <h3 class="mb-4 font-semibold">Status Keaktifan</h3>
+                <div class="relative h-64">
+                    <canvas id="aktifChart"></canvas>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow">
+                <h3 class="mb-4 font-semibold">Top Kelompok Berdasarkan Pendapatan</h3>
+                <canvas id="chartKelompok"></canvas>
+            </div>
+
+            <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow">
+                <h3 class="mb-4 font-semibold">Status Approval</h3>
+                <canvas id="approvalChart"></canvas>
+            </div>
+
+            <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow">
+                <h3 class="mb-4 font-semibold">Kondisi Aset</h3>
+                <canvas id="asetChart"></canvas>
+            </div>
+
+            <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow">
+                <h3 class="mb-4 font-semibold">Top 5 Pendapatan Kelompok</h3>
+                <canvas id="topPendapatanChart"></canvas>
+            </div>
+
+            <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow">
+                <h3 class="mb-4 font-semibold">Top 5 Nilai Aset Kelompok</h3>
+                <canvas id="topAsetChart"></canvas>
+            </div>
+
+        </div>
+    </div>
+
+    {{ warningApproval|json_script:"warningApproval" }}
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    new Chart(document.getElementById('chartBulanan'), {
+
+        type: 'line',
+
+        data: {
+            labels: [
+                {% for i in chartPendBulanan %}
+                    "{{ i.bulan }}",
+                {% endfor %}
+            ],
+            datasets: [
+                {
+                    label: 'Pendapatan',
+                    data: [
+                        {% for i in chartPendBulanan %}
+                            {{ i.pendapatan|default:0 }},
+                        {% endfor %}
+                    ],
+                    borderColor: '#22c55e',
+                    backgroundColor: '#22c55e22',
+                    tension: 0.4
+                },
+                {
+                    label: 'Pengeluaran',
+                    data: [
+                        {% for i in chartPendBulanan %}
+                            {{ i.pengeluaran|default:0 }},
+                        {% endfor %}
+                    ],
+                    borderColor: '#ef4444',
+                    backgroundColor: '#ef444422',
+                    tension: 0.4
+                },
+                {
+                    label: 'Laba',
+                    data: [
+                        {% for i in chartPendBulanan %}
+                            {{ i.laba|default:0 }},
+                        {% endfor %}
+                    ],
+                    borderColor: '#3b82f6',
+                    backgroundColor: '#3b82f622',
+                    tension: 0.4
+                }
+            ]
+        }
+
+    });
+    new Chart(document.getElementById('chartJenisUsaha'), {
+
+        type: 'pie',
+
+        data: {
+            labels: [
+                {% for i in chartPendJUsaha %}
+                    "{{ i.usaha__jenisUsaha__nmJUsaha }}",
+                {% endfor %}
+            ],
+            datasets: [{
+                data: [
+                    {% for i in chartPendJUsaha %}
+                        {{ i.total }},
+                    {% endfor %}
+                ],
+                backgroundColor: [
+                    '#3b82f6',
+                    '#22c55e',
+                    '#f59e0b',
+                    '#ef4444',
+                    '#8b5cf6',
+                    '#06b6d4'
+                ]
+            }]
+        }
+
+    });
+    new Chart(document.getElementById('topPendapatanChart'), {
+
+        type: 'bar',
+
+        data: {
+
+            labels: [
+                {% for i in chartKelompok %}
+                    "{{ i.usaha__kelompok__nmKelo }}",
+                {% endfor %}
+            ],
+
+            datasets: [{
+                label: 'Pendapatan',
+
+                data: [
+                    {% for i in chartKelompok %}
+                        {{ i.total }},
+                    {% endfor %}
+                ],
+
+                backgroundColor: '#3b82f6'
+            }]
+        },
+
+        options: {
+            indexAxis: 'y'
+        }
+
+    });
+    new Chart(document.getElementById('lembagaChart'), {
+
+        type: 'pie',
+
+        data: {
+            labels: [
+                {% for i in chartLembaga %}
+                    "{{ i.itemLegalitas__idJLega }}",
+                {% endfor %}
+            ],
+
+            datasets: [{
+                data: [
+                    {% for i in chartLembaga %}
+                        {{ i.total }},
+                    {% endfor %}
+                ],
+
+                backgroundColor: [
+                    '#3b82f6',
+                    '#22c55e',
+                    '#f59e0b',
+                    '#ef4444',
+                    '#8b5cf6',
+                    '#06b6d4'
+                ]
+            }]
+        }
+
+    });
+
+ 
+    
+    const canvas = document.getElementById('approvalChart');
+
+    
+    
+    
+    const warningApproval = JSON.parse(
+        document.getElementById('warningApproval').textContent
+    );
+
+    const labels = Object.keys(warningApproval);
+    const values = Object.values(warningApproval);
+
+    new Chart(canvas, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Pending',
+                data: [1, 1, 0, 0],
+                backgroundColor: [
+                    '#ef4444',
+                    '#f59e0b',
+                    '#3b82f6',
+                    '#8b5cf6'
+                ]
+            }]
+        }
+    });
+
+
+    // // ========================
+    // // TREN PENDAPATAN
+    // // ========================
+    
+    // const chartData = [
+    //     {% for i in chartPendBulanan %}
+    //     {
+    //         bulan: "{{ i.bulan }}",
+    //         pendapatan: {{ i.pendapatan|default:0 }},
+    //         pengeluaran: {{ i.pengeluaran|default:0 }},
+    //         laba: {{ i.laba|default:0 }}
+    //     },
+    //     {% endfor %}
+    // ];
+ 
+    // new Chart(
+    //     document.getElementById('pendapatanChart'),
+    //     {
+    //         type: 'line',
+
+    //         data: {
+    //             labels: chartData.map(x => x.bulan),
+
+    //             datasets: [
+    //                 {
+    //                     label: 'Pendapatan',
+    //                     data: chartData.map(x => x.pendapatan),
+    //                     borderColor: '#22c55e',
+    //                     backgroundColor: '#22c55e20',
+    //                     tension: 0.4
+    //                 },
+    //                 {
+    //                     label: 'Pengeluaran',
+    //                     data: chartData.map(x => x.pengeluaran),
+    //                     borderColor: '#ef4444',
+    //                     backgroundColor: '#ef444420',
+    //                     tension: 0.4
+    //                 },
+    //                 {
+    //                     label: 'Laba',
+    //                     data: chartData.map(x => x.laba),
+    //                     borderColor: '#3b82f6',
+    //                     backgroundColor: '#3b82f620',
+    //                     tension: 0.4
+    //                 }
+    //             ]
+    //         },
+
+    //         options: {
+    //             responsive: true,
+
+    //             plugins: {
+    //                 legend: {
+    //                     position: 'bottom'
+    //                 }
+    //             },
+
+    //             scales: {
+    //                 y: {
+    //                     beginAtZero: true
+    //                 }
+    //             }
+    //         }
+    //     }
+    // );
+
+    // new Chart(document.getElementById('chartKelengkapan'), {
+    //     type: 'doughnut',
+    //     data: {
+    //         labels: ['Lengkap', 'Belum Lengkap'],
+    //         datasets: [{
+    //             data: [
+    //                 {{ chartKelengkapan.lengkap }},
+    //                 {{ chartKelengkapan.kurang }}
+    //             ],
+    //             backgroundColor: [
+    //                 '#22c55e',
+    //                 '#ef4444'
+    //             ]
+    //         }]
+    //     }
+    // });
+    // // ========================
+    // // KONDISI ASET
+    // // =====================    ===
+
+    new Chart(document.getElementById('asetChart'), {
+
+        type: 'doughnut',
+
+        data: {
+            labels: [
+                'Baik',
+                'Perlu Perbaikan',
+                'Rusak'
+            ],
+
+            datasets: [{
+                data: [
+                    {{ chartKondisiAset.baik }},
+                    {{ chartKondisiAset.perlu }},
+                    {{ chartKondisiAset.rusak }}
+                ],
+
+                backgroundColor: [
+                    '#22c55e',
+                    '#f59e0b',
+                    '#ef4444'
+                ]
+            }]
+        }
+
+    });
+
+
+    // // ========================
+    // // TOP PENDAPATAN
+    // // ========================
+
+    new Chart(document.getElementById('chartKelompok'), {
+
+        type: 'bar',
+
+        data: {
+
+            labels: [
+                {% for i in chartKelompok %}
+                    "{{ i.usaha__kelompok__nmKelo }}",
+                {% endfor %}
+            ],
+
+            datasets: [{
+                label: 'Pendapatan',
+
+                data: [
+                    {% for i in chartKelompok %}
+                        {{ i.total }},
+                    {% endfor %}
+                ],
+
+                backgroundColor: '#3b82f6'
+            }]
+        },
+
+        options: {
+            indexAxis: 'y'
+        }
+
+    });
+
+
+    // // ========================
+    // // TOP ASET
+    // // ========================
+
+    new Chart(document.getElementById('topAsetChart'), {
+
+        type: 'bar',
+
+        data: {
+
+            labels: [
+                {% for i in chartAsetKelompok %}
+                    "{{ i.kelompok__nmKelo }}",
+                {% endfor %}
+            ],
+
+            datasets: [{
+                label: 'Nilai Aset',
+
+                data: [
+                    {% for i in chartAsetKelompok %}
+                        {{ i.total }},
+                    {% endfor %}
+                ],
+
+                backgroundColor: '#8b5cf6'
+            }]
+        },
+
+        options: {
+            indexAxis: 'y'
+        }
+
+    });
+
+     
+    
+    new Chart(document.getElementById('aktifChart'), {
+        type: 'doughnut',
+        data: {
+            labels: [
+                {% for i in aktif.labels %}
+                    "{{ i }}",
+                {% endfor %}
+            ],
+            datasets: [{
+                data: [
+                    {% for i in aktif.values %}
+                        {{ i }},
+                    {% endfor %}
+                ],
+                backgroundColor: [
+                    '#22c55e',
+                    '#ef4444'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let data = context.dataset.data;
+                            let total = data.reduce((a, b) => a + b, 0);
+                            let value = context.raw;
+                            let percentage = ((value / total) * 100).toFixed(1);
+
+                            return `${context.label}: ${value} (${percentage}%)`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+
+});
+</script>
+
+{% endblock %}

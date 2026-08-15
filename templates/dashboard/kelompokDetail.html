@@ -1,0 +1,482 @@
+{% extends './layout.html' %}
+{% block content %}
+
+<div class="p-6" style="background-color: rgb(254, 251, 251);">
+  <div class="max-w-6xl mx-auto space-y-6">
+    <div class="py-6">
+        <div class="flex justify-between items-center">
+          <div>
+            <h1 class="text-2xl/8 font-semibold text-zinc-950 sm:text-xl/8 dark:text-white">Detail Kelompok</h1>
+          </div>
+
+          <!-- BACK -->
+          <!-- <a href="/kelompok/"
+            class="px-4 py-2 text-sm border rounded-lg hover:bg-zinc-100">
+            ← Kembali
+          </a> -->
+          <button onclick="window.history.back()"
+                class="px-4 py-2 text-sm border rounded-lg hover:bg-zinc-100">
+                ← Kembali
+            </button>
+        </div>
+          
+          <hr role="presentation"
+            class="my-10 mt-6 w-full border-t border-zinc-950/10 dark:border-white/10">
+          <h1 class="text-xl font-semibold text-zinc-900 dark:text-white">
+            {{ kelompok.nmKelo }}
+          </h1>
+          <p class="text-sm text-zinc-500">
+            {{ kelompok.desa.nmDesa }} • {{ kelompok.desa.kecamatan.nmKec }}
+          </p>
+          
+
+    </div> 
+
+    <!-- ✅ INFO KELOMPOK -->
+    <div class="grid md:grid-cols-4 gap-4">
+
+      <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow border">
+        <p class="text-xs text-zinc-500">Ketua</p>
+        <p class="font-semibold mt-1">{{ kelompok.ketua }}</p>
+      </div>
+
+      <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow border">
+        <p class="text-xs text-zinc-500">Kelas</p>
+        <p class="mt-1">
+          <span class="px-2 py-1 text-xs rounded 
+            {% if kelompok.kelas == 'Madya' %}
+              bg-green-100 text-green-700
+            {% else %}
+              bg-yellow-100 text-yellow-700
+            {% endif %}
+          ">
+            {{ kelompok.kelas }}
+          </span>
+        </p>
+      </div>
+
+      <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow border">
+        <p class="text-xs text-zinc-500">Desa</p>
+        <p class="font-semibold mt-1">{{ kelompok.desa.nmDesa }}</p>
+      </div>
+
+      <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow border">
+        <p class="text-xs text-zinc-500">Koordinat</p>
+        <p class="text-sm mt-1">
+          {{ kelompok.koordinat|default:"-" }}
+        </p>
+      </div>
+
+    </div>
+
+    <!-- ✅ LEGALITAS -->
+    <div class="bg-white dark:bg-zinc-900 rounded-2xl shadow border">
+
+      <div class="p-4 border-b">
+        <h2 class="text-sm font-semibold text-zinc-600">
+          Legalitas Kelompok
+        </h2>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="min-w-full">
+
+          <thead>
+            <tr class="text-xs uppercase text-zinc-500 border-b">
+              <th class="px-6 py-3 text-left">Item</th>
+              <th class="px-6 py-3 text-left">Value</th>
+              
+              {% if isakses == 'PENGAWAL' %}
+                  <th class="px-6 py-3 text-left">
+                      Pengawas
+                  </th>
+
+              {% elif isakses == 'DESA' %}
+                  <th class="px-6 py-3 text-left">
+                      Desa
+                  </th>
+
+              {% elif isakses == 'KECAMATAN' %}
+                  <th class="px-6 py-3 text-left">
+                      Kecamatan
+                  </th>
+
+              {% endif %}
+            </tr>
+          </thead>
+
+          <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800">
+
+            {% for item in legalitas %}
+            <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800">
+
+              <!-- ITEM -->
+              <td class="px-6 py-4 font-medium">
+                {{ item.item.nmILega }}
+              </td>
+
+              <!-- VALUE -->
+              <td class="px-6 py-4">
+                {{ item.data.value |default:"-" }}
+              </td>  
+              
+              <!-- APPROVAL DESA -->
+              
+              <td class="px-6 py-4">
+
+                  {% if not item.data %}
+
+                      <span class="px-2 py-1 text-xs rounded bg-gray-100 text-gray-500">
+                          Belum Diinput
+                      </span>
+
+                  {% elif isakses == 'PENGAWAL' %}
+
+                      {% if item.data.aprovalPengawal %}
+                          <span class="px-2 py-1 text-xs rounded bg-green-100 text-green-700">
+                              Approve
+                          </span>
+
+                      {% elif item.data.ketPengawal %}
+                          <span class="px-2 py-1 text-xs rounded bg-red-100 text-red-700">
+                              Ditolak
+                          </span>
+
+                      {% else %}
+                          <button
+                              onclick="openModal('{{ item.data.id }}','aprovalPengawal')"
+                              class="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600">
+                              Approve
+                          </button>
+                      {% endif %}
+
+                  {% elif isakses == 'DESA' %}
+
+                      {% if item.data.aprovalDesa %}
+                          <span class="px-2 py-1 text-xs rounded bg-green-100 text-green-700">
+                              Approve
+                          </span>
+
+                      {% elif item.data.ketDesa %}
+                          <span class="px-2 py-1 text-xs rounded bg-red-100 text-red-700">
+                              Ditolak
+                          </span>
+
+                      {% else %}
+                          <button
+                              onclick="openModal('{{ item.data.id }}','aprovalDesa')"
+                              class="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600">
+                              Approve
+                          </button>
+                      {% endif %}
+
+                  {% elif isakses == 'KECAMATAN' %}
+
+                      {% if item.data.aprovalKec %}
+                          <span class="px-2 py-1 text-xs rounded bg-green-100 text-green-700">
+                              Approve
+                          </span>
+
+                      {% elif item.data.ketKec %}
+                          <span class="px-2 py-1 text-xs rounded bg-red-100 text-red-700">
+                              Ditolak
+                          </span>
+
+                      {% else %}
+                          <button
+                              onclick="openModal('{{ item.data.id }}','aprovalKec')"
+                              class="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600">
+                              Approve
+                          </button>
+                      {% endif %}
+
+                  {% endif %}
+
+              </td>
+
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="5" class="text-center py-6 text-zinc-500">
+                Belum ada data legalitas
+              </td>
+            </tr>
+            {% endfor %}
+
+          </tbody>
+
+        </table>
+      </div>
+
+    </div> 
+    <!-- ✅ USAHA -->
+    <div class="bg-white dark:bg-zinc-900 rounded-2xl shadow border mt-6">
+
+      <div class="p-4 border-b flex justify-between items-center">
+        <h2 class="text-sm font-semibold text-zinc-600">
+          Usaha Kelompok
+        </h2>
+        <!-- <a href="{% url 'anggota_add' kelompok.id %}"
+          class="px-3 py-1 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600">
+          + Tambah Usaha
+        </a> -->
+
+      </div>
+      
+       
+
+      <div class="overflow-x-auto">
+        <table class="min-w-full">
+
+          <!-- HEAD -->
+          <thead>
+            <tr class="text-xs uppercase text-zinc-500 border-b">
+              <th class="px-6 py-3 text-left">Jenis Usaha</th>
+              <th class="px-6 py-3 text-left">Komoditi</th>
+              <th class="px-6 py-3 text-left">Wadah</th>
+              <th class="px-6 py-3 text-left">Teknologi</th>
+              <th class="px-6 py-3 text-left">Lahan</th>
+              <th class="px-6 py-3 text-left">Status</th> 
+            </tr>
+          </thead>
+
+          <!-- BODY -->
+          <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800">
+
+            {% for item in listUsaha %}
+            <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800 transition">
+
+              <!-- JENIS USAHA -->
+              <td class="px-6 py-4 font-medium">
+                {{ item.jenisUsaha.nmJUsaha }}
+              </td>
+
+              <!-- KOMODITI -->
+              <td class="px-6 py-4">
+                {{ item.komoditi }}
+              </td>
+
+              <!-- WADAH -->
+              <td class="px-6 py-4 text-sm text-zinc-500">
+                {{ item.wadah|default:"-" }}
+              </td>
+
+              <!-- TEKNOLOGI -->
+              <td class="px-6 py-4 text-sm text-zinc-500">
+                {{ item.teknologi|default:"-" }}
+              </td>
+
+              <!-- LAHAN -->
+              <td class="px-6 py-4 text-sm">
+                {{ item.lahan|default:"-" }}
+              </td>
+
+              <!-- STATUS -->
+              <td class="px-6 py-4">
+                <span class="px-2 py-1 text-xs rounded
+                  {% if item.status == 'Aktif' %}
+                    bg-green-100 text-green-700
+                  {% else %}
+                    bg-red-100 text-red-700
+                  {% endif %}
+                ">
+                  {{ item.status }}
+                </span>
+              </td>
+
+               
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="7" class="text-center py-6 text-zinc-400">
+                Belum ada data usaha
+              </td>
+            </tr>
+            {% endfor %}
+
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+    <!-- ✅ ANGGOTA -->
+    <div class="bg-white dark:bg-zinc-900 rounded-2xl shadow border mt-6">
+
+      <div class="p-4 border-b flex justify-between items-center">
+        <h2 class="text-sm font-semibold text-zinc-600">
+          Anggota Kelompok
+        </h2>
+        {% if not isakses %}
+          <a href="{% url 'anggota_add' kelompok.id %}"
+            class="px-3 py-1 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600">
+            + Tambah Anggota
+          </a>
+        {% endif %}
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="min-w-full">
+
+          <thead>
+            <tr class="text-xs uppercase text-zinc-500 border-b">
+              <th class="px-6 py-3">Nama</th>
+              <th class="px-6 py-3">Jabatan</th>
+              <th class="px-6 py-3">No HP</th>
+              <th class="px-6 py-3">Alamat</th>
+              {% if not isakses %}
+                <th class="px-6 py-3">Aksi</th>
+              {% endif %}
+            </tr>
+          </thead>
+
+          <tbody class="divide-y">
+            {% for item in anggota %}
+            <tr>
+              <td class="px-6 py-3 font-medium">{{ item.nama }}</td>
+              <td class="px-6 py-3 capitalize">
+                <span class="px-2 py-1 text-xs rounded bg-blue-100 text-blue-700">
+                  {{ item.jabatan }}
+                </span>
+              </td>
+              <td class="px-6 py-3">{{ item.noHp|default:"-" }}</td>
+              <td class="px-6 py-3 text-sm text-zinc-500">
+                {{ item.alamat|default:"-" }}
+              </td>
+              {% if not isakses %}
+                <td class="px-6 py-3">
+                  <form method="post" action="{% url 'anggota_delete' item.id %}"
+                        onsubmit="return confirm('Yakin hapus anggota ini?')"
+                        class="inline">
+                      {% csrf_token %}
+
+                      <button type="submit"
+                          class="inline-flex items-center gap-1 px-2 py-1 text-xs text-red-600 
+                                bg-red-50 rounded hover:bg-red-100 transition">
+                          🗑 Hapus
+                      </button>
+                  </form>  
+
+                </td>
+              {% endif %}
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="4" class="text-center py-6 text-zinc-400">
+                Belum ada anggota
+              </td>
+            </tr>
+            
+            {% endfor %}
+          </tbody>
+
+        </table>
+      </div>
+    </div>
+    <!-- ✅ ASET -->
+    <div class="bg-white dark:bg-zinc-900 rounded-2xl shadow border mt-6">
+
+      <div class="p-4 border-b flex justify-between items-center">
+        <h2 class="text-sm font-semibold text-zinc-600">
+          Aset Kelompok
+        </h2>
+        
+        {% if not isakses %}
+          <a href="{% url 'aset_add' kelompok.id %}"
+            class="px-3 py-1 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600">
+            + Tambah Aset
+          </a>
+        {% endif %}
+        <!-- <a href="{% url 'aset_add' kelompok.id %}"
+          class="px-3 py-1 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600">
+          + Tambah Aset
+        </a> -->
+
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="min-w-full">
+
+          <thead>
+            <tr class="text-xs uppercase text-zinc-500 border-b">
+              <th class="px-6 py-3">Nama Aset</th>
+              <th class="px-6 py-3">Jumlah</th>
+              <th class="px-6 py-3">Kondisi</th>
+              <th class="px-6 py-3">Nilai</th>
+              <th class="px-6 py-3">Aksi</th>
+            </tr>
+          </thead>
+
+          <tbody class="divide-y">
+            {% for item in aset %}
+            <tr>
+              <td class="px-6 py-3 font-medium">{{ item.namaAset }}</td>
+              <td class="px-6 py-3">{{ item.jumlah }}</td>
+
+              <td class="px-6 py-3">
+                <span class="px-2 py-1 text-xs rounded
+                  {% if item.kondisi == 'baik' %}
+                    bg-green-100 text-green-700
+                  {% elif item.kondisi == 'rusak' %}
+                    bg-red-100 text-red-700
+                  {% else %}
+                    bg-yellow-100 text-yellow-700
+                  {% endif %}
+                ">
+                  {{ item.kondisi }}
+                </span>
+              </td>
+
+              <td class="px-6 py-3 text-sm">
+                Rp {{ item.nilai|default:0|floatformat:0 }}
+              </td>
+              {% if not isakses %}
+                <td class="px-6 py-3">
+                  <form method="post" action="{% url 'aset_delete' item.id %}"
+                        onsubmit="return confirm('Yakin hapus aset ini?')"
+                        class="inline">
+                      {% csrf_token %}
+
+                      <button type="submit"
+                          class="inline-flex items-center gap-1 px-2 py-1 text-xs text-red-600 
+                                bg-red-50 rounded hover:bg-red-100 transition">
+                          🗑 Hapus
+                      </button>
+                  </form> 
+                </td>
+              {% endif %}
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="4" class="text-center py-6 text-zinc-400">
+                Belum ada aset
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+
+        </table>
+      </div>
+    </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+  function openModal(id,key) {
+      console.log("mdl-clk");
+      
+      document.getElementById("modal-approve").classList.remove("hidden");
+
+      // set id ke input hidden
+      document.getElementById("approve-id").value = id;
+
+      // set action dynamic
+      document.getElementById("form-approve").action = "/legalitas/approve/" + id + "/"+key+"/";
+  }
+
+  function closeModal() {
+      document.getElementById("modal-approve").classList.add("hidden");
+  }
+</script>
+{% endblock %}

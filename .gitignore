@@ -4,3 +4,5 @@ db.sqlite3
 passenger_wsgi.py
 media
 core/services/*.json
+staticfiles
+static

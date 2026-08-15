@@ -23,6 +23,7 @@ from .views import (
     BidangViewSet,
     JenisOrganisasiViewSet,
     JenisKasusViewSet,
+    PetugasViewSet,
 )
 
 
@@ -63,7 +64,11 @@ router.register(
     KecamatanViewSet,
     basename="kecamatan"
 )
-
+router.register(
+    "master/petugas",
+    PetugasViewSet,
+    basename="petugas"
+)
 router.register(
     "master/desa",
     DesaViewSet,

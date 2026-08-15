@@ -6,7 +6,7 @@ from rest_framework import status, viewsets
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
+from django.db.models.fields.files import FieldFile
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from drf_spectacular.utils import extend_schema
@@ -38,8 +38,17 @@ from core.apps.pengaduan.PengaduanHistory.models import PengaduanHistory
 from core.apps.pengaduan.VerifikasiPengaduan.models import VerifikasiPengaduan
 
 
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema,OpenApiParameter
 from .serializers import *
+from django.core.paginator import Paginator
+
+from django.db.models import Q
+from rest_framework.parsers import (
+    MultiPartParser,
+    FormParser,
+    JSONParser,
+)
+from core.apps.pengaduan.service import generateNomorTiket
 
 # ============================================================
 # RESPONSE HELPER
@@ -101,11 +110,21 @@ def user_data(user):
 # ============================================================
 # SERIALIZE MODEL
 # ============================================================
-
+ 
 def serialize_value(value):
 
     if value is None:
         return None
+
+    if isinstance(value, FieldFile):
+
+        if not value:
+            return None
+
+        try:
+            return value.url
+        except Exception:
+            return None
 
     if hasattr(value, "isoformat"):
         try:
@@ -117,7 +136,6 @@ def serialize_value(value):
         return value.pk
 
     return value
-
 
 def serialize_model(instance):
 
@@ -135,15 +153,210 @@ def serialize_model(instance):
                 instance,
                 field_name
             )
-        except Exception:
-            value = None
 
-        data[field_name] = serialize_value(
-            value
-        )
+            if isinstance(value, FieldFile):
+
+                if value and value.name:
+                    data[field_name] = value.url
+                else:
+                    data[field_name] = None
+
+            else:
+
+                data[field_name] = serialize_value(
+                    value
+                )
+
+        except Exception:
+
+            data[field_name] = None
 
     return data
 
+
+def filter_by_group(
+    request,
+    queryset,
+    owner_field="pelapor"
+):
+
+    user = request.user
+
+    group = user.groups.first()
+
+    # ====================
+    # GROUP / PRIBADI
+    # ====================
+
+    bygroup = request.query_params.get(
+        "bygroup",
+        "group"
+    )
+
+    if bygroup == "pribadi":
+
+        queryset = queryset.filter(
+            **{
+                owner_field: user
+            }
+        )
+
+    elif not (
+        user.is_superuser
+        or (
+            group
+            and group.name in [
+                "ADMIN",
+                "KABAN",
+                "KABID"
+            ]
+        )
+    ):
+
+        queryset = queryset.filter(
+            **{
+                owner_field: user
+            }
+        )
+
+    # ====================
+    # STATUS
+    # ====================
+
+    status_param = request.query_params.get(
+        "status"
+    )
+
+    if status_param:
+
+        queryset = queryset.filter(
+            status=status_param
+        )
+
+    # ====================
+    # PELAPOR
+    # ====================
+
+    pelapor = request.query_params.get(
+        "pelapor"
+    )
+    # print(pelapor)
+    if pelapor == "pribadi":
+
+        queryset = queryset.filter(
+            pelapor=user
+        )
+
+    elif pelapor == "group":
+
+        queryset = queryset.exclude(
+            pelapor=user
+        )
+
+    # ====================
+    # PETUGAS
+    # ====================
+
+    petugas = request.query_params.get(
+        "petugas"
+    )
+
+    if petugas == "pribadi":
+
+        queryset = queryset.filter(
+            petugas=user
+        )
+
+    elif petugas == "group":
+
+        queryset = queryset.exclude(
+            petugas=user
+        )
+
+    # ====================
+    # VERIFIKATOR
+    # ====================
+
+    verifikator = request.query_params.get(
+        "verifikator"
+    )
+
+    if verifikator == "true":
+
+        queryset = queryset.filter(
+            verifikator__isnull=False
+        )
+
+    elif verifikator == "false":
+
+        queryset = queryset.filter(
+            verifikator__isnull=True
+        )
+
+    return queryset
+
+
+def search_and_paginate(
+    request,
+    queryset,
+    search_fields=None
+):
+
+    search = request.query_params.get(
+        "search"
+    )
+
+    if search and search_fields:
+
+        query = Q()
+
+        for field in search_fields:
+
+            query |= Q(
+                **{
+                    f"{field}__icontains": search
+                }
+            )
+
+        queryset = queryset.filter(
+            query
+        )
+
+    page = int(
+        request.query_params.get(
+            "page",
+            1
+        )
+    )
+
+    page_size = int(
+        request.query_params.get(
+            "page_size",
+            10
+        )
+    )
+
+    paginator = Paginator(
+        queryset,
+        page_size
+    )
+
+    page_obj = paginator.get_page(
+        page
+    )
+
+    return {
+        "page": page,
+        "page_size": page_size,
+        "total_data": paginator.count,
+        "total_page": paginator.num_pages,
+        "has_next": page_obj.has_next(),
+        "has_previous": page_obj.has_previous(),
+        "results": [
+            serialize_model(item)
+            for item in page_obj.object_list
+        ]
+    }
 
 # ============================================================
 # AUTH - LOGIN
@@ -153,7 +366,7 @@ def serialize_model(instance):
 class LoginAPIView(APIView):
 
     permission_classes = [AllowAny]
-
+    
     @extend_schema(
         tags=["Authentication"],
         request=LoginSerializer,
@@ -162,7 +375,7 @@ class LoginAPIView(APIView):
         }
     )
     def post(self, request):
-
+        print("LoginAPIView called")
         serializer = LoginSerializer(
             data=request.data
         )
@@ -713,42 +926,98 @@ class PengaduanViewSet(viewsets.ModelViewSet):
     queryset = Pengaduan.objects.all()
 
     def get_queryset(self):
-
-        user = self.request.user
-
-        group = user.groups.first()
-
-        if user.is_superuser:
-
-            return Pengaduan.objects.all()
-
-        if group and group.name in [
-            "ADMIN",
-            "KABAN",
-            "KABID"
-        ]:
-
-            return Pengaduan.objects.all()
-
-        return Pengaduan.objects.filter(
-            pelapor=user
+        return filter_by_group(
+            request=self.request,
+            queryset=Pengaduan.objects.all(),
+            owner_field="pelapor"
         )
-
     @extend_schema(
         tags=["Pengaduan"],
-        responses=PengaduanSerializer(many=True)
+        parameters=[
+            OpenApiParameter(
+                name="search",
+                type=str,
+                location=OpenApiParameter.QUERY,
+                description="Keyword pencarian"
+            ),
+            OpenApiParameter(
+                name="page",
+                type=int,
+                location=OpenApiParameter.QUERY,
+                description="Nomor halaman"
+            ),
+            OpenApiParameter(
+                name="page_size",
+                type=int,
+                location=OpenApiParameter.QUERY,
+                description="Jumlah data per halaman"
+            ),
+            OpenApiParameter(
+                name="bygroup",
+                type=str,
+                enum=["group", "pribadi"],
+                location=OpenApiParameter.QUERY,
+                description="Default: group"
+            ),
+            OpenApiParameter(
+                name="status",
+                type=str,
+                enum=[
+                    "BARU",
+                    "VERIFIKASI",
+                    "PIMPINAN",
+                    "PROSES",
+                    "MONITORING",
+                    "SELESAI",
+                    "DITUTUP",
+                    "DITOLAK",
+                ],
+                location=OpenApiParameter.QUERY,
+                description="Filter status"
+            ),
+
+            OpenApiParameter(
+                name="pelapor",
+                type=str,
+                enum=["group", "pribadi"],
+                location=OpenApiParameter.QUERY,
+                description="Filter pelapor"
+            ),
+
+            OpenApiParameter(
+                name="petugas",
+                type=str,
+                enum=["group", "pribadi"],
+                location=OpenApiParameter.QUERY,
+                description="Filter petugas"
+            ),
+
+            OpenApiParameter(
+                name="verifikator",
+                type=str,
+                enum=["true", "false"],
+                location=OpenApiParameter.QUERY,
+                description="Sudah diverifikasi atau belum"
+            ),
+        ],
     )
     def list(self, request):
 
-        queryset = self.get_queryset()
+        queryset = (
+            self.get_queryset()
+            .order_by("-created_at")
+        )
 
         return success_response(
-            data=[
-                serialize_model(item)
-                for item in queryset.order_by(
-                    "-created_at"
-                )
-            ]
+            data=search_and_paginate(
+                request=request,
+                queryset=queryset,
+                search_fields=[
+                    "status",
+                    "judul",
+                    "uraian",
+                ]
+            )
         )
 
     @extend_schema(
@@ -769,15 +1038,15 @@ class PengaduanViewSet(viewsets.ModelViewSet):
 
     @extend_schema(
         tags=["Pengaduan"],
-        request=PengaduanSerializer,
-        responses=PengaduanSerializer
+        request=PengaduanCreateSerializer,
+        responses=PengaduanSerializer,
     )
     def create(
         self,
         request
     ):
 
-        serializer = PengaduanSerializer(
+        serializer = PengaduanCreateSerializer(
             data=request.data
         )
 
@@ -788,8 +1057,32 @@ class PengaduanViewSet(viewsets.ModelViewSet):
                 serializer.errors
             )
 
-        obj = serializer.save(
-            pelapor=request.user
+        user = request.user
+
+        obj = Pengaduan.objects.create(
+            nomor_tiket=generateNomorTiket(),
+            pelapor=user,
+            nama_pelapor=user.get_full_name()
+            or user.username,
+            hp_pelapor=user.no_hp or "",
+            judul=serializer.validated_data[
+                "judul"
+            ],
+            desa_id=serializer.validated_data[
+                "desa"
+            ],
+            lokasi_kejadian=serializer.validated_data[
+                "lokasi_kejadian"
+            ],
+            uraian=serializer.validated_data[
+                "uraian"
+            ],
+            lampiran=request.FILES.get(
+                "lampiran"
+            ),
+            waktu_kejadian = serializer.validated_data["tanggal"],
+            status="BARU",
+            source="ANDROID",
         )
 
         return success_response(
@@ -860,11 +1153,12 @@ class PengaduanViewSet(viewsets.ModelViewSet):
         )
 
     @extend_schema(
-        tags=["Pengaduan"]
+        tags=["Pengaduan"],
+        request=PengaduanVerifikasiSerializer,
     )
     @action(
         detail=True,
-        methods=["get"]
+        methods=["post"]
     )
     def verifikasi(
         self,
@@ -872,25 +1166,150 @@ class PengaduanViewSet(viewsets.ModelViewSet):
         pk=None
     ):
 
+        serializer = (
+            PengaduanVerifikasiSerializer(
+                data=request.data
+            )
+        )
+
+        if not serializer.is_valid():
+
+            return error_response(
+                "Data tidak valid.",
+                serializer.errors
+            )
+
         pengaduan = self.get_object()
 
-        verifikasi = (
-            VerifikasiPengaduan.objects
-            .filter(
-                pengaduan=pengaduan
+        try:
+
+            petugas = User.objects.get(
+                pk=serializer.validated_data[
+                    "petugas"
+                ]
             )
-            .order_by(
-                "-tanggal_verifikasi"
+
+        except User.DoesNotExist:
+
+            return error_response(
+                "Petugas tidak ditemukan."
             )
+
+        pengaduan.petugas = petugas
+
+        pengaduan.disposisi_oleh = (
+            request.user
+        )
+
+        pengaduan.tindak_lanjut = (
+            serializer.validated_data.get(
+                "catatan",
+                ""
+            )
+        )
+
+        pengaduan.verifikator = (
+            request.user
+        )
+
+        pengaduan.verifikasi_admin = True
+
+        pengaduan.status = (
+            "VERIFIKASI"
+        )
+
+        pengaduan.verified_at = (
+            timezone.now()
+        )
+
+        pengaduan.save()
+
+        PengaduanHistory.objects.create(
+            pengaduan=pengaduan,
+            user=petugas,
+            judul="Pengaduan Diverifikasi",
+            deskripsi=(
+                "Pengaduan telah dialihkan "
+                "ke bidang terkait untuk "
+                "ditindaklanjuti"
+            ),
+            status_lama="",
+            status_baru="VERIFIKASI",
+            latitude=pengaduan.latitude,
+            longitude=pengaduan.longitude
+        )
+
+        Notifikasi.objects.create(
+            user=petugas,
+            judul=pengaduan.judul,
+            pesan=pengaduan.tindak_lanjut,
+            url=f"/pengaduan/{pengaduan.id}/"
         )
 
         return success_response(
-            data=[
-                serialize_model(item)
-                for item in verifikasi
+            data=serialize_model(
+                pengaduan
+            ),
+            message="Pengaduan berhasil diverifikasi."
+        )
+    @extend_schema(
+        tags=["Pengaduan"],
+        request=PengaduanStatusSerializer,
+    )
+    @action(
+        detail=True,
+        methods=["put"]
+    )
+    def status(
+        self,
+        request,
+        pk=None
+    ):
+
+        serializer = PengaduanStatusSerializer(
+            data=request.data
+        )
+
+        if not serializer.is_valid():
+
+            return error_response(
+                "Data tidak valid.",
+                serializer.errors
+            )
+
+        pengaduan = self.get_object()
+
+        status_lama = pengaduan.status
+
+        pengaduan.status = (
+            serializer.validated_data[
+                "status"
             ]
         )
 
+        pengaduan.save()
+
+        PengaduanHistory.objects.create(
+            pengaduan=pengaduan,
+            user=request.user,
+            judul="Perubahan Status",
+            deskripsi=(
+                f"Status diubah dari "
+                f"{status_lama} menjadi "
+                f"{pengaduan.status}"
+            ),
+            status_lama=status_lama,
+            status_baru=pengaduan.status,
+            latitude=pengaduan.latitude,
+            longitude=pengaduan.longitude,
+        )
+
+        return success_response(
+            data=serialize_model(
+                pengaduan
+            ),
+            message="Status berhasil diperbarui."
+        )
     @extend_schema(
         tags=["Pengaduan"],
         request=PengaduanProcessSerializer
@@ -980,7 +1399,67 @@ class PengaduanViewSet(viewsets.ModelViewSet):
             ),
             message="Pengaduan berhasil diproses."
         )
+    @extend_schema(
+        tags=["Pengaduan"]
+    )
+    @action(
+        detail=False,
+        methods=["get"]
+    )
+    def total(
+        self,
+        request
+    ):
 
+        user = request.user
+
+        return success_response(
+            data={
+                "umum": {
+                    "total": Pengaduan.objects.count(),
+                    "baru": Pengaduan.objects.filter(
+                        status="BARU"
+                    ).count(),
+                    "selesai": Pengaduan.objects.filter(
+                        status="SELESAI"
+                    ).count(),
+                    "berproses": Pengaduan.objects.exclude(
+                        status__in=[
+                            "BARU",
+                            "SELESAI",
+                        ]
+                    ).count(),
+                },
+                "foryou": {
+                    "total": Pengaduan.objects.filter(
+                        petugas=user
+                    ).count(),
+                    "aktif": Pengaduan.objects.filter(
+                        petugas=user
+                    ).exclude(
+                        status="SELESAI"
+                    ).count(),
+                    "selesai": Pengaduan.objects.filter(
+                        petugas=user,
+                        status="SELESAI"
+                    ).count(),
+                },
+                "fromyou": {
+                    "total": Pengaduan.objects.filter(
+                        pelapor=user
+                    ).count(),
+                    "aktif": Pengaduan.objects.filter(
+                        pelapor=user
+                    ).exclude(
+                        status="SELESAI"
+                    ).count(),
+                    "selesai": Pengaduan.objects.filter(
+                        pelapor=user,
+                        status="SELESAI"
+                    ).count(),
+                }
+            }
+        )
 # ============================================================
 # ORGANISASI
 # ============================================================
@@ -1383,8 +1862,37 @@ class DesaViewSet(
                 for item in self.get_queryset()
             ]
         )
+class PetugasViewSet(
+    viewsets.ReadOnlyModelViewSet
+):
 
+    permission_classes = [
+        IsAuthenticated
+    ]
 
+    queryset = User.objects.filter(
+        is_active=True
+    ).exclude(
+        groups__name__iexact="MASYARAKAT"
+    ).distinct()
+
+    def list(self, request):
+
+        return success_response(
+            data=[
+                {
+                    "id": item.id,
+                    "nama": (
+                        item.get_full_name()
+                        or item.username
+                    ),
+                    # "username": item.username,
+                    # "nik": item.nik,
+                    # "no_hp": item.no_hp,
+                }
+                for item in self.get_queryset()
+            ]
+        ) 
 class DinasViewSet(
     viewsets.ReadOnlyModelViewSet
 ):

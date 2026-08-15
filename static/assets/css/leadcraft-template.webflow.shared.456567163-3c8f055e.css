@@ -8577,7 +8577,7 @@ figure {
   height: 3rem;
   transition: background-color .4s;
   display: flex;
-  inset: auto auto 0%;
+  /* inset: auto auto 0%; */
   transform: translate(0);
 }
 

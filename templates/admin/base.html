@@ -99,7 +99,7 @@ async function ensureNotificationPermission() {
         allowOutsideClick: false,
         allowEscapeKey: false
     });
-
+s
     if (!result.isConfirmed) {
         logoutUser();
         return false;
@@ -189,15 +189,15 @@ async function initFCM() {
 document.addEventListener(
     "DOMContentLoaded",
     ()=>{
-        initFCM();
+        // initFCM();
         document.querySelectorAll(
             "input, textarea, select"
         ).forEach(el => {
 
-            const style = getComputedStyle(el);
-
+            const style = getComputedStyle(el); 
+            console.log(style.borderRightColor)
             if (
-                style.borderStyle === "none" ||
+                style.borderRightColor === "none" ||
                 style.borderWidth === "0px"
             ) {
                 el.style.border = "1px solid #d1d5db";
@@ -238,8 +238,30 @@ async function refreshOrLogout(
     } else {
         logoutUser();
     }
-} 
+}
+document.addEventListener('DOMContentLoaded', function () {
 
+    const currentUrl = window.location.pathname;
+
+    const hiddenUrls = [
+        '/admin/pengaduan/pengaduan/add/',
+        // '/admin/pengaduan/pengaduan/changelist/',
+    ];
+
+    if (hiddenUrls.includes(currentUrl)) {
+
+        const addButton = document.querySelector(
+            'a.addlink[href="/admin/pengaduan/pengaduan/add/"]'
+        );
+
+        if (addButton) {
+            addButton.closest(
+                '.flex.flex-row.items-center'
+            ).style.display = 'none';
+        }
+    }
+
+});
 </script>
 <style>
 /* Semua input anggota organisasi */

@@ -5,6 +5,7 @@ from core.services.notifications import process_pending_notifications
 from core.apps.accounts.User.models import User
 from core.apps.informasi.models import Notifikasi
 from django.db import transaction
+from threading import Thread
 
 
 @receiver(post_save, sender=Pengaduan)
@@ -28,8 +29,11 @@ def buat_notifikasi_pengaduan(sender, instance, created, **kwargs):
                 url=f"https://garda.kabsumbawabarat.com/admin/pengaduan/pengaduan/{instance.id}/change/"
             ) 
     transaction.on_commit(
-        lambda: process_pending_notifications()
-    )
+        lambda: Thread(
+            target=process_pending_notifications,
+            daemon=True
+        ).start()
+    ) 
 
 # @receiver(post_save, sender=Notifikasi)
 # def kirim_notifikasi_otomatis(

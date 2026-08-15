@@ -122,7 +122,9 @@ def kirimPengaduan(request):
                 "uraian"
             ),
             lampiran=request.FILES.get("lampiran"),
-            waktu_kejadian=timezone.now(),
+            waktu_kejadian=request.POST.get(
+                "tanggal"
+            ),
             status="BARU",
             source="WEB",
         )
