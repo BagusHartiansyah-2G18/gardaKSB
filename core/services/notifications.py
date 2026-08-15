@@ -31,7 +31,7 @@ def process_pending_notifications():
     )
 
     total = notifications.count()
-
+    print(f"pending : {total}")
     berhasil = 0
     gagal = 0
 
