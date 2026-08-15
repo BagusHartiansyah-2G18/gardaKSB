@@ -18,11 +18,12 @@ logger = logging.getLogger(__name__)
 def safe_process_notifications():
 
     try:
-
+        print("safe_process_notifications, masuk")
         process_pending_notifications()
-
+        print("safe_process_notifications, finish")
+        
     except Exception:
-
+        print("safe_process_notifications, Error")
         logger.exception(
             "Gagal memproses notifikasi"
         )
