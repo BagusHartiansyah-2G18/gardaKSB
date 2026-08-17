@@ -1,6 +1,8 @@
 import logging
+import time
 
-from threading import Thread
+from threading import Lock, Thread
+
 from django.db import transaction
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -14,18 +16,67 @@ from core.services.notifications import (
 
 logger = logging.getLogger(__name__)
 
+notification_lock = Lock()
+last_notification_time = 0
+
+DEBOUNCE_SECONDS = 5
+
 
 def safe_process_notifications():
 
+    global last_notification_time
+
+    current_time = time.time()
+
+    last_notification_time = current_time
+
+    logger.info(
+        "Notifikasi diterima, menunggu %s detik...",
+        DEBOUNCE_SECONDS
+    )
+
+    time.sleep(DEBOUNCE_SECONDS)
+
+    if last_notification_time != current_time:
+        logger.info(
+            "Ada notifikasi baru masuk, batalkan proses lama."
+        )
+        return
+
+    acquired = notification_lock.acquire(
+        blocking=False
+    )
+
+    if not acquired:
+        logger.info(
+            "Processor notifikasi sedang berjalan, skip."
+        )
+        return
+
     try:
-        print("safe_process_notifications, masuk")
+
+        logger.info(
+            "Mulai memproses pending notifications."
+        )
+
         process_pending_notifications()
-        print("safe_process_notifications, finish")
-        
+
+        logger.info(
+            "Selesai memproses pending notifications."
+        )
+
     except Exception:
-        print("safe_process_notifications, Error")
+
         logger.exception(
-            "Gagal memproses notifikasi"
+            "Gagal memproses notifikasi."
+        )
+
+    finally:
+
+        notification_lock.release()
+
+        logger.info(
+            "Lock notifikasi dilepas."
         )
 
 
