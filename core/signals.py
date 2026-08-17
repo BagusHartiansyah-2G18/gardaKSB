@@ -17,8 +17,8 @@ from core.services.notifications import (
 logger = logging.getLogger(__name__)
 
 notification_lock = Lock()
-last_notification_time = 0
 
+last_notification_time = 0
 DEBOUNCE_SECONDS = 5
 
 
@@ -27,42 +27,49 @@ def safe_process_notifications():
     global last_notification_time
 
     current_time = time.time()
-
     last_notification_time = current_time
 
     logger.info(
-        "Notifikasi diterima, menunggu %s detik...",
+        "Notifikasi diterima, menunggu %s detik.",
         DEBOUNCE_SECONDS
     )
 
     time.sleep(DEBOUNCE_SECONDS)
 
     if last_notification_time != current_time:
+
         logger.info(
-            "Ada notifikasi baru masuk, batalkan proses lama."
+            "Ada notifikasi baru masuk. Batalkan batch lama."
         )
+
         return
 
-    acquired = notification_lock.acquire(
+    if not notification_lock.acquire(
         blocking=False
-    )
+    ):
 
-    if not acquired:
         logger.info(
-            "Processor notifikasi sedang berjalan, skip."
+            "Process notification sedang berjalan. Skip."
         )
+
         return
 
     try:
 
         logger.info(
-            "Mulai memproses pending notifications."
+            "Mulai process_pending_notifications."
         )
 
-        process_pending_notifications()
+        result = process_pending_notifications()
 
         logger.info(
-            "Selesai memproses pending notifications."
+            (
+                "Selesai process_pending_notifications. "
+                "Total=%s Berhasil=%s Gagal=%s"
+            ),
+            result.get("total", 0),
+            result.get("berhasil", 0),
+            result.get("gagal", 0),
         )
 
     except Exception:
@@ -76,7 +83,7 @@ def safe_process_notifications():
         notification_lock.release()
 
         logger.info(
-            "Lock notifikasi dilepas."
+            "Notification lock released."
         )
 
 
@@ -109,7 +116,7 @@ def buat_notifikasi_pengaduan(
                 judul=instance.judul,
                 pesan=instance.uraian,
                 url=(
-                    f"https://garda.kabsumbawabarat.com/"
+                    "https://garda.kabsumbawabarat.com/"
                     f"admin/pengaduan/pengaduan/"
                     f"{instance.id}/change/"
                 )
@@ -118,7 +125,8 @@ def buat_notifikasi_pengaduan(
         except Exception:
 
             logger.exception(
-                "Gagal membuat notifikasi"
+                "Gagal membuat notifikasi untuk user=%s",
+                admin.id
             )
 
 
