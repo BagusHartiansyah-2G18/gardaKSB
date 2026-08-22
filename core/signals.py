@@ -121,6 +121,7 @@ def buat_notifikasi_pengaduan(
                     f"{instance.id}/change/"
                 )
             )
+            
 
         except Exception:
 
@@ -130,20 +131,20 @@ def buat_notifikasi_pengaduan(
             )
 
 
-@receiver(post_save, sender=Notifikasi)
-def kirim_notifikasi_otomatis(
-    sender,
-    instance,
-    created,
-    **kwargs
-):
+# @receiver(post_save, sender=Notifikasi)
+# def kirim_notifikasi_otomatis(
+#     sender,
+#     instance,
+#     created,
+#     **kwargs
+# ):
 
-    if not created:
-        return
+#     if not created:
+#         return
 
-    transaction.on_commit(
-        lambda: Thread(
-            target=safe_process_notifications,
-            daemon=True
-        ).start()
-    )
+    # transaction.on_commit(
+    #     lambda: Thread(
+    #         target=safe_process_notifications,
+    #         daemon=True
+    #     ).start()
+    # )
