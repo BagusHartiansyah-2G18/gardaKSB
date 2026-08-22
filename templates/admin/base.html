@@ -162,7 +162,7 @@ async function initFCM() {
             return;
         }
 
-        await fetch("/api/device-token/", {
+        await fetch("/api/device-tokens/", {
             method: "POST",
             credentials: "same-origin",
             headers: {
