@@ -611,7 +611,6 @@ class PengaduanAdmin(ModelAdmin):
             "created_at",
             "updated_at",
             "status",
-            "prioritas",
             "bidang_disposisi",
             "verifikator",
             "verified_at",
@@ -650,6 +649,7 @@ class PengaduanAdmin(ModelAdmin):
                     "email_pelapor",
                     "alamat_pelapor",
                     "anonim",
+                    "prioritas",
                 ]
 
         return tuple(exclude)
