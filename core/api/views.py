@@ -182,42 +182,22 @@ def filter_by_group(
 
     user = request.user
 
-    group = user.groups.first()
+    is_admin_group = user.groups.filter(
+        name__in=[
+            "ADMIN",
+            "KABAN",
+            "KABID",
+            "SEKBAN",
+        ]
+    ).exists()
 
-    # ====================
-    # GROUP / PRIBADI
-    # ====================
-
-    bygroup = request.query_params.get(
-        "bygroup",
-        "group"
-    )
-
-    if bygroup == "pribadi":
-
-        queryset = queryset.filter(
-            **{
-                owner_field: user
-            }
-        )
-
-    elif not (
-        user.is_superuser
-        or (
-            group
-            and group.name in [
-                "ADMIN",
-                "KABAN",
-                "KABID"
-            ]
-        )
+    if (
+        request.query_params.get("bygroup", "group") == "pribadi"
+        or not (user.is_superuser or is_admin_group)
     ):
-
         queryset = queryset.filter(
-            **{
-                owner_field: user
-            }
-        )
+            {owner_field: user}
+    ) 
 
     # ====================
     # STATUS
