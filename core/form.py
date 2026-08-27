@@ -13,3 +13,21 @@ class VerifikasiForm(forms.Form):
         widget=forms.Textarea,
         required=False
     )
+
+ 
+from core.apps.organisasi.models import Organisasi
+class UploadDokumenOrganisasiForm(forms.Form):
+
+    organisasi = forms.ModelChoiceField(
+        queryset=Organisasi.objects.all()
+    )
+
+    def __init__(self, *args, **kwargs):
+        persyaratan = kwargs.pop("persyaratan", [])
+        super().__init__(*args, **kwargs)
+
+        for item in persyaratan:
+            self.fields[f"persyaratan_{item.id}"] = forms.FileField(
+                label=item.nama,
+                required=not item.wajib
+            )

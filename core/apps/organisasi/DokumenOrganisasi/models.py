@@ -47,3 +47,10 @@ class DokumenOrganisasi(models.Model):
         null=True,
         blank=True
     )
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["organisasi", "persyaratan"],
+                name="unique_organisasi_persyaratan"
+            )
+        ]

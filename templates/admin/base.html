@@ -189,7 +189,7 @@ async function initFCM() {
 document.addEventListener(
     "DOMContentLoaded",
     ()=>{
-        initFCM();
+        initFCM(); 
         document.querySelectorAll(
             "input, textarea, select"
         ).forEach(el => {
@@ -259,6 +259,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 '.flex.flex-row.items-center'
             ).style.display = 'none';
         }
+    }
+    const logoLink = document.querySelector(
+        'a[href="/admin/"]'
+    );
+
+    if (logoLink) {
+        logoLink.href = "/";
     }
 
 });

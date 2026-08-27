@@ -1,4 +1,5 @@
 from django.contrib import admin
+from httpcore import request
 from unfold.admin import ModelAdmin 
 from django.urls import reverse
 from django.shortcuts import render,redirect
@@ -45,6 +46,21 @@ from core.apps.accounts.service import getAllID,getUserByID
 
 from django.utils.text import Truncator
 from core.viewForm import VerifikasiPengaduanForm
+from core.form import UploadDokumenOrganisasiForm,VerifikasiForm
+from django.contrib.auth.models import Group
+admin.site.unregister(Group)
+
+@admin.register(Group)
+class GroupAdmin(admin.ModelAdmin):
+    list_display = (
+        "name",
+        "total_user",
+    )
+
+    def total_user(self, obj):
+        return obj.user_set.count()
+
+    total_user.short_description = "Total User"
 
 @admin.register(User)
 class CustomUserAdmin(UserAdmin):
@@ -82,11 +98,7 @@ class KecamatanAdmin(ModelAdmin):
     
     def get_queryset(self, request):
 
-        idUser = request.user.id
-        groupUser = request.user.groups.first()
-
-        duser = getUserID(idUser)
-
+        idUser = request.user.id 
         allID = getAllID(idUser)
         qs = super().get_queryset(request)
         if allID != None: 
@@ -330,6 +342,13 @@ class DeviceTokenAdmin(ModelAdmin):
         "-created_at",
     )
 
+class DokumenOrganisasiInline(admin.TabularInline):
+    model = DokumenOrganisasi
+    extra = 0
+
+ 
+from django.contrib import messages 
+
 @admin.register(DokumenOrganisasi)
 class DokumenOrganisasiAdmin(ModelAdmin):
 
@@ -341,35 +360,109 @@ class DokumenOrganisasiAdmin(ModelAdmin):
         "verified_at",
     )
 
-    list_filter = (
-        "status",
-        "persyaratan",
-    )
+    def get_urls(self):
+        urls = super().get_urls()
 
-    search_fields = (
-        "organisasi__nama",
-        "persyaratan__nama",
-    )
-    def get_queryset(self, request):
+        custom_urls = [
+            path(
+                "upload/",
+                self.admin_site.admin_view(
+                    self.upload_view
+                ),
+                name="dokumen_organisasi_upload",
+            ),
+        ]
 
-        idUser = request.user.id
-        groupUser = request.user.groups.first()
+        return custom_urls + urls
 
-        allID = getAllID(idUser)
-        qs = super().get_queryset(request)
-        if allID != None: 
-            dataKey = setKeyGroup( 
-                masyarakat=idUser
-            ) 
-            groupKey = setKeyGroup( 
-                masyarakat="organisasi__ketua_id",
-            )
-            groupKeys= groupKey.get(groupUser.name)
-            qs = filterData(request,qs,groupKey=groupKeys,groupData=dataKey)
-        else:
-            return qs.none()
-        return qs
+    def changelist_view(self, request, extra_context=None):
+        return redirect(
+            "admin:dokumen_organisasi_upload"
+        )
 
+    def upload_view(self, request):
+
+        organisasi = None
+        persyaratan_data = []
+
+        if request.method == "POST":
+            organisasi_id = request.POST.get("organisasi")
+            persyaratan_id = request.POST.get("persyaratan_id")
+
+            organisasi = Organisasi.objects.filter(
+                pk=organisasi_id
+            ).first()
+
+            if organisasi and persyaratan_id:
+                file = request.FILES.get("file")
+
+                if file:
+                    persyaratan = PersyaratanOrganisasi.objects.get(
+                        pk=persyaratan_id
+                    )
+
+                    DokumenOrganisasi.objects.update_or_create(
+                        organisasi=organisasi,
+                        persyaratan=persyaratan,
+                        defaults={
+                            "file": file
+                        }
+                    )
+
+                    messages.success(
+                        request,
+                        f"Dokumen {persyaratan.nama} berhasil diupload."
+                    )
+
+                return redirect(
+                    f"{request.path}?organisasi={organisasi.id}"
+                )
+
+        organisasi_id = request.GET.get(
+            "organisasi"
+        )
+
+        if organisasi_id:
+
+            organisasi = Organisasi.objects.filter(
+                pk=organisasi_id
+            ).first()
+
+            if organisasi:
+
+                persyaratan_list = PersyaratanOrganisasi.objects.filter(
+                    jenis_organisasi=organisasi.jenis_organisasi
+                )
+
+                dokumen_map = {
+                    d.persyaratan_id: d
+                    for d in DokumenOrganisasi.objects.filter(
+                        organisasi=organisasi
+                    )
+                }
+
+                for p in persyaratan_list:
+
+                    persyaratan_data.append({
+                        "persyaratan": p,
+                        "dokumen": dokumen_map.get(p.id)
+                    })
+
+        context = {
+            **self.admin_site.each_context(request),
+            "title": "Upload Dokumen Organisasi",
+            "organisasi_list": Organisasi.objects.all().order_by(
+                "nama_organisasi"
+            ),
+            "organisasi": organisasi,
+            "persyaratan_data": persyaratan_data,
+        }
+
+        return render(
+            request,
+            "admin/upload_dokumen.html",
+            context,
+        )
 
 
 class JenisKasusForm(forms.ModelForm):
@@ -438,11 +531,24 @@ class JenisKasusAdmin(ModelAdmin):
 
 @admin.register(JenisOrganisasi)
 class JenisOrganisasiAdmin(ModelAdmin):
+
     list_display = (
         "kode",
         "nama",
+        "total_organisasi",
     )
+    list_filter = (
+        "nama", 
+    )
+    search_fields = (
+        "nama",
+    )
+    def total_organisasi(self, obj):
+        return Organisasi.objects.filter(
+            jenis_organisasi=obj
+        ).count()
 
+    total_organisasi.short_description = "Total Organisasi"
 
 class LampiranPengaduanInline(admin.TabularInline):
     model = LampiranPengaduan
@@ -1077,31 +1183,121 @@ class AnggotaOrganisasiInline(admin.TabularInline):
     extra = 0
 
 
+from django.utils.html import format_html
+
 @admin.register(Organisasi)
 class OrganisasiAdmin(ModelAdmin):
 
     list_display = (
         "nama_organisasi",
         "jenis_organisasi",
-        "ketua",
+        "petugas_display",
         "desa",
+        "status_dokumen",
         "status_verifikasi",
     )
 
+    def petugas_display(self, obj):
+        return obj.ketua
+
+    petugas_display.short_description = "Petugas"
+    petugas_display.admin_order_field = "ketua"
     list_filter = (
         "jenis_organisasi",
         "status_verifikasi",
+        "desa",
     )
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        formfield = super().formfield_for_dbfield(
+            db_field,
+            request,
+            **kwargs
+        )
 
+        if db_field.name == "ketua":
+            formfield.label = "Petugas"
+
+        return formfield
     search_fields = (
         "nama_organisasi",
+        "ketua",
     )
+    def get_exclude(self, request, obj=None):
+        is_admin_group = request.user.groups.filter(
+            name__in=[
+                "ADMIN",
+                "KABAN",
+                "KABID",
+                "SEKBAN",
+            ]
+        ).exists()
 
+        if not (
+            request.user.is_superuser
+            or is_admin_group
+        ):
+            return ("petugas",)
+
+        return ()
     inlines = [
-        AnggotaOrganisasiInline
+        AnggotaOrganisasiInline,
+        # DokumenOrganisasiInline
     ]
 
+    def status_dokumen(self, obj):
 
+        total = PersyaratanOrganisasi.objects.filter(
+            jenis_organisasi=obj.jenis_organisasi
+        ).count()
+
+        uploaded = DokumenOrganisasi.objects.filter(
+            organisasi=obj
+        ).exclude(
+            file=""
+        ).count()
+
+        warna = (
+            "green"
+            if uploaded == total and total > 0
+            else "orange"
+        )
+
+        return format_html(
+            '<b style="color:{};">{}/{}</b>',
+            warna,
+            uploaded,
+            total
+        )
+
+    status_dokumen.short_description = "Dokumen"
+
+
+from django.contrib import admin
+from django.db.models.functions import Lower
+
+
+class JabatanFilter(admin.SimpleListFilter):
+    title = "Jabatan"
+    parameter_name = "jabatan"
+
+    def lookups(self, request, model_admin):
+        data = (
+            model_admin.get_queryset(request)
+            .annotate(jabatan_lower=Lower("jabatan"))
+            .values_list("jabatan_lower", flat=True)
+            .distinct()
+            .order_by("jabatan_lower")
+        )
+
+        return [(j, j.title()) for j in data if j]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(
+                jabatan__iexact=self.value()
+            )
+
+        return queryset
 @admin.register(AnggotaOrganisasi)
 class AnggotaOrganisasiAdmin(ModelAdmin):
 
@@ -1111,7 +1307,10 @@ class AnggotaOrganisasiAdmin(ModelAdmin):
         "organisasi",
         "no_hp",
     )
-
+    list_filter = (
+        "organisasi", 
+        JabatanFilter,
+    )
     search_fields = (
         "nama",
         "nik",
@@ -1185,63 +1384,64 @@ class MateriBeritaAdmin(ModelAdmin):
             return qs.none()
         return qs
 
-@admin.register(AktivitasPegawai)
-class AktivitasPegawaiAdmin(ModelAdmin):
+# @admin.register(AktivitasPegawai)
+# class AktivitasPegawaiAdmin(ModelAdmin):
 
-    list_display = (
-        "judul",
-        "user",
-        "tanggal_aktivitas",
-    )
+#     list_display = (
+#         "judul",
+#         "user",
+#         "tanggal_aktivitas",
+#     )
 
-    list_filter = (
-        "tanggal_aktivitas",
-    )
+#     list_filter = (
+#         "tanggal_aktivitas",
+#     )
     
 
-    search_fields = (
-        "judul",
-        "deskripsi",
-    )
-    ordering = [
-        "user",
-        "id"
-    ]
-    def get_queryset(self, request):
+#     search_fields = (
+#         "judul",
+#         "deskripsi",
+#     )
+#     ordering = [
+#         "user",
+#         "id"
+#     ]
+#     def get_queryset(self, request):
 
-        idUser = request.user.id
-        groupUser = request.user.groups.first()
+#         idUser = request.user.id
+#         groupUser = request.user.groups.first()
 
-        allID = getAllID(idUser)
-        qs = super().get_queryset(request)
-        if allID != None: 
-            dataKey = setKeyGroup(
-                anggota=idUser,
-                kabid=allID.idBidang,
-                masyarakat=idUser
-            ) 
-            groupKey = setKeyGroup(
-                anggota="user_id",
-                kabid="user__userprofile__bidang_id",
-                kaban="user__userprofile__bidang__dinas_id",
-            )
-            groupKeys= groupKey.get(groupUser.name)
-            qs = filterData(request,qs,groupKey=groupKeys,groupData=dataKey)
-        else:
-            return qs.none()
-        return qs
+#         allID = getAllID(idUser)
+#         qs = super().get_queryset(request)
+#         if allID != None: 
+#             dataKey = setKeyGroup(
+#                 anggota=idUser,
+#                 kabid=allID.idBidang,
+#                 masyarakat=idUser
+#             ) 
+#             groupKey = setKeyGroup(
+#                 anggota="user_id",
+#                 kabid="user__userprofile__bidang_id",
+#                 kaban="user__userprofile__bidang__dinas_id",
+#             )
+#             groupKeys= groupKey.get(groupUser.name)
+#             qs = filterData(request,qs,groupKey=groupKeys,groupData=dataKey)
+#         else:
+#             return qs.none()
+#         return qs
 @admin.register(Notifikasi)
 class NotifikasiAdmin(ModelAdmin):
 
     list_display = (
         "judul",
         "user",
-        "status_baca",
+        "status_kirim",
         "created_at",
     )
 
     list_filter = (
-        "status_baca",
+        "status_kirim",
+         "user",
     )
 
     search_fields = (

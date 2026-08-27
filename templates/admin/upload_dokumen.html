@@ -1,0 +1,178 @@
+{% extends "unfold/layouts/base.html" %}
+{% load i18n %}
+
+{% block content %}
+
+<div class="flex flex-col gap-6">
+
+    <div class="bg-white rounded-xl shadow p-6">
+
+        <h1 class="text-2xl font-semibold mb-4">
+            Upload Dokumen Organisasi
+        </h1>
+
+        <form method="get">
+
+            <label class="block mb-2 font-medium">
+                Organisasi
+            </label>
+
+            <select
+                name="organisasi"
+                class="w-full border rounded-lg p-2"
+                onchange="this.form.submit();"
+            >
+                <option value="">
+                    Pilih Organisasi
+                </option>
+
+                {% for item in organisasi_list %}
+                <option
+                    value="{{ item.id }}"
+                    {% if organisasi and organisasi.id == item.id %}
+                        selected
+                    {% endif %}
+                >
+                    {{ item.nama_organisasi }}
+                </option>
+                {% endfor %}
+
+            </select>
+
+        </form>
+
+    </div>
+
+    {% if organisasi %}
+
+    <div class="bg-white rounded-xl shadow p-6">
+
+        <div class="mb-6">
+
+            <h2 class="text-xl font-semibold">
+                {{ organisasi.nama_organisasi }}
+            </h2>
+
+            <p class="text-sm text-gray-500">
+                {{ organisasi.jenis_organisasi }}
+            </p>
+
+        </div>
+
+        <div class="grid grid-cols-1 gap-4">
+
+            {% for row in persyaratan_data %}
+
+            <div class="border rounded-xl p-4">
+
+                <div class="flex justify-between items-center mb-3">
+
+                    <div>
+
+                        <span class="font-medium">
+                            {{ row.persyaratan.nama }}
+                        </span>
+
+                        {% if row.persyaratan.wajib %}
+                            <span class="text-red-500">*</span>
+                        {% endif %}
+
+                    </div>
+
+                    <div>
+
+                        {% if row.dokumen and row.dokumen.file %}
+                            <span class="text-green-600 font-medium">
+                                ✅ Sudah Upload
+                            </span>
+                        {% else %}
+                            <span class="text-red-600 font-medium">
+                                ❌ Belum Upload
+                            </span>
+                        {% endif %}
+
+                    </div>
+
+                </div>
+                <div class="flex flex-row justify-between items-center gap-3">
+                    
+                    <form
+                        method="post"
+                        enctype="multipart/form-data"
+                        class="flex items-center gap-3"
+                    >
+                        {% csrf_token %}
+
+                        <input
+                            type="hidden"
+                            name="organisasi"
+                            value="{{ organisasi.id }}"
+                        >
+
+                        <input
+                            type="hidden"
+                            name="persyaratan_id"
+                            value="{{ row.persyaratan.id }}"
+                        >
+
+                        <button
+                            type="submit"
+                            class="
+                                bg-primary-600
+                                hover:bg-primary-700
+                                text-white
+                                px-4
+                                py-2
+                                rounded-lg
+                                shrink-0
+                            "
+                        >
+                            {% if row.dokumen %}
+                                Ganti File
+                            {% else %}
+                                Upload
+                            {% endif %}
+                        </button>
+
+                        <input
+                            type="file"
+                            name="file"
+                            class="
+                                flex-1
+                                border
+                                rounded-lg
+                                p-2
+                            "
+                            required
+                        >
+
+                    </form>
+                    {% if row.dokumen and row.dokumen.file %}
+
+                    <div class="mb-3">
+
+                        <a href="{{ row.dokumen.file.url }}"
+                            target="_blank"
+                            class="text-primary-600">
+                            📄 Lihat Dokumen
+                        </a>
+
+                    </div>
+
+                    {% endif %}
+                </div>
+                
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+    </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

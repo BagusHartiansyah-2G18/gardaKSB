@@ -54,7 +54,7 @@ class Pengaduan(models.Model):
         max_length=20
     )
 
-    email_pelapor = models.EmailField(
+    email_pelapor = models.CharField(
         blank=True
     )
 
