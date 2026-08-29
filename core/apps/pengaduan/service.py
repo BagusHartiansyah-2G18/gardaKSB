@@ -21,6 +21,7 @@ def getMapKasus():
             "longitude",
             "status",
             "prioritas",
+            "judul",
             "desa__nama",
             "jenis_kasus__nama",
             "jenis_kasus__warna",

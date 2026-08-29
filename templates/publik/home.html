@@ -433,9 +433,9 @@ const mapData = JSON.parse(
     '{{ dmap|escapejs }}'
 );
 
-const map = L.map(
-    'map'
-).setView(
+console.log("MAP DATA", mapData);
+
+const map = L.map('map').setView(
     [-8.7485, 116.8287],
     10
 );
@@ -443,50 +443,87 @@ const map = L.map(
 L.tileLayer(
     'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
     {
-        maxZoom: 18
+        maxZoom: 18,
+        attribution: '&copy; OpenStreetMap'
     }
 ).addTo(map);
+
 L.Icon.Default.mergeOptions({
     iconRetinaUrl: "{% static 'vendor/leaflet/images/marker-icon-2x.png' %}",
     iconUrl: "{% static 'vendor/leaflet/images/marker-icon.png' %}",
     shadowUrl: "{% static 'vendor/leaflet/images/marker-shadow.png' %}",
 });
+
+const markers = [];
+
 mapData.forEach(item => {
 
-   const icon = L.divIcon({
+    const lat = Number(item.latitude);
+    const lng = Number(item.longitude);
+
+    console.log(
+        `ID: ${item.id}`,
+        `LAT: ${lat}`,
+        `LNG: ${lng}`
+    );
+
+    if (
+        isNaN(lat) ||
+        isNaN(lng) ||
+        lat === 0 ||
+        lng === 0
+    ) {
+        console.warn(
+            "Koordinat tidak valid:",
+            item
+        );
+        return;
+    }
+
+    const icon = L.divIcon({
         className: '',
         html: `
             <div style="
                 width:20px;
                 height:20px;
-                background:${item.jenis_kasus__warna};
+                background:${item.jenis_kasus__warna || '#0ea5e9'};
                 border-radius:50% 50% 50% 0;
                 transform:rotate(-45deg);
                 border:2px solid white;
+                box-shadow:0 2px 4px rgba(0,0,0,.3);
             "></div>
         `,
-        iconSize: [20, 20]
+        iconSize: [20, 20],
+        iconAnchor: [10, 20],
     });
 
-    L.marker(
-        [
-            parseFloat(item.latitude),
-            parseFloat(item.longitude)
-        ],
-        {
-            icon: icon
-        }
+    const marker = L.marker(
+        [lat, lng],
+        { icon }
     )
     .bindPopup(`
-        <b>${item.nomor_tiket}</b><br>
-        Jenis: ${item.jenis_kasus__nama}<br>
-        Desa: ${item.desa__nama}<br>
-        Status: ${item.status}<br>
-        Prioritas: ${item.prioritas}
+        <b>${item.nomor_tiket || '-'}</b><br>
+        Jenis: ${item.jenis_kasus__nama || '-'}<br>
+        Judul: ${item.judul || '-'}<br>
+        Desa: ${item.desa__nama || '-'}<br>
+        Status: ${item.status || '-'}<br>
+        Prioritas: ${item.prioritas || '-'}
     `)
     .addTo(map);
 
+    markers.push(marker);
 });
+
+if (markers.length > 0) {
+    const group = L.featureGroup(markers);
+
+    map.fitBounds(
+        group.getBounds(),
+        {
+            padding: [30, 30]
+        }
+    );
+}
 
 </script>
 {% endblock %}
